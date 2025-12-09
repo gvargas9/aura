@@ -1,0 +1,219 @@
+{
+  "name": "Aura - Low Stock Alert & Auto-Reorder",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 6
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Every 6 Hours",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "inventory",
+        "returnAll": true,
+        "filters": {
+          "conditions": []
+        },
+        "options": {}
+      },
+      "id": "get-inventory",
+      "name": "Get Inventory",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [460, 300],
+      "credentials": {
+        "supabaseApi": {
+          "id": "supabase-creds",
+          "name": "Supabase API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Filter items below reorder point\nconst items = $input.all();\n\nconst lowStockItems = items.filter(item => {\n  const inventory = item.json;\n  return inventory.quantity <= inventory.reorder_point;\n});\n\nreturn lowStockItems.map(item => ({\n  productId: item.json.product_id,\n  currentQuantity: item.json.quantity,\n  reorderPoint: item.json.reorder_point,\n  reorderQuantity: item.json.reorder_quantity || 500,\n  warehouseLocation: item.json.warehouse_location\n}));"
+      },
+      "id": "filter-low-stock",
+      "name": "Filter Low Stock",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{$json.length}}",
+              "operation": "larger",
+              "value2": 0
+            }
+          ]
+        }
+      },
+      "id": "check-if-low-stock",
+      "name": "Has Low Stock?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "aura_products",
+        "returnAll": false,
+        "limit": 100,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "in",
+              "keyValue": "={{$json.map(i => i.productId).join(',')}}"
+            }
+          ]
+        }
+      },
+      "id": "get-product-details",
+      "name": "Get Product Details",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [1120, 200],
+      "credentials": {
+        "supabaseApi": {
+          "id": "supabase-creds",
+          "name": "Supabase API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Generate PDF Purchase Order\nconst lowStockItems = $('Filter Low Stock').all();\nconst products = $input.all();\n\nconst poNumber = `PO-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${Math.random().toString(36).substring(2,6).toUpperCase()}`;\n\nconst lineItems = lowStockItems.map(item => {\n  const product = products.find(p => p.json.id === item.json.productId);\n  return {\n    sku: product?.json.sku || 'UNKNOWN',\n    name: product?.json.name || 'Unknown Product',\n    quantity: item.json.reorderQuantity,\n    unitCost: product?.json.cost_price || 0,\n    totalCost: (product?.json.cost_price || 0) * item.json.reorderQuantity\n  };\n});\n\nconst total = lineItems.reduce((sum, item) => sum + item.totalCost, 0);\n\nreturn {\n  poNumber,\n  date: new Date().toISOString(),\n  supplier: 'Suzazon Mexico',\n  lineItems,\n  total,\n  deliveryLocation: 'El Paso Warehouse'\n};"
+      },
+      "id": "generate-po",
+      "name": "Generate PO",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1340, 200]
+    },
+    {
+      "parameters": {
+        "fromEmail": "orders@aura.com",
+        "toEmail": "={{$env.SUPPLIER_EMAIL}}",
+        "subject": "Purchase Order {{$json.poNumber}} - Aura",
+        "emailType": "html",
+        "message": "<h1>Purchase Order: {{$json.poNumber}}</h1><p>Date: {{$json.date}}</p><p>Delivery To: {{$json.deliveryLocation}}</p><h2>Items:</h2><ul>{{$json.lineItems.map(i => `<li>${i.quantity}x ${i.name} (${i.sku}) - $${i.totalCost}</li>`).join('')}}</ul><p><strong>Total: ${{$json.total}}</strong></p>"
+      },
+      "id": "send-po-email",
+      "name": "Send PO to Supplier",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [1560, 200]
+    },
+    {
+      "parameters": {
+        "channel": "#aura-inventory",
+        "text": ":warning: *Low Stock Alert*\n\nThe following items are below reorder point:\n{{$('Filter Low Stock').all().map(i => `• Product ${i.json.productId}: ${i.json.currentQuantity} units (reorder at ${i.json.reorderPoint})`).join('\\n')}}\n\nPO {{$json.poNumber}} has been sent to supplier."
+      },
+      "id": "notify-team",
+      "name": "Notify Team",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2,
+      "position": [1780, 200]
+    }
+  ],
+  "connections": {
+    "Every 6 Hours": {
+      "main": [
+        [
+          {
+            "node": "Get Inventory",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Inventory": {
+      "main": [
+        [
+          {
+            "node": "Filter Low Stock",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Low Stock": {
+      "main": [
+        [
+          {
+            "node": "Has Low Stock?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Low Stock?": {
+      "main": [
+        [
+          {
+            "node": "Get Product Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Product Details": {
+      "main": [
+        [
+          {
+            "node": "Generate PO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate PO": {
+      "main": [
+        [
+          {
+            "node": "Send PO to Supplier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send PO to Supplier": {
+      "main": [
+        [
+          {
+            "node": "Notify Team",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": ["aura", "inventory", "automation"],
+  "triggerCount": 1
+}

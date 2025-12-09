@@ -1,0 +1,95 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 15, 23, 42;
+  --background-start-rgb: 255, 255, 255;
+  --background-end-rgb: 236, 253, 245;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 6, 78, 59;
+    --background-end-rgb: 15, 23, 42;
+  }
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+  min-height: 100vh;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-aura-primary hover:bg-aura-secondary text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg;
+  }
+
+  .btn-secondary {
+    @apply bg-white hover:bg-gray-50 text-aura-primary border-2 border-aura-primary font-semibold py-2 px-4 rounded-lg transition-all duration-200;
+  }
+
+  .btn-accent {
+    @apply bg-aura-accent hover:bg-amber-600 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg;
+  }
+
+  .card {
+    @apply bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 overflow-hidden;
+  }
+
+  .card-dark {
+    @apply bg-aura-dark rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 overflow-hidden text-white;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-aura-primary focus:border-transparent outline-none transition-all duration-200;
+  }
+
+  .box-slot {
+    @apply w-16 h-16 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center transition-all duration-200 hover:border-aura-primary hover:bg-aura-light cursor-pointer;
+  }
+
+  .box-slot-filled {
+    @apply w-16 h-16 rounded-full border-2 border-aura-primary bg-aura-light flex items-center justify-center transition-all duration-200;
+  }
+
+  .section-title {
+    @apply text-3xl font-bold text-aura-dark mb-4;
+  }
+
+  .gradient-text {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-aura-primary to-aura-accent;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+}
