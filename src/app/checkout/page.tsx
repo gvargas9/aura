@@ -23,6 +23,7 @@ interface BoxConfig {
   size: string;
   products: string[];
   price: number;
+  dealerCode?: string;
 }
 
 export default function CheckoutPage() {
@@ -55,6 +56,11 @@ export default function CheckoutPage() {
 
       const config = JSON.parse(stored) as BoxConfig;
       setBoxConfig(config);
+
+      // Pre-fill dealer code if came from referral link
+      if (config.dealerCode) {
+        setDealerCode(config.dealerCode);
+      }
 
       // Fetch product details
       const { data } = await supabase

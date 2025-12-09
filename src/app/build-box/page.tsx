@@ -106,6 +106,9 @@ export default function BuildBoxPage() {
   };
 
   const handleCheckout = () => {
+    // Get referral code from URL if present
+    const refCode = searchParams.get("ref");
+
     // Store box config in localStorage for checkout
     localStorage.setItem(
       "aura_box_config",
@@ -113,6 +116,7 @@ export default function BuildBoxPage() {
         size: boxSize,
         products: selectedProducts.map((p) => p.id),
         price: config.price,
+        dealerCode: refCode || undefined,
       })
     );
     router.push("/checkout");
