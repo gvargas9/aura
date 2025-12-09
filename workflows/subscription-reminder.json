@@ -1,0 +1,243 @@
+{
+  "name": "Aura - Subscription Meal Selection Reminder",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * *"
+            }
+          ]
+        }
+      },
+      "id": "daily-trigger",
+      "name": "Daily at 9 AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "aura_subscriptions",
+        "returnAll": true,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "status",
+              "keyValue": "active"
+            }
+          ]
+        }
+      },
+      "id": "get-subscriptions",
+      "name": "Get Active Subscriptions",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [460, 300],
+      "credentials": {
+        "supabaseApi": {
+          "id": "supabase-creds",
+          "name": "Supabase API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Filter subscriptions due for reminder (7 days before next delivery)\nconst subscriptions = $input.all();\nconst today = new Date();\nconst reminderThreshold = 7; // days before delivery\n\nconst needsReminder = subscriptions.filter(sub => {\n  const nextDelivery = new Date(sub.json.next_delivery_date);\n  const daysUntilDelivery = Math.ceil((nextDelivery - today) / (1000 * 60 * 60 * 24));\n  return daysUntilDelivery === reminderThreshold;\n});\n\nreturn needsReminder.map(sub => ({\n  subscriptionId: sub.json.id,\n  userId: sub.json.user_id,\n  boxSize: sub.json.box_size,\n  nextDeliveryDate: sub.json.next_delivery_date,\n  currentBoxConfig: sub.json.box_config\n}));"
+      },
+      "id": "filter-due-reminders",
+      "name": "Filter Due Reminders",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "profiles",
+        "returnAll": false,
+        "limit": 1000,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "in",
+              "keyValue": "={{$json.map(s => s.userId).join(',')}}"
+            }
+          ]
+        }
+      },
+      "id": "get-user-details",
+      "name": "Get User Details",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [900, 300],
+      "credentials": {
+        "supabaseApi": {
+          "id": "supabase-creds",
+          "name": "Supabase API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "split-batches",
+      "name": "Process Each User",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "hello@aura.com",
+        "toEmail": "={{$json.email}}",
+        "subject": "Time to Choose Your Meals! Your Aura Box Ships in 7 Days",
+        "emailType": "html",
+        "message": "<h1>Hi {{$json.full_name}}!</h1><p>Your next Aura box ships in <strong>7 days</strong>.</p><p>Don't forget to customize your box with your favorite meals!</p><a href='{{$env.APP_URL}}/subscription/customize' style='display:inline-block;background:#10B981;color:white;padding:12px 24px;text-decoration:none;border-radius:8px;'>Choose My Meals</a><p>If you don't make a selection, we'll send your previous favorites.</p><p>- The Aura Team</p>"
+      },
+      "id": "send-reminder-email",
+      "name": "Send Reminder Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [1340, 300]
+    },
+    {
+      "parameters": {
+        "to": "={{$json.phone}}",
+        "message": "Aura: Your subscription box ships in 7 days! Tap to customize your meals: {{$env.APP_URL}}/subscription/customize"
+      },
+      "id": "send-sms-reminder",
+      "name": "Send SMS Reminder",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [1340, 480],
+      "credentials": {
+        "twilioApi": {
+          "id": "twilio-creds",
+          "name": "Twilio API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "tableId": "omni_interaction_log",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldName": "user_id",
+              "fieldValue": "={{$json.id}}"
+            },
+            {
+              "fieldName": "channel",
+              "fieldValue": "email"
+            },
+            {
+              "fieldName": "direction",
+              "fieldValue": "outbound"
+            },
+            {
+              "fieldName": "content",
+              "fieldValue": "Subscription reminder sent - 7 days before delivery"
+            }
+          ]
+        }
+      },
+      "id": "log-interaction",
+      "name": "Log Interaction",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [1560, 300],
+      "credentials": {
+        "supabaseApi": {
+          "id": "supabase-creds",
+          "name": "Supabase API"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Daily at 9 AM": {
+      "main": [
+        [
+          {
+            "node": "Get Active Subscriptions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Active Subscriptions": {
+      "main": [
+        [
+          {
+            "node": "Filter Due Reminders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Due Reminders": {
+      "main": [
+        [
+          {
+            "node": "Get User Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get User Details": {
+      "main": [
+        [
+          {
+            "node": "Process Each User",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Each User": {
+      "main": [
+        [
+          {
+            "node": "Send Reminder Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send SMS Reminder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Reminder Email": {
+      "main": [
+        [
+          {
+            "node": "Log Interaction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": ["aura", "subscriptions", "notifications"],
+  "triggerCount": 1
+}

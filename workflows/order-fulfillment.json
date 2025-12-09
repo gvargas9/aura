@@ -1,0 +1,203 @@
+{
+  "name": "Aura - Order Fulfillment",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "aura-new-order",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "New Order Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Validate order payload\nconst order = $input.first().json.body;\n\nif (!order.orderId || !order.items || !order.shippingAddress) {\n  throw new Error('Invalid order payload');\n}\n\nreturn {\n  orderId: order.orderId,\n  orderNumber: order.orderNumber,\n  userId: order.userId,\n  items: order.items,\n  shippingAddress: order.shippingAddress,\n  total: order.total,\n  isSubscription: order.isSubscription || false,\n  subscriptionId: order.subscriptionId || null\n};"
+      },
+      "id": "validate-order",
+      "name": "Validate Order",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.WMS_API_URL}}/orders",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "external_order_id",
+              "value": "={{$json.orderNumber}}"
+            },
+            {
+              "name": "items",
+              "value": "={{$json.items}}"
+            },
+            {
+              "name": "shipping_address",
+              "value": "={{$json.shippingAddress}}"
+            },
+            {
+              "name": "priority",
+              "value": "standard"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "send-to-wms",
+      "name": "Send to WMS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "aura_orders",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "keyValue": "={{$('Validate Order').item.json.orderId}}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldName": "status",
+              "fieldValue": "sent_to_wms"
+            },
+            {
+              "fieldName": "updated_at",
+              "fieldValue": "={{$now.toISO()}}"
+            }
+          ]
+        }
+      },
+      "id": "update-order-status",
+      "name": "Update Order Status",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [900, 300],
+      "credentials": {
+        "supabaseApi": {
+          "id": "supabase-creds",
+          "name": "Supabase API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "orders@aura.com",
+        "toEmail": "={{$('Validate Order').item.json.shippingAddress.email}}",
+        "subject": "Your Aura Order #{{$('Validate Order').item.json.orderNumber}} is Being Prepared!",
+        "emailType": "html",
+        "message": "<h1>Thanks for your order!</h1><p>We're preparing your Aura box and will ship it soon.</p><p>Order Number: {{$('Validate Order').item.json.orderNumber}}</p>"
+      },
+      "id": "send-confirmation-email",
+      "name": "Send Confirmation Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {},
+      "id": "error-handler",
+      "name": "On Error",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [680, 500]
+    },
+    {
+      "parameters": {
+        "channel": "#aura-errors",
+        "text": "Order fulfillment failed for order: {{$json.orderId}}\nError: {{$json.error.message}}"
+      },
+      "id": "notify-error",
+      "name": "Notify Team",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2,
+      "position": [900, 500]
+    }
+  ],
+  "connections": {
+    "New Order Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate Order",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Order": {
+      "main": [
+        [
+          {
+            "node": "Send to WMS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send to WMS": {
+      "main": [
+        [
+          {
+            "node": "Update Order Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Order Status": {
+      "main": [
+        [
+          {
+            "node": "Send Confirmation Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On Error": {
+      "main": [
+        [
+          {
+            "node": "Notify Team",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": ["aura", "orders", "fulfillment"],
+  "triggerCount": 1
+}
