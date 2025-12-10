@@ -4,74 +4,157 @@
 
 :root {
   --foreground-rgb: 15, 23, 42;
-  --background-start-rgb: 255, 255, 255;
-  --background-end-rgb: 236, 253, 245;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 6, 78, 59;
-    --background-end-rgb: 15, 23, 42;
-  }
+  --background-rgb: 255, 255, 255;
+  --aura-glow: 16, 185, 129;
 }
 
 body {
   color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  background: rgb(var(--background-rgb));
   min-height: 100vh;
+  font-feature-settings: "rlig" 1, "calt" 1;
 }
 
+/* Smooth scrolling */
 @layer base {
   html {
     scroll-behavior: smooth;
   }
+
+  /* Better focus states */
+  :focus-visible {
+    @apply outline-none ring-2 ring-aura-primary ring-offset-2;
+  }
+
+  /* Selection color */
+  ::selection {
+    @apply bg-aura-primary/20 text-aura-dark;
+  }
 }
 
 @layer components {
+  /* Enhanced buttons with micro-interactions */
   .btn-primary {
-    @apply bg-aura-primary hover:bg-aura-secondary text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg;
+    @apply relative bg-aura-primary hover:bg-aura-secondary text-white font-semibold py-2.5 px-5 rounded-xl
+           transition-all duration-300 shadow-lg shadow-aura-primary/25 hover:shadow-xl hover:shadow-aura-primary/30
+           hover:-translate-y-0.5 active:translate-y-0 active:shadow-md;
   }
 
   .btn-secondary {
-    @apply bg-white hover:bg-gray-50 text-aura-primary border-2 border-aura-primary font-semibold py-2 px-4 rounded-lg transition-all duration-200;
+    @apply bg-white hover:bg-gray-50 text-aura-primary border-2 border-aura-primary font-semibold py-2.5 px-5 rounded-xl
+           transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0;
   }
 
   .btn-accent {
-    @apply bg-aura-accent hover:bg-amber-600 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg;
+    @apply bg-gradient-to-r from-aura-accent to-amber-500 hover:from-amber-500 hover:to-aura-accent text-white font-semibold py-2.5 px-5 rounded-xl
+           transition-all duration-300 shadow-lg shadow-aura-accent/25 hover:shadow-xl hover:shadow-aura-accent/30
+           hover:-translate-y-0.5 active:translate-y-0;
   }
 
+  .btn-ghost {
+    @apply text-gray-600 hover:text-aura-primary hover:bg-aura-light/50 font-medium py-2 px-4 rounded-xl transition-all duration-200;
+  }
+
+  /* Glass morphism card */
   .card {
-    @apply bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 overflow-hidden;
+    @apply bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg shadow-gray-200/50 border border-gray-100/50
+           transition-all duration-300 overflow-hidden;
+  }
+
+  .card-hover {
+    @apply hover:shadow-xl hover:shadow-gray-200/50 hover:-translate-y-1;
   }
 
   .card-dark {
-    @apply bg-aura-dark rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 overflow-hidden text-white;
+    @apply bg-gradient-to-br from-aura-dark to-emerald-950 rounded-2xl shadow-xl overflow-hidden text-white;
   }
 
+  .card-gradient {
+    @apply bg-gradient-to-br from-aura-primary via-aura-secondary to-aura-dark rounded-2xl shadow-xl overflow-hidden text-white;
+  }
+
+  /* Enhanced inputs */
   .input-field {
-    @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-aura-primary focus:border-transparent outline-none transition-all duration-200;
+    @apply w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl
+           focus:bg-white focus:ring-2 focus:ring-aura-primary/20 focus:border-aura-primary
+           outline-none transition-all duration-200 placeholder:text-gray-400;
   }
 
+  /* Box builder slots */
   .box-slot {
-    @apply w-16 h-16 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center transition-all duration-200 hover:border-aura-primary hover:bg-aura-light cursor-pointer;
+    @apply w-16 h-16 rounded-2xl border-2 border-dashed border-gray-300 flex items-center justify-center
+           transition-all duration-300 hover:border-aura-primary hover:bg-aura-light/50 hover:scale-105 cursor-pointer;
   }
 
   .box-slot-filled {
-    @apply w-16 h-16 rounded-full border-2 border-aura-primary bg-aura-light flex items-center justify-center transition-all duration-200;
+    @apply w-16 h-16 rounded-2xl border-2 border-aura-primary bg-aura-light flex items-center justify-center
+           transition-all duration-200 shadow-md shadow-aura-primary/20;
   }
 
+  /* Typography */
   .section-title {
-    @apply text-3xl font-bold text-aura-dark mb-4;
+    @apply text-3xl lg:text-4xl font-bold text-gray-900 mb-4 tracking-tight;
   }
 
   .gradient-text {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-aura-primary to-aura-accent;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-aura-primary via-emerald-500 to-aura-accent;
+  }
+
+  .gradient-text-dark {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-aura-dark to-aura-secondary;
+  }
+
+  /* Product image containers */
+  .product-image {
+    @apply relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100;
+  }
+
+  .product-image img {
+    @apply transition-transform duration-500 ease-out;
+  }
+
+  .product-image:hover img {
+    @apply scale-105;
+  }
+
+  /* Badge styles */
+  .badge {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold tracking-wide;
+  }
+
+  .badge-primary {
+    @apply bg-aura-primary/10 text-aura-primary;
+  }
+
+  .badge-accent {
+    @apply bg-aura-accent/10 text-aura-accent;
+  }
+
+  .badge-success {
+    @apply bg-green-100 text-green-700;
+  }
+
+  /* Stats display */
+  .stat-card {
+    @apply relative overflow-hidden bg-white rounded-2xl p-6 border border-gray-100 transition-all duration-300 hover:shadow-lg;
+  }
+
+  .stat-card::before {
+    content: '';
+    @apply absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 bg-gradient-to-br from-aura-primary/10 to-transparent rounded-full;
+  }
+
+  /* Navigation pills */
+  .nav-pill {
+    @apply px-4 py-2 rounded-full text-sm font-medium transition-all duration-200;
+  }
+
+  .nav-pill-active {
+    @apply bg-aura-primary text-white shadow-md shadow-aura-primary/25;
+  }
+
+  .nav-pill-inactive {
+    @apply text-gray-600 hover:text-aura-primary hover:bg-aura-light/50;
   }
 }
 
@@ -80,16 +163,91 @@ body {
     text-wrap: balance;
   }
 
+  /* Animations */
   .animate-float {
-    animation: float 3s ease-in-out infinite;
+    animation: float 4s ease-in-out infinite;
+  }
+
+  .animate-pulse-slow {
+    animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  .animate-shimmer {
+    animation: shimmer 2s linear infinite;
+    background-size: 200% 100%;
+  }
+
+  .animate-bounce-soft {
+    animation: bounce-soft 2s ease-in-out infinite;
+  }
+
+  .animate-glow {
+    animation: glow 2s ease-in-out infinite alternate;
   }
 
   @keyframes float {
     0%, 100% {
+      transform: translateY(0) rotate(0deg);
+    }
+    50% {
+      transform: translateY(-15px) rotate(1deg);
+    }
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+
+  @keyframes bounce-soft {
+    0%, 100% {
       transform: translateY(0);
     }
     50% {
-      transform: translateY(-10px);
+      transform: translateY(-5px);
     }
+  }
+
+  @keyframes glow {
+    from {
+      box-shadow: 0 0 20px rgba(var(--aura-glow), 0.3);
+    }
+    to {
+      box-shadow: 0 0 40px rgba(var(--aura-glow), 0.6);
+    }
+  }
+
+  /* Gradient backgrounds */
+  .bg-mesh {
+    background-color: #fff;
+    background-image:
+      radial-gradient(at 40% 20%, rgba(16, 185, 129, 0.1) 0px, transparent 50%),
+      radial-gradient(at 80% 0%, rgba(245, 158, 11, 0.1) 0px, transparent 50%),
+      radial-gradient(at 0% 50%, rgba(16, 185, 129, 0.08) 0px, transparent 50%),
+      radial-gradient(at 80% 50%, rgba(245, 158, 11, 0.05) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, rgba(16, 185, 129, 0.1) 0px, transparent 50%);
+  }
+
+  .bg-dots {
+    background-image: radial-gradient(rgba(16, 185, 129, 0.15) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+
+  /* Text shadow for hero sections */
+  .text-shadow {
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Glassmorphism */
+  .glass {
+    @apply bg-white/70 backdrop-blur-xl border border-white/20;
+  }
+
+  .glass-dark {
+    @apply bg-gray-900/70 backdrop-blur-xl border border-white/10;
   }
 }
