@@ -54,6 +54,7 @@ export interface Database {
           organization_id?: string | null;
           updated_at?: string;
         };
+        Relationships: [];
       };
       organizations: {
         Row: {
@@ -96,6 +97,7 @@ export interface Database {
           address?: Json | null;
           updated_at?: string;
         };
+        Relationships: [];
       };
       aura_products: {
         Row: {
@@ -162,6 +164,7 @@ export interface Database {
           is_active?: boolean;
           updated_at?: string;
         };
+        Relationships: [];
       };
       aura_subscriptions: {
         Row: {
@@ -200,10 +203,12 @@ export interface Database {
           delivery_frequency_days?: number;
           updated_at?: string;
         };
+        Relationships: [];
       };
       aura_orders: {
         Row: {
           id: string;
+          order_number: string | null;
           user_id: string;
           subscription_id: string | null;
           organization_id: string | null;
@@ -225,6 +230,7 @@ export interface Database {
         };
         Insert: {
           id?: string;
+          order_number?: string | null;
           user_id: string;
           subscription_id?: string | null;
           organization_id?: string | null;
@@ -245,6 +251,7 @@ export interface Database {
           updated_at?: string;
         };
         Update: {
+          order_number?: string | null;
           subscription_id?: string | null;
           organization_id?: string | null;
           dealer_attribution_id?: string | null;
@@ -262,6 +269,7 @@ export interface Database {
           notes?: string | null;
           updated_at?: string;
         };
+        Relationships: [];
       };
       dealers: {
         Row: {
@@ -296,6 +304,7 @@ export interface Database {
           is_active?: boolean;
           updated_at?: string;
         };
+        Relationships: [];
       };
       inventory: {
         Row: {
@@ -331,6 +340,7 @@ export interface Database {
           last_restock_date?: string | null;
           updated_at?: string;
         };
+        Relationships: [];
       };
       gift_cards: {
         Row: {
@@ -364,6 +374,7 @@ export interface Database {
           expires_at?: string | null;
           updated_at?: string;
         };
+        Relationships: [];
       };
       omni_interaction_log: {
         Row: {
@@ -391,6 +402,7 @@ export interface Database {
           content?: string;
           metadata?: Json | null;
         };
+        Relationships: [];
       };
       vending_machines: {
         Row: {
@@ -423,6 +435,7 @@ export interface Database {
           last_checkin?: string | null;
           updated_at?: string;
         };
+        Relationships: [];
       };
       vending_machine_inventory: {
         Row: {
@@ -451,6 +464,7 @@ export interface Database {
           max_quantity?: number;
           updated_at?: string;
         };
+        Relationships: [];
       };
     };
     Views: {

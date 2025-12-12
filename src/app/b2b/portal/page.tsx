@@ -57,42 +57,44 @@ export default function DealerPortalPage() {
         .from("dealers")
         .select("*, organizations(*)")
         .eq("profile_id", user.id)
-        .single();
+        .maybeSingle();
 
       if (dealerData) {
-        setDealer(dealerData);
+        setDealer(dealerData as unknown as Dealer);
+        const dealerId = (dealerData as { id: string }).id;
 
         // Get orders attributed to this dealer
         const { data: orders } = await supabase
           .from("aura_orders")
           .select("*")
-          .eq("dealer_attribution_id", dealerData.id)
+          .eq("dealer_attribution_id", dealerId)
           .order("created_at", { ascending: false })
           .limit(10);
 
         if (orders) {
-          setRecentOrders(orders);
+          setRecentOrders(orders as Order[]);
         }
 
         // Calculate stats
         const { count: totalOrders } = await supabase
           .from("aura_orders")
           .select("*", { count: "exact", head: true })
-          .eq("dealer_attribution_id", dealerData.id);
+          .eq("dealer_attribution_id", dealerId);
 
         const { data: revenueData } = await supabase
           .from("aura_orders")
           .select("total")
-          .eq("dealer_attribution_id", dealerData.id);
+          .eq("dealer_attribution_id", dealerId);
 
         const totalRevenue =
-          revenueData?.reduce((sum, o) => sum + o.total, 0) || 0;
+          (revenueData as { total: number }[] | null)?.reduce((sum, o) => sum + o.total, 0) || 0;
 
+        const dealerInfo = dealerData as { commission_earned: number; commission_pending?: number };
         setStats({
           totalOrders: totalOrders || 0,
           totalRevenue,
-          commissionEarned: dealerData.commission_earned,
-          commissionPending: dealerData.commission_pending || 0,
+          commissionEarned: dealerInfo.commission_earned,
+          commissionPending: dealerInfo.commission_pending || 0,
           activeReferrals: totalOrders || 0,
           conversionRate: 0.12, // Would calculate from actual data
         });

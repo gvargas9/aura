@@ -203,9 +203,13 @@ async function handleSubscriptionCancelled(subscription: Stripe.Subscription) {
 async function handleInvoicePaid(invoice: Stripe.Invoice) {
   // For recurring payments, create new order
   if (invoice.billing_reason === "subscription_cycle") {
-    const subscription = await stripe.subscriptions.retrieve(
-      invoice.subscription as string
-    );
+    const subscriptionId = typeof invoice.parent?.subscription_details?.subscription === "string"
+      ? invoice.parent.subscription_details.subscription
+      : (invoice as unknown as { subscription: string | null }).subscription;
+
+    if (!subscriptionId) return;
+
+    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
 
     const { userId, boxSize } = subscription.metadata || {};
     if (!userId) return;
@@ -222,14 +226,15 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
     const orderNumber = `AUR-${new Date().toISOString().slice(0, 10).replace(/-/g, "")}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
 
     // Create recurring order
+    const paymentIntentId = (invoice as unknown as { payment_intent: string | null }).payment_intent;
     await supabaseAdmin.from("aura_orders").insert({
       order_number: orderNumber,
       user_id: userId,
       subscription_id: sub.id,
-      stripe_payment_intent_id: invoice.payment_intent as string,
+      stripe_payment_intent_id: paymentIntentId,
       status: "processing",
-      subtotal: invoice.amount_paid / 100,
-      total: invoice.amount_paid / 100,
+      subtotal: (invoice.amount_paid ?? 0) / 100,
+      total: (invoice.amount_paid ?? 0) / 100,
       items: sub.box_config.map((id: string) => ({
         productId: id,
         quantity: 1,

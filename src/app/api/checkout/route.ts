@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Check for dealer attribution
-    let dealerId = null;
+    let dealerId: string | null = null;
     if (dealerCode) {
       const { data: dealer } = await supabase
         .from("dealers")
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (dealer) {
-        dealerId = dealer.id;
+        dealerId = (dealer as { id: string }).id;
       }
     }
 

@@ -40,7 +40,7 @@ interface DashboardStats {
 
 interface RecentOrder {
   id: string;
-  order_number: string;
+  order_number: string | null;
   status: string;
   total: number;
   created_at: string;
@@ -84,9 +84,9 @@ export default function AdminDashboardPage() {
         const { data: revenueData } = await supabase
           .from("aura_orders")
           .select("total")
-          .neq("status", "cancelled");
+          .neq("status", "cancelled" as const);
 
-        const totalRevenue = revenueData?.reduce((sum, o) => sum + o.total, 0) || 0;
+        const totalRevenue = (revenueData as { total: number }[] | null)?.reduce((sum, o) => sum + o.total, 0) || 0;
 
         // Get customer count
         const { count: totalCustomers } = await supabase

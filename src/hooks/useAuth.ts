@@ -103,7 +103,9 @@ export function useAuth() {
     async (updates: Partial<Profile>) => {
       if (!state.user) return null;
 
-      const { data, error } = await supabase
+      // Create fresh client to avoid type inference issues from previous queries
+      const freshClient = createClient();
+      const { data, error } = await freshClient
         .from("profiles")
         .update(updates)
         .eq("id", state.user.id)
@@ -117,9 +119,9 @@ export function useAuth() {
         profile: data as Profile,
       }));
 
-      return data;
+      return data as Profile;
     },
-    [supabase, state.user]
+    [state.user]
   );
 
   return {

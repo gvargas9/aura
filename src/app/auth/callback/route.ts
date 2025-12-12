@@ -1,5 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import type { Database } from "@/types/database";
+
+type ProfileInsert = Database["public"]["Tables"]["profiles"]["Insert"];
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
@@ -18,21 +21,24 @@ export async function GET(request: Request) {
       } = await supabase.auth.getUser();
 
       if (user) {
-        const { data: profile } = await supabase
+        // Check if profile exists
+        const { count } = await supabase
           .from("profiles")
-          .select("id")
-          .eq("id", user.id)
-          .single();
+          .select("*", { count: "exact", head: true })
+          .eq("id", user.id);
 
-        if (!profile) {
+        if (!count || count === 0) {
           // Create profile for new user
-          await supabase.from("profiles").insert({
+          const newProfile: ProfileInsert = {
             id: user.id,
             email: user.email!,
-            full_name: user.user_metadata.full_name || user.user_metadata.name,
-            avatar_url: user.user_metadata.avatar_url,
+            full_name: user.user_metadata.full_name || user.user_metadata.name || null,
+            avatar_url: user.user_metadata.avatar_url || null,
             role: "customer",
-          });
+          };
+          // Use type assertion to work around Supabase type inference issue with chained queries
+          const insertClient = await createClient();
+          await (insertClient.from("profiles") as unknown as { insert: (data: ProfileInsert) => Promise<unknown> }).insert(newProfile);
         }
       }
 

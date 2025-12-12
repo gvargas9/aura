@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { getStripe } from "@/lib/stripe/client";
 import { Header, Footer, Button, Input, Card } from "@/components/ui";
 import { useAuth } from "@/hooks";
 import { BOX_CONFIGS } from "@/types";
@@ -98,12 +97,14 @@ export default function CheckoutPage() {
         throw new Error(data.error || "Checkout failed");
       }
 
-      // Redirect to Stripe
+      // Redirect to Stripe Checkout
       if (data.url) {
         window.location.href = data.url;
+      } else if (data.sessionId) {
+        // Fallback: construct Stripe checkout URL directly
+        window.location.href = `https://checkout.stripe.com/c/pay/${data.sessionId}`;
       } else {
-        const stripe = await getStripe();
-        await stripe?.redirectToCheckout({ sessionId: data.sessionId });
+        throw new Error("No checkout URL received");
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Checkout failed");
