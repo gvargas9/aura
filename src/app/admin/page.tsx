@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks";
+import { AdminLayout } from "@/components/admin";
 import { Card, Button } from "@/components/ui";
 import { formatCurrency } from "@/lib/utils";
 import {
@@ -11,17 +11,18 @@ import {
   DollarSign,
   Package,
   Users,
-  TrendingUp,
   ShoppingCart,
   AlertTriangle,
   RefreshCcw,
   ArrowUpRight,
-  ArrowDownRight,
   Loader2,
   Settings,
   Box,
   Truck,
   CreditCard,
+  Plus,
+  Download,
+  FileText,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -47,26 +48,12 @@ interface RecentOrder {
 }
 
 export default function AdminDashboardPage() {
-  const router = useRouter();
-  const { profile, isLoading: authLoading, isAuthenticated } = useAuth();
+  const { profile, isLoading: authLoading } = useAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const supabase = createClient();
-
-  // Check admin access
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      router.push("/auth/login?redirectTo=/admin");
-      return;
-    }
-
-    if (!authLoading && profile?.role !== "admin") {
-      router.push("/");
-      return;
-    }
-  }, [authLoading, isAuthenticated, profile, router]);
 
   // Fetch dashboard data
   useEffect(() => {
@@ -145,69 +132,51 @@ export default function AdminDashboardPage() {
     }
   }, [profile, supabase]);
 
-  if (authLoading || isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Loader2 className="w-8 h-8 animate-spin text-aura-primary" />
-      </div>
-    );
-  }
-
-  if (!stats) {
-    return null;
-  }
-
   const quickLinks = [
     { label: "Products", href: "/admin/products", icon: Box },
     { label: "Orders", href: "/admin/orders", icon: Package },
     { label: "Customers", href: "/admin/customers", icon: Users },
     { label: "Subscriptions", href: "/admin/subscriptions", icon: RefreshCcw },
     { label: "Inventory", href: "/admin/inventory", icon: Truck },
-    { label: "Payments", href: "/admin/payments", icon: CreditCard },
     { label: "Dealers", href: "/admin/dealers", icon: BarChart3 },
     { label: "Settings", href: "/admin/settings", icon: Settings },
   ];
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Admin Header */}
-      <header className="bg-aura-dark text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link href="/" className="text-2xl font-bold text-aura-primary">
-                Aura
-              </Link>
-              <span className="px-2 py-0.5 bg-aura-primary/20 text-aura-primary text-xs rounded">
-                Admin
-              </span>
-            </div>
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-300">
-                {profile?.full_name || profile?.email}
-              </span>
-              <Link href="/" className="text-sm text-gray-400 hover:text-white">
-                View Store
-              </Link>
-            </div>
-          </div>
+  // Show loading in AdminLayout (which handles auth)
+  if (authLoading) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="w-8 h-8 animate-spin text-aura-primary" />
         </div>
-      </header>
+      </AdminLayout>
+    );
+  }
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  return (
+    <AdminLayout>
+      <div className="space-y-6">
         {/* Page Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600">
-            Overview of your Aura platform performance
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+            <p className="text-gray-500">Overview of your Aura platform performance</p>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" leftIcon={<Download className="w-4 h-4" />}>
+              Export Report
+            </Button>
+            <Link href="/admin/products">
+              <Button leftIcon={<Plus className="w-4 h-4" />}>Add Product</Button>
+            </Link>
+          </div>
         </div>
 
         {/* Alerts */}
-        {(stats.pendingOrders > 0 || stats.lowStockProducts > 0) && (
-          <div className="mb-8 space-y-3">
+        {stats && (stats.pendingOrders > 0 || stats.lowStockProducts > 0) && (
+          <div className="space-y-3">
             {stats.pendingOrders > 0 && (
-              <div className="flex items-center gap-3 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+              <div className="flex items-center gap-3 p-4 bg-amber-50 border border-amber-200 rounded-xl">
                 <AlertTriangle className="w-5 h-5 text-amber-500" />
                 <span className="text-amber-800">
                   {stats.pendingOrders} orders pending processing
@@ -221,7 +190,7 @@ export default function AdminDashboardPage() {
               </div>
             )}
             {stats.lowStockProducts > 0 && (
-              <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-xl">
                 <AlertTriangle className="w-5 h-5 text-red-500" />
                 <span className="text-red-800">
                   {stats.lowStockProducts} products low on stock
@@ -238,94 +207,107 @@ export default function AdminDashboardPage() {
         )}
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <Card padding="md">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Total Revenue</p>
-                <p className="text-2xl font-bold mt-1">
-                  {formatCurrency(stats.totalRevenue)}
-                </p>
+        {isLoading ? (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {[...Array(4)].map((_, i) => (
+              <Card key={i} padding="md">
+                <div className="animate-pulse">
+                  <div className="h-4 bg-gray-200 rounded w-24 mb-2"></div>
+                  <div className="h-8 bg-gray-200 rounded w-20"></div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        ) : stats ? (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card padding="md">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm text-gray-500">Total Revenue</p>
+                  <p className="text-2xl font-bold mt-1">
+                    {formatCurrency(stats.totalRevenue)}
+                  </p>
+                </div>
+                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                  <DollarSign className="w-5 h-5 text-green-600" />
+                </div>
               </div>
-              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                <DollarSign className="w-5 h-5 text-green-600" />
+              <div className="flex items-center gap-1 mt-2 text-sm">
+                <ArrowUpRight className="w-4 h-4 text-green-500" />
+                <span className="text-green-600 font-medium">
+                  +{stats.revenueChange}%
+                </span>
+                <span className="text-gray-500">vs last month</span>
               </div>
-            </div>
-            <div className="flex items-center gap-1 mt-2 text-sm">
-              <ArrowUpRight className="w-4 h-4 text-green-500" />
-              <span className="text-green-600 font-medium">
-                +{stats.revenueChange}%
-              </span>
-              <span className="text-gray-500">vs last month</span>
-            </div>
-          </Card>
+            </Card>
 
-          <Card padding="md">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Total Orders</p>
-                <p className="text-2xl font-bold mt-1">{stats.totalOrders}</p>
+            <Card padding="md">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm text-gray-500">Total Orders</p>
+                  <p className="text-2xl font-bold mt-1">{stats.totalOrders}</p>
+                </div>
+                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <ShoppingCart className="w-5 h-5 text-blue-600" />
+                </div>
               </div>
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                <ShoppingCart className="w-5 h-5 text-blue-600" />
+              <div className="flex items-center gap-1 mt-2 text-sm">
+                <ArrowUpRight className="w-4 h-4 text-green-500" />
+                <span className="text-green-600 font-medium">
+                  +{stats.ordersChange}%
+                </span>
+                <span className="text-gray-500">vs last month</span>
               </div>
-            </div>
-            <div className="flex items-center gap-1 mt-2 text-sm">
-              <ArrowUpRight className="w-4 h-4 text-green-500" />
-              <span className="text-green-600 font-medium">
-                +{stats.ordersChange}%
-              </span>
-              <span className="text-gray-500">vs last month</span>
-            </div>
-          </Card>
+            </Card>
 
-          <Card padding="md">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Customers</p>
-                <p className="text-2xl font-bold mt-1">{stats.totalCustomers}</p>
+            <Card padding="md">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm text-gray-500">Customers</p>
+                  <p className="text-2xl font-bold mt-1">{stats.totalCustomers}</p>
+                </div>
+                <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <Users className="w-5 h-5 text-purple-600" />
+                </div>
               </div>
-              <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                <Users className="w-5 h-5 text-purple-600" />
+              <div className="flex items-center gap-1 mt-2 text-sm">
+                <ArrowUpRight className="w-4 h-4 text-green-500" />
+                <span className="text-green-600 font-medium">
+                  +{stats.customersChange}%
+                </span>
+                <span className="text-gray-500">vs last month</span>
               </div>
-            </div>
-            <div className="flex items-center gap-1 mt-2 text-sm">
-              <ArrowUpRight className="w-4 h-4 text-green-500" />
-              <span className="text-green-600 font-medium">
-                +{stats.customersChange}%
-              </span>
-              <span className="text-gray-500">vs last month</span>
-            </div>
-          </Card>
+            </Card>
 
-          <Card padding="md">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Active Subscriptions</p>
-                <p className="text-2xl font-bold mt-1">
-                  {stats.activeSubscriptions}
-                </p>
+            <Card padding="md">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm text-gray-500">Active Subscriptions</p>
+                  <p className="text-2xl font-bold mt-1">
+                    {stats.activeSubscriptions}
+                  </p>
+                </div>
+                <div className="w-10 h-10 bg-aura-primary/10 rounded-lg flex items-center justify-center">
+                  <RefreshCcw className="w-5 h-5 text-aura-primary" />
+                </div>
               </div>
-              <div className="w-10 h-10 bg-aura-primary/10 rounded-lg flex items-center justify-center">
-                <RefreshCcw className="w-5 h-5 text-aura-primary" />
+              <div className="flex items-center gap-1 mt-2 text-sm">
+                <ArrowUpRight className="w-4 h-4 text-green-500" />
+                <span className="text-green-600 font-medium">
+                  +{stats.subscriptionsChange}%
+                </span>
+                <span className="text-gray-500">vs last month</span>
               </div>
-            </div>
-            <div className="flex items-center gap-1 mt-2 text-sm">
-              <ArrowUpRight className="w-4 h-4 text-green-500" />
-              <span className="text-green-600 font-medium">
-                +{stats.subscriptionsChange}%
-              </span>
-              <span className="text-gray-500">vs last month</span>
-            </div>
-          </Card>
-        </div>
+            </Card>
+          </div>
+        ) : null}
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid lg:grid-cols-3 gap-6">
           {/* Recent Orders */}
           <div className="lg:col-span-2">
             <Card padding="lg">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold">Recent Orders</h2>
+                <h2 className="text-lg font-semibold">Recent Orders</h2>
                 <Link href="/admin/orders">
                   <Button variant="ghost" size="sm">
                     View All
@@ -333,7 +315,16 @@ export default function AdminDashboardPage() {
                 </Link>
               </div>
 
-              {recentOrders.length > 0 ? (
+              {isLoading ? (
+                <div className="space-y-3">
+                  {[...Array(5)].map((_, i) => (
+                    <div key={i} className="animate-pulse flex items-center justify-between py-3">
+                      <div className="h-4 bg-gray-200 rounded w-24"></div>
+                      <div className="h-4 bg-gray-200 rounded w-16"></div>
+                    </div>
+                  ))}
+                </div>
+              ) : recentOrders.length > 0 ? (
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
@@ -357,7 +348,7 @@ export default function AdminDashboardPage() {
                               href={`/admin/orders/${order.id}`}
                               className="font-medium text-aura-primary hover:underline"
                             >
-                              {order.order_number || order.id.slice(0, 8)}
+                              #{order.order_number || order.id.slice(0, 8)}
                             </Link>
                           </td>
                           <td className="py-3">
@@ -392,15 +383,15 @@ export default function AdminDashboardPage() {
           </div>
 
           {/* Quick Links */}
-          <div>
+          <div className="space-y-6">
             <Card padding="lg">
-              <h2 className="text-xl font-semibold mb-4">Quick Links</h2>
-              <div className="grid grid-cols-2 gap-3">
+              <h2 className="text-lg font-semibold mb-4">Quick Links</h2>
+              <div className="grid grid-cols-2 gap-2">
                 {quickLinks.map((link) => (
                   <Link
                     key={link.href}
                     href={link.href}
-                    className="flex items-center gap-2 p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="flex items-center gap-2 p-3 rounded-xl hover:bg-gray-50 transition-colors"
                   >
                     <link.icon className="w-5 h-5 text-gray-400" />
                     <span className="text-sm font-medium">{link.label}</span>
@@ -410,23 +401,25 @@ export default function AdminDashboardPage() {
             </Card>
 
             {/* Quick Actions */}
-            <Card padding="lg" className="mt-6">
-              <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
-              <div className="space-y-3">
-                <Button className="w-full" variant="primary">
-                  Add New Product
-                </Button>
-                <Button className="w-full" variant="secondary">
+            <Card padding="lg">
+              <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
+              <div className="space-y-2">
+                <Link href="/admin/products" className="block">
+                  <Button className="w-full" variant="primary" leftIcon={<Plus className="w-4 h-4" />}>
+                    Add New Product
+                  </Button>
+                </Link>
+                <Button className="w-full" variant="secondary" leftIcon={<Download className="w-4 h-4" />}>
                   Export Orders
                 </Button>
-                <Button className="w-full" variant="outline">
+                <Button className="w-full" variant="outline" leftIcon={<FileText className="w-4 h-4" />}>
                   View Reports
                 </Button>
               </div>
             </Card>
           </div>
         </div>
-      </main>
-    </div>
+      </div>
+    </AdminLayout>
   );
 }

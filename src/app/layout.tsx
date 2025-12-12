@@ -1,11 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-});
 
 export const metadata: Metadata = {
   title: "Aura | Premium Shelf-Stable Food Subscription",
@@ -35,8 +29,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={inter.variable} data-scroll-behavior="smooth">
-      <body className="antialiased min-h-screen bg-gradient-to-b from-white to-aura-light">
+    <html lang="en" data-scroll-behavior="smooth">
+      <body className="font-sans antialiased min-h-screen bg-gradient-to-b from-white to-aura-light">
         {children}
       </body>
     </html>
