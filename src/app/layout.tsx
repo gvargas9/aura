@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { AuraChatWidget } from "@/components/ui/AuraChatWidget";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -38,6 +39,7 @@ export default function RootLayout({
     <html lang="en" className={inter.variable} data-scroll-behavior="smooth">
       <body className="antialiased min-h-screen bg-gradient-to-b from-white to-aura-light">
         {children}
+        <AuraChatWidget />
       </body>
     </html>
   );

@@ -17,3 +17,4 @@ export {
   TableSkeleton,
   BoxBuilderSkeleton,
 } from "./SkeletonLoader";
+export { AuraChatWidget } from "./AuraChatWidget";
