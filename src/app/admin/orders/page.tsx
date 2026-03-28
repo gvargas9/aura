@@ -278,9 +278,13 @@ export default function AdminOrdersPage() {
                       onClick={() => toggleExpand(order)}
                     >
                       <td className="py-3 px-4">
-                        <span className="font-medium text-aura-primary text-sm">
+                        <Link
+                          href={`/admin/orders/${order.id}`}
+                          className="font-medium text-aura-primary text-sm hover:underline"
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           {order.order_number || order.id.slice(0, 8)}
-                        </span>
+                        </Link>
                       </td>
                       <td className="py-3 px-4">
                         <div>

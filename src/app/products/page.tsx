@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Header, Footer } from "@/components/ui";
 import { ProductGridSkeleton } from "@/components/ui/SkeletonLoader";
 import Image from "next/image";
+import Link from "next/link";
 import {
   Search,
   SlidersHorizontal,
@@ -79,6 +80,7 @@ function CatalogProductCard({
 
   if (viewMode === "list") {
     return (
+      <Link href={`/products/${product.id}`}>
       <article className="group bg-white rounded-2xl border border-gray-100 hover:border-aura-primary/20 hover:shadow-lg transition-all duration-300 overflow-hidden flex">
         {/* Image */}
         <div className="relative w-48 flex-shrink-0 bg-gradient-to-br from-gray-50 to-gray-100">
@@ -152,10 +154,12 @@ function CatalogProductCard({
           </div>
         </div>
       </article>
+      </Link>
     );
   }
 
   return (
+    <Link href={`/products/${product.id}`}>
     <article
       className="group bg-white rounded-2xl border border-gray-100 hover:border-aura-primary/20 overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
       onMouseEnter={() => setIsHovered(true)}
@@ -323,6 +327,7 @@ function CatalogProductCard({
         )}
       </div>
     </article>
+    </Link>
   );
 }
 

@@ -352,6 +352,14 @@ export default function OrdersPage() {
                                 </p>
                               </div>
                             )}
+
+                            <a
+                              href={`/orders/${order.id}`}
+                              className="inline-flex items-center gap-1.5 text-sm font-medium text-aura-primary hover:underline mt-2"
+                            >
+                              View Full Details
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </a>
                           </div>
                         </div>
                       </div>
