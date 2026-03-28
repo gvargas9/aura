@@ -25,14 +25,24 @@ export function useAuth() {
   const supabase = createClient();
 
   const fetchProfile = useCallback(
-    async (userId: string) => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", userId)
-        .single();
+    async (userId: string): Promise<Profile | null> => {
+      try {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", userId)
+          .single();
 
-      return data as Profile | null;
+        if (error) {
+          console.error("[useAuth] Profile fetch error:", error.message);
+          return null;
+        }
+
+        return data as Profile | null;
+      } catch (err) {
+        console.error("[useAuth] Profile fetch exception:", err);
+        return null;
+      }
     },
     [supabase]
   );
