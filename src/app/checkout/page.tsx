@@ -25,6 +25,7 @@ import {
   X,
   Check,
   Sparkles,
+  Image as ImageIcon,
 } from "lucide-react";
 import Link from "next/link";
 import type { Product, Address } from "@/types";
@@ -69,7 +70,7 @@ const US_STATES = [
 ];
 
 const STEPS = [
-  { id: 1, label: "Review Order", icon: Package },
+  { id: 1, label: "Review", icon: Package },
   { id: 2, label: "Discounts", icon: Tag },
   { id: 3, label: "Shipping", icon: MapPin },
   { id: 4, label: "Payment", icon: CreditCard },
@@ -227,6 +228,12 @@ export default function CheckoutPage() {
   const taxRate = 0.0825;
   const tax = subtotalAfterDiscounts * taxRate;
   const total = subtotalAfterDiscounts + shipping + tax;
+  const totalSavings =
+    promoDiscount +
+    giftCardDiscount +
+    creditsDiscount +
+    (purchaseType === "subscription" ? config ? config.oneTimePrice - config.price : 0 : 0) +
+    (purchaseType === "subscription" ? 9.99 : 0);
 
   // Validate promo code
   const validatePromo = useCallback(async () => {
@@ -431,10 +438,8 @@ export default function CheckoutPage() {
       }
 
       if (data.invoiceCreated) {
-        // B2B invoice flow: redirect to success
         router.push(`/checkout/success?order_id=${data.orderId}&type=invoice`);
       } else if (data.zeroDollar) {
-        // Fully covered by credits/gift card
         router.push(`/checkout/success?order_id=${data.orderId}&type=${purchaseType}`);
       } else if (data.url) {
         window.location.href = data.url;
@@ -449,13 +454,26 @@ export default function CheckoutPage() {
 
   if (authLoading || isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-aura-primary" />
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-aura-primary mx-auto mb-3" />
+          <p className="text-sm text-gray-500">Loading your order...</p>
+        </div>
       </div>
     );
   }
 
   if (!boxConfig || !config) return null;
+
+  // Count duplicate products for display
+  const productCounts = products.reduce<Record<string, { product: Product; count: number }>>((acc, p) => {
+    if (acc[p.id]) {
+      acc[p.id].count += 1;
+    } else {
+      acc[p.id] = { product: p, count: 1 };
+    }
+    return acc;
+  }, {});
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
@@ -478,7 +496,7 @@ export default function CheckoutPage() {
           {/* Step Indicator */}
           <nav className="mb-8" aria-label="Checkout steps">
             <ol className="flex items-center gap-2 sm:gap-4">
-              {STEPS.map((step) => {
+              {STEPS.map((step, index) => {
                 const StepIcon = step.icon;
                 const isActive = currentStep === step.id;
                 const isCompleted = currentStep > step.id;
@@ -508,6 +526,7 @@ export default function CheckoutPage() {
                       </div>
                       <span className="hidden sm:block text-sm font-medium">{step.label}</span>
                     </button>
+                    {/* Connector line between steps */}
                   </li>
                 );
               })}
@@ -518,6 +537,9 @@ export default function CheckoutPage() {
             <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-600 rounded-lg flex items-center gap-2">
               <X className="w-5 h-5 flex-shrink-0" />
               {error}
+              <button onClick={() => setError(null)} className="ml-auto p-1 hover:bg-red-100 rounded" aria-label="Dismiss error">
+                <X className="w-4 h-4" />
+              </button>
             </div>
           )}
 
@@ -578,39 +600,57 @@ export default function CheckoutPage() {
                     <div className="w-16 h-16 bg-aura-primary rounded-lg flex items-center justify-center flex-shrink-0">
                       <Package className="w-8 h-8 text-white" />
                     </div>
-                    <div>
+                    <div className="flex-1">
                       <h3 className="font-semibold capitalize">
                         {boxConfig.size} Box {purchaseType === "subscription" ? "Subscription" : ""}
                       </h3>
                       <p className="text-gray-600 text-sm">
                         {config.slots} premium meals {purchaseType === "subscription" ? "delivered monthly" : ""}
                       </p>
-                      <p className="text-aura-primary font-semibold mt-1">
+                    </div>
+                    <div className="text-right">
+                      <p className="text-aura-primary font-semibold text-lg">
                         {formatCurrency(basePrice)}
                         {purchaseType === "subscription" ? "/mo" : ""}
-                        {purchaseType !== "subscription" && (
-                          <span className="ml-2 text-gray-400 line-through text-sm">
-                            {formatCurrency(config.compareAtPrice)}
-                          </span>
-                        )}
                       </p>
+                      {purchaseType !== "subscription" && config.compareAtPrice > basePrice && (
+                        <p className="text-gray-400 line-through text-sm">
+                          {formatCurrency(config.compareAtPrice)}
+                        </p>
+                      )}
                     </div>
                   </div>
 
-                  {/* Products List */}
+                  {/* Products List with images */}
                   <h3 className="font-medium mb-3">Selected Meals ({products.length})</h3>
-                  <div className="space-y-2 mb-6 max-h-64 overflow-y-auto">
-                    {products.map((product, index) => (
+                  <div className="space-y-2 mb-6 max-h-80 overflow-y-auto pr-1">
+                    {Object.values(productCounts).map(({ product, count }) => (
                       <div
-                        key={`${product.id}-${index}`}
-                        className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0"
+                        key={product.id}
+                        className="flex items-center gap-3 py-3 px-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors"
                       >
-                        <div className="flex items-center gap-3">
-                          <CheckCircle className="w-4 h-4 text-aura-primary flex-shrink-0" />
-                          <span className="text-sm">{product.name}</span>
+                        {/* Product Image */}
+                        <div className="w-12 h-12 rounded-lg bg-gray-100 flex-shrink-0 overflow-hidden">
+                          {product.image_url ? (
+                            <img
+                              src={product.image_url}
+                              alt={product.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <ImageIcon className="w-5 h-5 text-gray-300" />
+                            </div>
+                          )}
                         </div>
-                        <span className="text-sm text-gray-500">
-                          {formatCurrency(product.price)}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{product.name}</p>
+                          {count > 1 && (
+                            <p className="text-xs text-gray-500">Qty: {count}</p>
+                          )}
+                        </div>
+                        <span className="text-sm text-gray-600 font-medium flex-shrink-0">
+                          {formatCurrency(product.price * count)}
                         </span>
                       </div>
                     ))}
@@ -670,7 +710,8 @@ export default function CheckoutPage() {
               {/* Step 2: Promo & Gift Cards */}
               {currentStep === 2 && (
                 <Card padding="lg">
-                  <h2 className="text-xl font-semibold mb-6">Discounts & Gift Cards</h2>
+                  <h2 className="text-xl font-semibold mb-2">Discounts & Gift Cards</h2>
+                  <p className="text-sm text-gray-500 mb-6">Apply any promo codes, gift cards, or loyalty credits to your order.</p>
 
                   {/* Promo Code */}
                   <div className="mb-8">
@@ -768,7 +809,7 @@ export default function CheckoutPage() {
                     ) : (
                       <div className="flex gap-3">
                         <Input
-                          placeholder="Enter gift card code"
+                          placeholder="Enter gift card code (AURA-XXXX-XXXX-XXXX)"
                           value={giftCardCode}
                           onChange={(e) => setGiftCardCode(e.target.value.toUpperCase())}
                           error={giftCardValidation?.valid === false ? giftCardValidation.error : undefined}
@@ -784,6 +825,9 @@ export default function CheckoutPage() {
                         </Button>
                       </div>
                     )}
+                    <p className="text-xs text-gray-400 mt-2">
+                      <Link href="/gift-cards" className="text-aura-primary hover:underline">Buy a gift card</Link> for someone special
+                    </p>
                   </div>
 
                   {/* Loyalty Credits */}
@@ -819,7 +863,19 @@ export default function CheckoutPage() {
                             Use Max
                           </Button>
                         </div>
+                        {creditsToApply > 0 && (
+                          <p className="text-xs text-amber-600 mt-2">
+                            Applying {formatCurrency(creditsToApply)} in credits. Remaining after checkout: {formatCurrency(availableCredits - creditsToApply)}
+                          </p>
+                        )}
                       </div>
+                    </div>
+                  )}
+
+                  {/* No discounts available message */}
+                  {!promoValidation?.valid && !giftCardValidation?.valid && availableCredits <= 0 && (
+                    <div className="text-center py-4 text-sm text-gray-400">
+                      No active discounts applied. Enter a code above or continue to the next step.
                     </div>
                   )}
                 </Card>
@@ -920,10 +976,13 @@ export default function CheckoutPage() {
                       }`}>
                         <CreditCard className="w-5 h-5" />
                       </div>
-                      <div>
+                      <div className="flex-1">
                         <p className="font-medium">Pay with Card</p>
                         <p className="text-sm text-gray-500">Secure payment via Stripe</p>
                       </div>
+                      {paymentMethod === "card" && (
+                        <CheckCircle className="w-5 h-5 text-aura-primary flex-shrink-0" />
+                      )}
                     </button>
 
                     {/* Credits Only (if credits cover full amount) */}
@@ -941,12 +1000,15 @@ export default function CheckoutPage() {
                         }`}>
                           <Wallet className="w-5 h-5" />
                         </div>
-                        <div>
+                        <div className="flex-1">
                           <p className="font-medium">Pay with Credits</p>
                           <p className="text-sm text-gray-500">
                             Your credits and gift card balance cover this order
                           </p>
                         </div>
+                        {paymentMethod === "credits" && (
+                          <CheckCircle className="w-5 h-5 text-aura-primary flex-shrink-0" />
+                        )}
                       </button>
                     )}
 
@@ -965,12 +1027,15 @@ export default function CheckoutPage() {
                         }`}>
                           <FileText className="w-5 h-5" />
                         </div>
-                        <div>
+                        <div className="flex-1">
                           <p className="font-medium">Request Invoice</p>
                           <p className="text-sm text-gray-500">
                             {organization.name} - Payment terms: {organization.payment_terms.replace("_", " ")}
                           </p>
                         </div>
+                        {paymentMethod === "invoice" && (
+                          <CheckCircle className="w-5 h-5 text-aura-primary flex-shrink-0" />
+                        )}
                       </button>
                     )}
 
@@ -987,8 +1052,51 @@ export default function CheckoutPage() {
                     )}
                   </div>
 
-                  {/* Trust Badges */}
+                  {/* Final order summary for payment step */}
                   <div className="mt-8 pt-6 border-t">
+                    <h3 className="font-medium mb-4 text-sm text-gray-600">Order Summary</h3>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Subtotal</span>
+                        <span>{formatCurrency(basePrice)}</span>
+                      </div>
+                      {promoDiscount > 0 && (
+                        <div className="flex justify-between text-green-600">
+                          <span>Promo Discount</span>
+                          <span>-{formatCurrency(promoDiscount)}</span>
+                        </div>
+                      )}
+                      {giftCardDiscount > 0 && (
+                        <div className="flex justify-between text-green-600">
+                          <span>Gift Card</span>
+                          <span>-{formatCurrency(giftCardDiscount)}</span>
+                        </div>
+                      )}
+                      {creditsDiscount > 0 && (
+                        <div className="flex justify-between text-green-600">
+                          <span>Credits</span>
+                          <span>-{formatCurrency(creditsDiscount)}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Shipping</span>
+                        <span className={shipping === 0 ? "text-green-600" : ""}>
+                          {shipping === 0 ? "FREE" : formatCurrency(shipping)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Tax</span>
+                        <span>{formatCurrency(tax)}</span>
+                      </div>
+                      <div className="flex justify-between pt-3 border-t font-semibold text-base">
+                        <span>Total Due</span>
+                        <span className="text-aura-primary">{formatCurrency(total)}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Trust Badges */}
+                  <div className="mt-6 pt-6 border-t">
                     <div className="grid grid-cols-3 gap-4 text-center">
                       <div className="flex flex-col items-center gap-2">
                         <ShieldCheck className="w-6 h-6 text-green-600" />
@@ -1065,6 +1173,37 @@ export default function CheckoutPage() {
                   </div>
                 </div>
 
+                {/* Product thumbnails */}
+                <div className="py-3 border-b">
+                  <div className="flex flex-wrap gap-1.5">
+                    {Object.values(productCounts).slice(0, 8).map(({ product, count }) => (
+                      <div
+                        key={product.id}
+                        className="relative w-10 h-10 rounded-md bg-gray-100 overflow-hidden flex-shrink-0"
+                        title={`${product.name}${count > 1 ? ` x${count}` : ""}`}
+                      >
+                        {product.image_url ? (
+                          <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Package className="w-4 h-4 text-gray-300" />
+                          </div>
+                        )}
+                        {count > 1 && (
+                          <span className="absolute -top-1 -right-1 bg-aura-primary text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                            {count}
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                    {Object.keys(productCounts).length > 8 && (
+                      <div className="w-10 h-10 rounded-md bg-gray-100 flex items-center justify-center text-xs text-gray-500 font-medium">
+                        +{Object.keys(productCounts).length - 8}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 <div className="space-y-3 py-4 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Subtotal</span>
@@ -1114,18 +1253,12 @@ export default function CheckoutPage() {
                 </div>
 
                 {/* Savings callout */}
-                {(promoDiscount > 0 || giftCardDiscount > 0 || creditsDiscount > 0 || purchaseType === "subscription") && (
+                {totalSavings > 0 && (
                   <div className="p-3 bg-green-50 rounded-lg text-sm text-green-700 flex items-center gap-2">
                     <Sparkles className="w-4 h-4 flex-shrink-0" />
                     <span>
                       You are saving{" "}
-                      {formatCurrency(
-                        promoDiscount +
-                        giftCardDiscount +
-                        creditsDiscount +
-                        (purchaseType === "subscription" ? config.oneTimePrice - config.price : 0) +
-                        (purchaseType === "subscription" ? 9.99 : 0)
-                      )}
+                      {formatCurrency(totalSavings)}
                       {purchaseType === "subscription" ? " per order" : " on this order"}
                     </span>
                   </div>
