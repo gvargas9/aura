@@ -72,3 +72,22 @@ Supabase Edge Functions run on Deno. The `supabase/functions/` directory is excl
 4. **Gift card codes are case-insensitive** — always use `.toUpperCase()` when comparing.
 5. **The `Json` type from database.ts** — when passing objects to Supabase insert/update that expect `Json`, cast with `as unknown as Json`.
 6. **Product images** — stored in Supabase Storage `media/products/` bucket. The Next.js image config allows `*.supabase.co` domains.
+7. **Embedding model naming** — Google renamed models; `text-embedding-004` doesn't exist in v1beta. Use `gemini-embedding-001` and check available models via ListModels API.
+8. **pgvector dimension limits** — IVFFlat max 2000 dims, HNSW also max 2000. Always truncate Gemini embeddings (3072) to 1536.
+9. **Storefront theming** — use CSS custom properties, not Tailwind classes, for dynamic per-storefront colors. Tailwind classes are compile-time only.
+10. **Supabase Realtime** — must enable replication for tables in Supabase dashboard (Database > Replication). Without this, realtime hooks receive no events.
+11. **Agent directory creation** — subagents can't always create new directories. Pre-create directory structures before dispatching agents.
+
+## Architecture Decisions (Phase 2)
+
+### Why pgvector for Recommendations (not external ML service)
+Keeping recommendations in-database with pgvector means zero additional infrastructure, sub-millisecond similarity queries, and the ability to join recommendations with product data in a single query. Adequate for the current catalog size (<1000 products). Would need a dedicated vector DB (Pinecone, Weaviate) only at 100K+ products.
+
+### Why CSS Custom Properties for Storefronts (not Tailwind)
+Tailwind classes are compiled at build time. Dynamic storefront themes need runtime color changes. CSS custom properties (`--sf-primary`) can be set via inline styles and cascade to all children, making per-storefront theming work without rebuilding.
+
+### Why Truncate Embeddings to 1536 (not use full 3072)
+Gemini's `gemini-embedding-001` outputs 3072 dimensions. pgvector indexes (IVFFlat, HNSW) support max 2000 dimensions. Truncating to 1536 loses some information but maintains strong similarity performance — research shows truncated embeddings retain 95%+ of their discriminative power for top-k retrieval.
+
+### Why Mock Mode for Shipping
+Not all development environments have EasyPost API keys. Mock mode returns realistic carrier data so the full checkout → shipping → tracking flow can be developed and tested without credentials. The `mock: true` flag in responses lets the UI optionally indicate demo mode.

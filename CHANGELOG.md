@@ -2,7 +2,87 @@
 
 All notable changes to the Aura platform are documented in this file.
 
-## [2026-03-28] — Major Platform Build
+## [2026-03-28] — Core Platform Complete (Phase 2)
+
+### Added — AI Recommendations & Smart Fill
+- Product embeddings via Gemini `gemini-embedding-001` (truncated to 1536 dims for pgvector)
+- `match_products` RPC function for cosine similarity search with HNSW index
+- Smart Aura Fill replaces random selection with category diversity + taste profile matching
+- "You Might Also Like" AI-powered section on product detail pages
+- Personalized recommendations from order history
+- Frequently bought together from order co-occurrence
+- Embedding generation script (`scripts/generate-embeddings.mjs`)
+
+### Added — Multi-Storefront System
+- 4 themed stores: Main (emerald), Camping/Outdoor (brown), Marine/Aviation (blue), Preparedness (gray)
+- Dynamic CSS theming via custom properties (`--sf-primary`, `--sf-accent`, `--sf-dark`)
+- Storefront directory (`/store`) with color swatches and "Visit Store" cards
+- Individual stores (`/store/[slug]`) with audience-specific hero copy
+- Storefront-scoped product catalog and box builder
+- Admin storefront management with theme editor and color pickers (`/admin/storefronts`)
+- B2B dealer branding page for Gold/Platinum tiers (`/b2b/portal/branding`)
+
+### Added — Supabase Realtime
+- `useRealtimeOrders` hook for live order status updates on dashboard
+- `useRealtimeInventory` hook for admin inventory monitoring with change highlighting
+- `useRealtimeNotifications` hook replacing polling in NotificationCenter
+- Live connection indicators with animated badges
+
+### Added — Wishlist / Favorites
+- `wishlists` table with RLS (migration)
+- `useWishlist` hook with optimistic updates and O(1) lookup
+- Heart toggle animations on product cards and detail pages (auth-gated)
+- Wishlist page (`/dashboard/wishlist`) with sort options
+- Wishlist API (`/api/wishlist`)
+
+### Added — Global Search
+- `SearchModal` component (Spotlight-style, `Cmd+K` keyboard shortcut)
+- Unified search API (`/api/search`) across products + recipes + categories
+- Keyboard navigation (arrow keys, enter, escape)
+- Recent searches in localStorage, popular searches
+- Integrated in Header search button
+
+### Added — Product Detail Page
+- Full product page (`/products/[id]`) with image gallery, variant selector, dietary badges
+- Subscribe & Save toggle with 15% savings display
+- 4 tabs: Description (ingredients, allergens), Nutrition Facts (FDA-style label), Aura Academy (recipes), Reviews
+- Cross-sells: "Pairs Well With", "Customers Also Bought", "You Might Also Like" (AI)
+- Review submission form for verified purchasers
+
+### Added — Aura Academy
+- `product_recipes` table (migration 004) with chef-prepared recipes
+- 4 seed recipes with full ingredients, steps, and chef bios
+- Academy landing page (`/academy`) with recipe grid, filters, chef spotlights
+- Individual recipe page (`/academy/[recipeId]`) with interactive ingredient checklists
+- Admin recipe management (`/admin/recipes`) with step/ingredient editors
+
+### Added — Vending Machine Dashboard
+- Admin vending overview (`/admin/vending`) with status indicators and stats
+- Machine detail (`/admin/vending/[id]`) with slot inventory grid, restock controls
+- Transaction history, QR redemptions tracking, machine config editor
+
+### Added — Shipping Integration
+- Shipping client library (`src/lib/shipping/`) with EasyPost provider + mock mode
+- Warehouse config (El Paso, TX origin)
+- `/api/shipping/rates`, `/api/shipping/label`, `/api/shipping/track` endpoints
+- Customer order tracking page (`/orders/[id]`) with visual timeline
+- Admin order detail (`/admin/orders/[id]`) with rate selection and label creation
+
+### Added — Email Templates
+- Email renderer (`src/lib/email/renderer.ts`) with branded HTML wrapper
+- 9 transactional templates (order, shipping, subscription, welcome, etc.)
+- Admin template management (`/admin/email-templates`) with split-view editor
+- Live preview with variable substitution, send-test functionality
+- `/api/email/preview` and `/api/email/send-test` endpoints
+
+### Fixed
+- Hero showcase now uses real product images from Supabase Storage (was CSS gradients)
+- Embedding model corrected from `text-embedding-004` to `gemini-embedding-001`
+- Embedding dimensions truncated to 1536 (pgvector HNSW limit)
+
+---
+
+## [2026-03-28] — Major Platform Build (Phase 1)
 
 ### Added — Payment System
 - Gift card purchase page (`/gift-cards`) with amount selector, recipient form, live preview

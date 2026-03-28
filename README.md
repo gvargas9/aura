@@ -69,17 +69,19 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 | Metric | Count |
 |--------|-------|
-| **Routes** | 64 |
-| **Source Files** | 108 |
-| **Lines of Code** | 31,590 |
-| **UI Components** | 19 |
-| **Pages** | 31 |
-| **API Endpoints** | 32 |
+| **Routes** | 90 |
+| **Source Files** | 148 |
+| **Lines of Code** | 47,167 |
+| **UI Components** | 20 |
+| **Pages** | 48 |
+| **API Endpoints** | 41 |
 | **Edge Functions** | 7 |
-| **Database Tables** | 38+ |
-| **DB Migrations** | 3 |
+| **Custom Hooks** | 6 |
+| **Database Tables** | 42+ |
+| **DB Migrations** | 6 |
 | **E2E Tests** | 166 (15 files) |
 | **n8n Workflows** | 3 |
+| **Storefronts** | 4 |
 
 ## Architecture
 
@@ -104,8 +106,15 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 │  Price Lists → Volume Breaks → Promotions           │
 │  Subscribe & Save · B2B Contracts · Credits         │
 ├─────────────────────────────────────────────────────┤
+│           AI Engine (src/lib/ai/)                    │
+│  Embeddings · Recommendations · Smart Fill          │
+│  pgvector Similarity · Taste Profiles               │
+├─────────────────────────────────────────────────────┤
+│           Shipping (src/lib/shipping/)               │
+│  EasyPost · Mock Mode · Rates · Labels · Tracking   │
+├─────────────────────────────────────────────────────┤
 │                 Supabase (PostgreSQL)                │
-│  38+ tables · RLS · Triggers · pgvector             │
+│  42+ tables · RLS · Triggers · pgvector · Realtime  │
 ├─────────────────────────────────────────────────────┤
 │               External Integrations                  │
 │  Stripe · n8n · Gemini AI · Imagen 4.0 · Twilio    │
@@ -115,11 +124,19 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 ## Key Features
 
 ### Consumer (B2C)
-- **Build-a-Box**: Visual slot grid, dietary filters, "Aura Fill" AI auto-fill
+- **Build-a-Box**: Visual slot grid, dietary filters, AI-powered "Smart Fill"
 - **Subscribe & Save**: 14-17% savings vs one-time purchases
+- **Product Detail**: Image gallery, variants, FDA nutrition facts, reviews, Aura Academy recipes
 - **Product Catalog**: Dietary badges, allergen filtering, reviews, shelf-life info
+- **AI Recommendations**: pgvector similarity search, personalized suggestions, "You Might Also Like"
 - **Ask Aura**: AI chat assistant powered by Gemini for recommendations and support
+- **Aura Academy**: Chef-crafted recipes with step-by-step instructions, ingredient checklists
 - **Gift Cards**: Purchase, send, and redeem digital gift cards
+- **Wishlist**: Save favorite products with heart toggles, dedicated wishlist page
+- **Global Search**: Spotlight-style search (Cmd+K) across products, recipes, categories
+- **Order Tracking**: Visual timeline with carrier tracking and status updates
+- **Realtime Updates**: Live order status changes via Supabase Realtime
+- **Multi-Storefront**: Themed niche stores (Camping, Marine, Preparedness)
 - **Dashboard**: Order history, subscription management, notification preferences
 
 ### Business (B2B)

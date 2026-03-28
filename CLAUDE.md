@@ -152,6 +152,13 @@ import { triggerOrderFulfillment, triggerLowStockAlert } from "@/lib/n8n";
 | `gift_cards` / `gift_card_transactions` | Gift card system |
 | `credit_ledger` | Loyalty points/credits ledger |
 | `b2b_contracts` | B2B contract pricing with effective dates |
+| `product_recipes` | Chef-prepared recipes for Aura Academy |
+| `product_bundles` / `product_bundle_items` | Pre-made and custom bundles |
+| `product_nutrition` | FDA-structured nutrition facts |
+| `product_relationships` | Cross-sells, "pairs well with" |
+| `storefronts` | Multi-storefront configurations and themes |
+| `wishlists` | User saved/favorite products |
+| `referrals` | Referral tracking and rewards |
 | `omni_interaction_log` | All communications (CRM backbone) |
 
 ### Supabase Edge Functions (in `supabase/functions/`)
@@ -178,6 +185,32 @@ import { triggerOrderFulfillment, triggerLowStockAlert } from "@/lib/n8n";
 - **Admin credentials**: `admin@inspiration-ai.com` / `Inssigma@2`
 - **Every new feature MUST have Playwright tests**
 
+### AI & Recommendations (`src/lib/ai/`)
+```typescript
+import { generateProductEmbedding, generateAllProductEmbeddings } from "@/lib/ai/embeddings";
+import { getRecommendations, getSmartFillProducts, getPersonalizedRecommendations } from "@/lib/ai/recommendations";
+```
+- Embeddings use `gemini-embedding-001` model, truncated to 1536 dims
+- pgvector cosine similarity via `match_products` RPC function
+- Smart fill considers: category variety, taste profile, dietary compatibility
+
+### Shipping (`src/lib/shipping/`)
+```typescript
+import { getRates, createLabel, getTracking } from "@/lib/shipping/client";
+import { WAREHOUSE_ADDRESS } from "@/lib/shipping/warehouse";
+```
+- Provider pattern: EasyPost implementation + mock mode when API key not set
+- Warehouse origin: El Paso, TX
+
+### Custom Hooks
+| Hook | Purpose |
+|------|---------|
+| `useAuth()` | Auth state, profile, signOut, updateProfile |
+| `useWishlist()` | Wishlist with optimistic updates, toggle, isWishlisted |
+| `useRealtimeOrders(userId)` | Live order status updates via Supabase Realtime |
+| `useRealtimeInventory()` | Admin inventory monitoring with change highlighting |
+| `useRealtimeNotifications(userId)` | Live notification count for bell component |
+
 ### Gotchas
 
 1. **Admin layout**: Must use direct Supabase calls, NOT useAuth() hook — Turbopack hydration bug
@@ -186,6 +219,10 @@ import { triggerOrderFulfillment, triggerLowStockAlert } from "@/lib/n8n";
 4. **Color palette**: Defined in BOTH `tailwind.config.ts` AND `globals.css @theme` — keep them in sync
 5. **Supabase region**: us-east-1 (project: qshpheimnzpkqgerikwh)
 6. **n8n calls are fire-and-forget**: Never throw on n8n failure — the app must work without n8n
+7. **Embedding model**: Use `gemini-embedding-001` (not text-embedding-004), truncate to 1536 dims for pgvector
+8. **Storefront theming**: Uses CSS custom properties (`--sf-primary`, etc.) — not Tailwind classes
+9. **Shipping mock mode**: When `EASYPOST_API_KEY` is not set, shipping APIs return realistic fake data with `mock: true` flag
+10. **Wishlist auth**: useWishlist only works when authenticated — check isAuthenticated before rendering heart toggles
 
 ## n8n Workflows
 
@@ -197,4 +234,22 @@ Located in `/workflows/` and deployed to `automation.inspiration-ai.com`:
 ## Scripts
 
 - `scripts/generate-product-images.mjs` — Generate product images with Imagen 4.0, upload to Supabase Storage
+- `scripts/generate-embeddings.mjs` — Generate product embeddings with Gemini for AI recommendations
 - `create-admin.mjs` — Create admin user account
+
+## Project Metrics (2026-03-28)
+
+| Metric | Count |
+|--------|-------|
+| Routes | 90 |
+| Source Files | 148 |
+| Lines of Code | 47,167 |
+| UI Components | 20 |
+| Pages | 48 |
+| API Endpoints | 41 |
+| Edge Functions | 7 |
+| Custom Hooks | 6 |
+| Database Tables | 42+ |
+| Migrations | 6 |
+| E2E Tests | 166 (15 files) |
+| n8n Workflows | 3 |
