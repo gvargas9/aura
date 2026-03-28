@@ -40,7 +40,7 @@ interface RecentOrder {
 }
 
 export default function AdminDashboardPage() {
-  const { profile } = useAuth();
+  const { profile, isLoading: authLoading } = useAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -49,9 +49,8 @@ export default function AdminDashboardPage() {
 
   useEffect(() => {
     const fetchDashboardData = async () => {
-      if (!profile || profile.role !== "admin") return;
-
-      setIsLoading(true);
+      if (authLoading) return;
+      if (!profile) return;
 
       try {
         const { count: totalOrders } = await supabase
@@ -116,12 +115,10 @@ export default function AdminDashboardPage() {
       setIsLoading(false);
     };
 
-    if (profile?.role === "admin") {
-      fetchDashboardData();
-    }
-  }, [profile, supabase]);
+    fetchDashboardData();
+  }, [profile, authLoading, supabase]);
 
-  if (isLoading) {
+  if (authLoading || isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
         <Loader2 className="w-8 h-8 animate-spin text-aura-primary" />
@@ -130,7 +127,11 @@ export default function AdminDashboardPage() {
   }
 
   if (!stats) {
-    return null;
+    return (
+      <div className="text-center py-20 text-gray-500">
+        <p>Unable to load dashboard data. Please try refreshing.</p>
+      </div>
+    );
   }
 
   return (

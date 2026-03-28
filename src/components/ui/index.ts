@@ -8,3 +8,4 @@ export { ProductHero } from "./ProductHero";
 export { OrderSummary, BoxOrderSummary } from "./OrderSummary";
 export { RecommendedPairings, HorizontalPairings } from "./RecommendedPairings";
 export { QuantityControl } from "./QuantityControl";
+export { NotificationCenter } from "./NotificationCenter";

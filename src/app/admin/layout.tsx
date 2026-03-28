@@ -12,6 +12,7 @@ import {
   RefreshCcw,
   Warehouse,
   Handshake,
+  Bell,
   Settings,
   Menu,
   X,
@@ -27,6 +28,7 @@ const navItems = [
   { label: "Subscriptions", href: "/admin/subscriptions", icon: RefreshCcw },
   { label: "Inventory", href: "/admin/inventory", icon: Warehouse },
   { label: "Dealers", href: "/admin/dealers", icon: Handshake },
+  { label: "Notifications", href: "/admin/notifications", icon: Bell },
   { label: "Settings", href: "/admin/settings", icon: Settings },
 ];
 

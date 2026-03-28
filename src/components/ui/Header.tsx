@@ -16,6 +16,8 @@ import {
   Search,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks";
+import { NotificationCenter } from "./NotificationCenter";
 
 interface NavItem {
   label: string;
@@ -45,6 +47,7 @@ const userNav: NavItem[] = [
 export function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const [cartCount] = useState(3); // TODO: Connect to cart state
+  const { isAuthenticated } = useAuth();
 
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-gray-100">
@@ -78,6 +81,9 @@ export function Header() {
             <button className="hidden sm:flex p-2.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors">
               <Search className="w-5 h-5" />
             </button>
+
+            {/* Notifications */}
+            {isAuthenticated && <NotificationCenter />}
 
             {/* Cart */}
             <Link

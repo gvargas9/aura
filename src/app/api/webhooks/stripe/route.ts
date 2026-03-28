@@ -3,6 +3,11 @@ import { headers } from "next/headers";
 import Stripe from "stripe";
 import { stripe } from "@/lib/stripe/server";
 import { createClient } from "@supabase/supabase-js";
+import {
+  triggerOrderFulfillment,
+  triggerPaymentFailed,
+  triggerCustomerEvent,
+} from "@/lib/n8n/client";
 
 // Use service role for webhooks (bypasses RLS)
 const supabaseAdmin = createClient(
@@ -166,8 +171,17 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     });
   }
 
-  // TODO: Trigger n8n webhook for order fulfillment
-  // await fetch(process.env.N8N_WEBHOOK_URL + '/new-order', { ... });
+  // Trigger n8n order fulfillment workflow (fire-and-forget, never throws)
+  await triggerOrderFulfillment({
+    orderId: subscription.id,
+    orderNumber,
+    userId,
+    subscriptionId: subscription.id,
+    items: parsedProductIds.map((id: string) => ({ productId: id, quantity: 1 })),
+    shippingAddress: {},
+    total: session.amount_total ? session.amount_total / 100 : 0,
+    dealerAttributionId: dealerId || null,
+  });
 
   console.log(`Subscription created for user ${userId}`);
 }
@@ -190,6 +204,8 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
 }
 
 async function handleSubscriptionCancelled(subscription: Stripe.Subscription) {
+  const { userId } = subscription.metadata || {};
+
   await supabaseAdmin
     .from("aura_subscriptions")
     .update({
@@ -198,6 +214,20 @@ async function handleSubscriptionCancelled(subscription: Stripe.Subscription) {
       updated_at: new Date().toISOString(),
     })
     .eq("stripe_subscription_id", subscription.id);
+
+  // Trigger n8n churn event notification
+  if (userId) {
+    await triggerCustomerEvent({
+      type: "subscription.cancelled",
+      userId,
+      data: {
+        stripeSubscriptionId: subscription.id,
+        cancelledAt: new Date().toISOString(),
+        cancellationReason:
+          subscription.cancellation_details?.reason ?? "unknown",
+      },
+    });
+  }
 }
 
 async function handleInvoicePaid(invoice: Stripe.Invoice) {
@@ -255,9 +285,30 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
 }
 
 async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
-  // Log failed payment
   console.error(`Payment failed for invoice ${invoice.id}`);
 
-  // Could trigger notification workflow here
-  // await fetch(process.env.N8N_WEBHOOK_URL + '/payment-failed', { ... });
+  // Resolve the subscription ID from the invoice
+  const subscriptionId =
+    typeof invoice.parent?.subscription_details?.subscription === "string"
+      ? invoice.parent.subscription_details.subscription
+      : (invoice as unknown as { subscription: string | null }).subscription;
+
+  // Look up user from subscription metadata if possible
+  let userId: string | undefined;
+  if (subscriptionId) {
+    try {
+      const sub = await stripe.subscriptions.retrieve(subscriptionId);
+      userId = sub.metadata?.userId;
+    } catch {
+      // Subscription may have been deleted -- proceed without userId
+    }
+  }
+
+  // Trigger n8n payment-failed notification (fire-and-forget)
+  await triggerPaymentFailed({
+    userId: userId ?? "unknown",
+    invoiceId: invoice.id,
+    subscriptionId: subscriptionId ?? null,
+    amountDue: (invoice.amount_due ?? 0) / 100,
+  });
 }
