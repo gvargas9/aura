@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
+import { createClient } from "@/lib/supabase/client";
 import { Header, Footer } from "@/components/ui";
 import {
   Package,
@@ -225,14 +227,36 @@ function AnimatedSection({
 }
 
 function ProductShowcase() {
-  const products = [
-    { name: "Chicken Tikka", color: "from-orange-400 to-red-500", emoji: "" },
-    { name: "Pad Thai", color: "from-amber-400 to-orange-500", emoji: "" },
-    { name: "Beef Stew", color: "from-red-700 to-red-900", emoji: "" },
-    { name: "Green Curry", color: "from-emerald-400 to-green-600", emoji: "" },
-    { name: "Pasta Primavera", color: "from-yellow-400 to-orange-400", emoji: "" },
-    { name: "Quinoa Bowl", color: "from-lime-400 to-emerald-500", emoji: "" },
-  ];
+  const [products, setProducts] = useState([
+    { name: "Herb Roasted Chicken", image_url: "", color: "from-orange-400 to-red-500" },
+    { name: "Beef Stew Classic", image_url: "", color: "from-amber-400 to-orange-500" },
+    { name: "Vegetable Curry", image_url: "", color: "from-red-700 to-red-900" },
+    { name: "Salmon Teriyaki", image_url: "", color: "from-emerald-400 to-green-600" },
+    { name: "Quinoa Pilaf", image_url: "", color: "from-yellow-400 to-orange-400" },
+    { name: "Energy Bites", image_url: "", color: "from-lime-400 to-emerald-500" },
+  ]);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase
+      .from("aura_products")
+      .select("name, image_url")
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true })
+      .limit(6)
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          setProducts(
+            data.map((p, i) => ({
+              name: p.name,
+              image_url: p.image_url || "",
+              color: products[i]?.color || "from-gray-400 to-gray-600",
+            }))
+          );
+        }
+      });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="relative w-full max-w-lg mx-auto">
@@ -265,15 +289,26 @@ function ProductShowcase() {
                 className="group relative aspect-square rounded-2xl overflow-hidden cursor-pointer"
                 style={{ animationDelay: `${i * 100}ms` }}
               >
-                <div
-                  className={cn(
-                    "absolute inset-0 bg-gradient-to-br opacity-90 group-hover:opacity-100 transition-opacity duration-300",
-                    product.color
-                  )}
-                />
-                <div className="absolute inset-0 flex flex-col items-center justify-center p-1">
-                  <span className="text-2xl mb-1">{product.emoji}</span>
-                  <span className="text-white text-[9px] font-medium text-center leading-tight drop-shadow-lg">
+                {product.image_url ? (
+                  <Image
+                    src={product.image_url}
+                    alt={product.name}
+                    fill
+                    className="object-cover group-hover:scale-110 transition-transform duration-500"
+                    sizes="(max-width: 768px) 80px, 120px"
+                  />
+                ) : (
+                  <div
+                    className={cn(
+                      "absolute inset-0 bg-gradient-to-br opacity-90",
+                      product.color
+                    )}
+                  />
+                )}
+                {/* Name overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-2">
+                  <span className="text-white text-[9px] font-medium text-center leading-tight drop-shadow-lg block">
                     {product.name}
                   </span>
                 </div>
