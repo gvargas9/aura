@@ -1880,6 +1880,25 @@ export interface Database {
         };
         Relationships: [];
       };
+      wishlists: {
+        Row: {
+          id: string;
+          user_id: string;
+          product_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          product_id: string;
+          created_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          product_id?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -1947,4 +1966,5 @@ export type CreditLedgerEntry = Database["public"]["Tables"]["credit_ledger"]["R
 export type Referral = Database["public"]["Tables"]["referrals"]["Row"];
 export type GiftOrder = Database["public"]["Tables"]["gift_orders"]["Row"];
 export type B2BContract = Database["public"]["Tables"]["b2b_contracts"]["Row"];
+export type Wishlist = Database["public"]["Tables"]["wishlists"]["Row"];
 export type ProductRecipe = Database["public"]["Tables"]["product_recipes"]["Row"];

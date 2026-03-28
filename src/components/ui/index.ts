@@ -18,3 +18,4 @@ export {
   BoxBuilderSkeleton,
 } from "./SkeletonLoader";
 export { AuraChatWidget } from "./AuraChatWidget";
+export { SearchModal } from "./SearchModal";

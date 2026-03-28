@@ -4,8 +4,10 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Header, Footer } from "@/components/ui";
 import { ProductGridSkeleton } from "@/components/ui/SkeletonLoader";
+import { useAuth, useWishlist } from "@/hooks";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Search,
   SlidersHorizontal,
@@ -63,12 +65,18 @@ const SORT_OPTIONS = [
 function CatalogProductCard({
   product,
   viewMode,
+  isWishlisted,
+  onToggleWishlist,
+  isAuthenticated,
 }: {
   product: Product;
   viewMode: "grid" | "list";
+  isWishlisted: boolean;
+  onToggleWishlist: (productId: string) => void;
+  isAuthenticated: boolean;
 }) {
   const [isHovered, setIsHovered] = useState(false);
-  const [isLiked, setIsLiked] = useState(false);
+  const router = useRouter();
 
   const dietaryLabels = product.dietary_labels || [];
   const shelfLife = product.shelf_life_months;
@@ -204,18 +212,26 @@ function CatalogProductCard({
           <button
             onClick={(e) => {
               e.preventDefault();
-              setIsLiked(!isLiked);
+              e.stopPropagation();
+              if (!isAuthenticated) {
+                router.push("/auth/login?redirectTo=/products");
+                return;
+              }
+              onToggleWishlist(product.id);
             }}
             className={cn(
               "w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200",
-              isLiked
-                ? "bg-red-50 text-red-500"
+              isWishlisted
+                ? "bg-red-50 text-red-500 scale-100"
                 : "bg-white/80 backdrop-blur-sm text-gray-400 opacity-0 group-hover:opacity-100"
             )}
-            aria-label={isLiked ? "Remove from favorites" : "Add to favorites"}
+            aria-label={isWishlisted ? "Remove from favorites" : "Add to favorites"}
           >
             <Heart
-              className={cn("w-4 h-4", isLiked && "fill-current")}
+              className={cn(
+                "w-4 h-4 transition-transform duration-200",
+                isWishlisted && "fill-current animate-[heartBounce_0.3s_ease-out]"
+              )}
             />
           </button>
         </div>
@@ -522,6 +538,8 @@ export default function ProductsPage() {
   const [sortOpen, setSortOpen] = useState(false);
 
   const supabase = createClient();
+  const { isAuthenticated } = useAuth();
+  const { toggle: toggleWishlist, isWishlisted } = useWishlist();
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -839,6 +857,9 @@ export default function ProductsPage() {
                       key={product.id}
                       product={product}
                       viewMode="grid"
+                      isWishlisted={isWishlisted(product.id)}
+                      onToggleWishlist={toggleWishlist}
+                      isAuthenticated={isAuthenticated}
                     />
                   ))}
                 </div>
@@ -849,6 +870,9 @@ export default function ProductsPage() {
                       key={product.id}
                       product={product}
                       viewMode="list"
+                      isWishlisted={isWishlisted(product.id)}
+                      onToggleWishlist={toggleWishlist}
+                      isAuthenticated={isAuthenticated}
                     />
                   ))}
                 </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import {
   Bell,
@@ -11,8 +11,10 @@ import {
   Bot,
   Check,
   X,
+  Wifi,
+  WifiOff,
 } from "lucide-react";
-import { useAuth } from "@/hooks";
+import { useAuth, useRealtimeNotifications } from "@/hooks";
 import { cn } from "@/lib/utils";
 
 interface Notification {
@@ -67,34 +69,16 @@ function truncateContent(content: string, maxLength: number = 80): string {
 export function NotificationCenter() {
   const { user, isAuthenticated } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const fetchNotifications = useCallback(async () => {
-    if (!user) return;
-    setIsLoading(true);
-    try {
-      const res = await fetch("/api/notifications?page=1&pageSize=10");
-      if (!res.ok) return;
-      const data = await res.json();
-      if (data.success) {
-        setNotifications(data.data.items);
-        setUnreadCount(data.data.unreadCount);
-      }
-    } catch {
-      // silently fail for notification fetch
-    } finally {
-      setIsLoading(false);
-    }
-  }, [user]);
-
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      fetchNotifications();
-    }
-  }, [isAuthenticated, user, fetchNotifications]);
+  const {
+    notifications,
+    unreadCount,
+    isConnected,
+    markAllAsRead,
+    refresh,
+  } = useRealtimeNotifications(user?.id || "");
 
   // Close on click outside
   useEffect(() => {
@@ -117,30 +101,7 @@ export function NotificationCenter() {
   if (!isAuthenticated) return null;
 
   const handleMarkAllRead = async () => {
-    const unreadIds = notifications
-      .filter((n) => !n.metadata?.read)
-      .map((n) => n.id);
-
-    if (unreadIds.length === 0) return;
-
-    try {
-      const res = await fetch("/api/notifications", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ids: unreadIds }),
-      });
-      if (res.ok) {
-        setNotifications((prev) =>
-          prev.map((n) => ({
-            ...n,
-            metadata: { ...n.metadata, read: true },
-          }))
-        );
-        setUnreadCount(0);
-      }
-    } catch {
-      // silently fail
-    }
+    await markAllAsRead();
   };
 
   return (
@@ -148,14 +109,14 @@ export function NotificationCenter() {
       <button
         onClick={() => {
           setIsOpen(!isOpen);
-          if (!isOpen) fetchNotifications();
+          if (!isOpen) refresh();
         }}
         className="relative p-2.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
         aria-label={`Notifications${unreadCount > 0 ? `, ${unreadCount} unread` : ""}`}
       >
-        <Bell className="w-5 h-5" />
+        <Bell className={cn("w-5 h-5", unreadCount > 0 && "animate-[wiggle_0.3s_ease-in-out]")} />
         {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 flex items-center justify-center w-5 h-5 text-[10px] font-bold text-white bg-red-500 rounded-full">
+          <span className="absolute -top-0.5 -right-0.5 flex items-center justify-center w-5 h-5 text-[10px] font-bold text-white bg-red-500 rounded-full animate-in zoom-in duration-200">
             {unreadCount > 99 ? "99+" : unreadCount}
           </span>
         )}
@@ -165,9 +126,16 @@ export function NotificationCenter() {
         <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white rounded-xl shadow-lg border border-gray-200 z-50 overflow-hidden">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-            <h3 className="text-sm font-semibold text-gray-900">
-              Notifications
-            </h3>
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-semibold text-gray-900">
+                Notifications
+              </h3>
+              {isConnected ? (
+                <Wifi className="w-3 h-3 text-green-500" aria-label="Live updates active" />
+              ) : (
+                <WifiOff className="w-3 h-3 text-gray-300" aria-label="Live updates disconnected" />
+              )}
+            </div>
             <div className="flex items-center gap-2">
               {unreadCount > 0 && (
                 <button

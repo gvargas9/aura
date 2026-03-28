@@ -16,6 +16,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks";
 import { NotificationCenter } from "./NotificationCenter";
+import { SearchModal } from "./SearchModal";
 
 interface NavItem {
   label: string;
@@ -41,6 +42,7 @@ const mobileTabNav = [
 export function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [cartCount] = useState(0);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { isAuthenticated } = useAuth();
   const pathname = usePathname();
 
@@ -50,6 +52,18 @@ export function Header() {
     };
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Cmd+K / Ctrl+K to open search
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setIsSearchOpen(true);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
   const isActive = (href: string) => {
@@ -109,6 +123,7 @@ export function Header() {
             <div className="flex items-center gap-2">
               {/* Search */}
               <button
+                onClick={() => setIsSearchOpen(true)}
                 className="hidden sm:flex items-center justify-center w-10 h-10 text-gray-500 hover:text-aura-dark hover:bg-gray-100 rounded-full transition-all duration-200"
                 aria-label="Search products"
               >
@@ -219,6 +234,9 @@ export function Header() {
 
       {/* Spacer for mobile bottom nav */}
       <div className="lg:hidden h-16" />
+
+      {/* Search Modal */}
+      <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </>
   );
 }

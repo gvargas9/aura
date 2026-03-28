@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useWishlist } from "@/hooks/useWishlist";
 import { Header, Footer, Button } from "@/components/ui";
 import { Skeleton } from "@/components/ui/SkeletonLoader";
 import Image from "next/image";
@@ -788,6 +789,7 @@ export default function ProductDetailPage() {
   const [recipes, setRecipes] = useState<ProductRecipe[]>([]);
   const [relatedPairsWith, setRelatedPairsWith] = useState<Product[]>([]);
   const [relatedAlsoBought, setRelatedAlsoBought] = useState<Product[]>([]);
+  const [aiRecommendations, setAiRecommendations] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -797,7 +799,11 @@ export default function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1);
   const [isSubscription, setIsSubscription] = useState(true);
   const [expandedRecipe, setExpandedRecipe] = useState<string | null>(null);
-  const [isLiked, setIsLiked] = useState(false);
+
+  // Wishlist integration
+  const { toggle: toggleWishlist, isWishlisted } = useWishlist();
+  const { isAuthenticated } = useAuth();
+  const isLiked = product ? isWishlisted(product.id) : false;
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
@@ -896,6 +902,19 @@ export default function ProductDetailPage() {
           );
         }
       }
+    }
+
+    // Fetch AI-powered recommendations (non-blocking)
+    try {
+      const aiRes = await fetch(
+        `/api/recommendations?productId=${productId}&limit=4`
+      );
+      const aiData = await aiRes.json();
+      if (aiData.success && aiData.data?.similar) {
+        setAiRecommendations(aiData.data.similar);
+      }
+    } catch {
+      // AI recommendations are non-critical, silently fail
     }
 
     setIsLoading(false);
@@ -1221,14 +1240,23 @@ export default function ProductDetailPage() {
               {/* Quick actions */}
               <div className="flex items-center gap-4">
                 <button
-                  onClick={() => setIsLiked(!isLiked)}
+                  onClick={() => {
+                    if (!isAuthenticated) {
+                      window.location.href = `/auth/login?redirectTo=/products/${productId}`;
+                      return;
+                    }
+                    if (product) toggleWishlist(product.id);
+                  }}
                   className={cn(
                     "flex items-center gap-2 text-sm font-medium transition-colors",
                     isLiked ? "text-red-500" : "text-gray-400 hover:text-gray-600"
                   )}
                   aria-label={isLiked ? "Remove from wishlist" : "Add to wishlist"}
                 >
-                  <Heart className={cn("w-5 h-5", isLiked && "fill-current")} />
+                  <Heart className={cn(
+                    "w-5 h-5 transition-transform duration-200",
+                    isLiked && "fill-current animate-[heartBounce_0.3s_ease-out]"
+                  )} />
                   {isLiked ? "Saved" : "Save"}
                 </button>
                 <button
@@ -1458,7 +1486,7 @@ export default function ProductDetailPage() {
         </section>
 
         {/* Cross-sells Section */}
-        {(relatedPairsWith.length > 0 || relatedAlsoBought.length > 0) && (
+        {(relatedPairsWith.length > 0 || relatedAlsoBought.length > 0 || aiRecommendations.length > 0) && (
           <section className="border-t border-gray-100 py-12 bg-gray-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
               {relatedPairsWith.length > 0 && (
@@ -1481,6 +1509,25 @@ export default function ProductDetailPage() {
                   </h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {relatedAlsoBought.map((p) => (
+                      <RelatedProductCard key={p.id} product={p} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {aiRecommendations.length > 0 && (
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                    <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-aura-primary/10">
+                      <svg className="w-3.5 h-3.5 text-aura-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z" />
+                        <path d="M18 14l1 3 3 1-3 1-1 3-1-3-3-1 3-1 1-3z" />
+                      </svg>
+                    </span>
+                    You Might Also Like
+                  </h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {aiRecommendations.map((p) => (
                       <RelatedProductCard key={p.id} product={p} />
                     ))}
                   </div>

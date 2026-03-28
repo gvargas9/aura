@@ -22,6 +22,7 @@ import {
   MonitorSmartphone,
   Mail,
   ChefHat,
+  Store,
 } from "lucide-react";
 
 const navItems = [
@@ -32,6 +33,7 @@ const navItems = [
   { label: "Subscriptions", href: "/admin/subscriptions", icon: RefreshCcw },
   { label: "Inventory", href: "/admin/inventory", icon: Warehouse },
   { label: "Dealers", href: "/admin/dealers", icon: Handshake },
+  { label: "Storefronts", href: "/admin/storefronts", icon: Store },
   { label: "Vending", href: "/admin/vending", icon: MonitorSmartphone },
   { label: "Recipes", href: "/admin/recipes", icon: ChefHat },
   { label: "Notifications", href: "/admin/notifications", icon: Bell },

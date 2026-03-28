@@ -84,6 +84,22 @@
     0% { stroke-dashoffset: 283; }
     100% { stroke-dashoffset: var(--progress-offset); }
   }
+
+  @keyframes heartBounce {
+    0% { transform: scale(1); }
+    25% { transform: scale(1.3); }
+    50% { transform: scale(0.95); }
+    100% { transform: scale(1); }
+  }
+
+  @keyframes wiggle {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-8deg); }
+    75% { transform: rotate(8deg); }
+  }
+
+  --animate-heart-bounce: heartBounce 0.3s ease-out;
+  --animate-wiggle: wiggle 0.3s ease-in-out;
 }
 
 /* ===========================

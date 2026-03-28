@@ -425,6 +425,7 @@ function BuildBoxContent() {
   const [appliedPromo, setAppliedPromo] = useState<string | null>(null);
   const [discount, setDiscount] = useState(0);
   const [sparkleAnim, setSparkleAnim] = useState(false);
+  const [isAuraFilling, setIsAuraFilling] = useState(false);
 
   const supabase = createClient();
 
@@ -496,19 +497,53 @@ function BuildBoxContent() {
     }
   };
 
-  const handleAuraFill = () => {
+  const handleAuraFill = async () => {
     setSparkleAnim(true);
-    setTimeout(() => setSparkleAnim(false), 1500);
+    setIsAuraFilling(true);
 
     const remainingSlots = maxSlots - selectedProducts.length;
-    if (remainingSlots <= 0) return;
+    if (remainingSlots <= 0) {
+      setSparkleAnim(false);
+      setIsAuraFilling(false);
+      return;
+    }
 
-    const availableProducts = products.filter(
-      (p) => !selectedProducts.find((sp) => sp.id === p.id)
-    );
-    const shuffled = [...availableProducts].sort(() => Math.random() - 0.5);
-    const toAdd = shuffled.slice(0, remainingSlots);
-    setSelectedProducts([...selectedProducts, ...toAdd]);
+    try {
+      const response = await fetch("/api/recommendations/smart-fill", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          selectedProductIds: selectedProducts.map((p) => p.id),
+          boxSize: maxSlots,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success && result.data && result.data.length > 0) {
+        const toAdd = result.data.slice(0, remainingSlots);
+        setSelectedProducts([...selectedProducts, ...toAdd]);
+      } else {
+        // Fallback to random fill if API fails or returns no results
+        const availableProducts = products.filter(
+          (p) => !selectedProducts.find((sp) => sp.id === p.id)
+        );
+        const shuffled = [...availableProducts].sort(() => Math.random() - 0.5);
+        const toAdd = shuffled.slice(0, remainingSlots);
+        setSelectedProducts([...selectedProducts, ...toAdd]);
+      }
+    } catch {
+      // Fallback to random fill on network error
+      const availableProducts = products.filter(
+        (p) => !selectedProducts.find((sp) => sp.id === p.id)
+      );
+      const shuffled = [...availableProducts].sort(() => Math.random() - 0.5);
+      const toAdd = shuffled.slice(0, remainingSlots);
+      setSelectedProducts([...selectedProducts, ...toAdd]);
+    } finally {
+      setTimeout(() => setSparkleAnim(false), 1500);
+      setIsAuraFilling(false);
+    }
   };
 
   const handleApplyPromo = () => {
@@ -664,20 +699,29 @@ function BuildBoxContent() {
                 {!isComplete && (
                   <button
                     onClick={handleAuraFill}
+                    disabled={isAuraFilling}
                     className={cn(
                       "w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold transition-all duration-300 mb-4 border-2 border-dashed",
-                      sparkleAnim
-                        ? "border-aura-accent bg-aura-accent/5 text-aura-accent"
-                        : "border-aura-primary/30 bg-aura-light/50 text-aura-primary hover:border-aura-primary hover:bg-aura-light"
+                      isAuraFilling
+                        ? "border-aura-primary/20 bg-aura-light/30 text-aura-primary/60 cursor-wait"
+                        : sparkleAnim
+                          ? "border-aura-accent bg-aura-accent/5 text-aura-accent"
+                          : "border-aura-primary/30 bg-aura-light/50 text-aura-primary hover:border-aura-primary hover:bg-aura-light"
                     )}
                   >
-                    <Sparkles
-                      className={cn(
-                        "w-5 h-5",
-                        sparkleAnim && "animate-sparkle"
-                      )}
-                    />
-                    Aura Fill Remaining
+                    {isAuraFilling ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <Sparkles
+                        className={cn(
+                          "w-5 h-5",
+                          sparkleAnim && "animate-sparkle"
+                        )}
+                      />
+                    )}
+                    {isAuraFilling
+                      ? "Finding your perfect meals..."
+                      : "Aura Fill Remaining"}
                   </button>
                 )}
 
@@ -812,10 +856,18 @@ function BuildBoxContent() {
             {!isComplete ? (
               <button
                 onClick={handleAuraFill}
-                className="px-4 py-2.5 bg-aura-light text-aura-primary rounded-xl text-xs font-semibold flex items-center gap-1.5"
+                disabled={isAuraFilling}
+                className={cn(
+                  "px-4 py-2.5 bg-aura-light text-aura-primary rounded-xl text-xs font-semibold flex items-center gap-1.5",
+                  isAuraFilling && "opacity-60 cursor-wait"
+                )}
               >
-                <Sparkles className="w-3.5 h-3.5" />
-                Aura Fill
+                {isAuraFilling ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Sparkles className="w-3.5 h-3.5" />
+                )}
+                {isAuraFilling ? "Filling..." : "Aura Fill"}
               </button>
             ) : null}
 

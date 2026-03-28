@@ -4,14 +4,14 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { useAuth } from "@/hooks";
+import { useAuth, useRealtimeOrders } from "@/hooks";
 import {
   Card,
   Button,
   Header,
   Footer,
 } from "@/components/ui";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { cn, formatCurrency, formatDate } from "@/lib/utils";
 import { BOX_CONFIGS } from "@/types";
 import type { Order, Subscription } from "@/types";
 import {
@@ -25,6 +25,8 @@ import {
   ArrowRight,
   Calendar,
   ChevronRight,
+  Wifi,
+  Heart,
 } from "lucide-react";
 
 interface DashboardData {
@@ -52,6 +54,13 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   const supabase = createClient();
+
+  // Realtime order updates
+  const {
+    orders: realtimeOrders,
+    isConnected: ordersConnected,
+    lastUpdate: ordersLastUpdate,
+  } = useRealtimeOrders(profile?.id || "");
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -265,12 +274,20 @@ export default function DashboardPage() {
                 )}
               </Card>
 
-              {/* Recent Orders */}
+              {/* Recent Orders - Realtime */}
               <Card padding="lg">
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-semibold text-gray-900">
-                    Recent Orders
-                  </h2>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-xl font-semibold text-gray-900">
+                      Recent Orders
+                    </h2>
+                    {ordersConnected && (
+                      <span className="flex items-center gap-1 text-[10px] text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
+                        <Wifi className="w-3 h-3" />
+                        Live
+                      </span>
+                    )}
+                  </div>
                   <Link href="/orders">
                     <Button variant="ghost" size="sm">
                       View All
@@ -279,7 +296,9 @@ export default function DashboardPage() {
                   </Link>
                 </div>
 
-                {data.recentOrders.length > 0 ? (
+                {(() => {
+                  const displayOrders = realtimeOrders.length > 0 ? realtimeOrders.slice(0, 5) : data.recentOrders;
+                  return displayOrders.length > 0 ? (
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead>
@@ -299,10 +318,16 @@ export default function DashboardPage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {data.recentOrders.map((order) => (
+                        {displayOrders.map((order) => {
+                          const isRecentlyUpdated = ordersLastUpdate &&
+                            new Date(order.updated_at || order.created_at).getTime() > (ordersLastUpdate.getTime() - 5000);
+                          return (
                           <tr
                             key={order.id}
-                            className="border-b last:border-0"
+                            className={cn(
+                              "border-b last:border-0 transition-colors duration-1000",
+                              isRecentlyUpdated && "bg-aura-light/50"
+                            )}
                           >
                             <td className="py-3">
                               <span className="font-medium text-gray-900">
@@ -311,10 +336,12 @@ export default function DashboardPage() {
                             </td>
                             <td className="py-3">
                               <span
-                                className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                className={cn(
+                                  "px-2 py-1 rounded-full text-xs font-medium transition-all",
                                   STATUS_BADGES[order.status] ||
-                                  "bg-gray-100 text-gray-700"
-                                }`}
+                                  "bg-gray-100 text-gray-700",
+                                  isRecentlyUpdated && "ring-2 ring-aura-primary/30"
+                                )}
                               >
                                 {order.status}
                               </span>
@@ -326,7 +353,8 @@ export default function DashboardPage() {
                               {formatCurrency(order.total)}
                             </td>
                           </tr>
-                        ))}
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
@@ -335,7 +363,8 @@ export default function DashboardPage() {
                     <Package className="w-12 h-12 text-gray-300 mx-auto mb-3" />
                     <p className="text-gray-500">No orders yet.</p>
                   </div>
-                )}
+                );
+                })()}
               </Card>
             </div>
 
@@ -371,6 +400,16 @@ export default function DashboardPage() {
                       rightIcon={<ArrowRight className="w-4 h-4" />}
                     >
                       Manage Subscription
+                    </Button>
+                  </Link>
+                  <Link href="/dashboard/wishlist" className="block">
+                    <Button
+                      className="w-full justify-between"
+                      variant="outline"
+                      leftIcon={<Heart className="w-4 h-4" />}
+                      rightIcon={<ArrowRight className="w-4 h-4" />}
+                    >
+                      My Wishlist
                     </Button>
                   </Link>
                 </div>
