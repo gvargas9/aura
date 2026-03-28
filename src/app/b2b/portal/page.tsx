@@ -1,369 +1,450 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks";
-import { Header, Footer, Card, Button } from "@/components/ui";
+import { Card, Button } from "@/components/ui";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import {
-  BarChart3,
   DollarSign,
   Package,
-  Users,
   TrendingUp,
+  Clock,
   QrCode,
   Copy,
-  Download,
+  Check,
+  ExternalLink,
   ArrowUpRight,
   Loader2,
-  ExternalLink,
+  LinkIcon,
+  ShoppingBag,
 } from "lucide-react";
-import type { Dealer, Order, DealerStats } from "@/types";
+import type { Dealer, Organization, Order } from "@/types";
+
+interface CommissionTransaction {
+  id: string;
+  dealer_id: string;
+  order_id: string | null;
+  amount: number;
+  type: "earned" | "paid" | "adjustment";
+  status: string;
+  stripe_payout_id: string | null;
+  notes: string | null;
+  created_at: string;
+}
 
 export default function DealerPortalPage() {
-  const router = useRouter();
-  const { user, profile, isLoading: authLoading, isAuthenticated } = useAuth();
+  const { user, profile } = useAuth();
   const [dealer, setDealer] = useState<Dealer | null>(null);
-  const [stats, setStats] = useState<DealerStats | null>(null);
+  const [organization, setOrganization] = useState<Organization | null>(null);
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
+  const [commissionHistory, setCommissionHistory] = useState<CommissionTransaction[]>([]);
+  const [totalOrders, setTotalOrders] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [copied, setCopied] = useState(false);
 
   const supabase = createClient();
 
-  // Check if user is a dealer
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      router.push("/auth/login?redirectTo=/b2b/portal");
-      return;
-    }
+  const fetchData = useCallback(async () => {
+    if (!user) return;
+    setIsLoading(true);
 
-    if (!authLoading && profile?.role !== "dealer") {
-      router.push("/b2b");
-      return;
-    }
-  }, [authLoading, isAuthenticated, profile, router]);
+    const { data: dealerData } = await supabase
+      .from("dealers")
+      .select("*")
+      .eq("profile_id", user.id)
+      .maybeSingle();
 
-  // Fetch dealer data
-  useEffect(() => {
-    const fetchDealerData = async () => {
-      if (!user) return;
-
-      setIsLoading(true);
-
-      // Get dealer record
-      const { data: dealerData } = await supabase
-        .from("dealers")
-        .select("*, organizations(*)")
-        .eq("profile_id", user.id)
-        .maybeSingle();
-
-      if (dealerData) {
-        setDealer(dealerData as unknown as Dealer);
-        const dealerId = (dealerData as { id: string }).id;
-
-        // Get orders attributed to this dealer
-        const { data: orders } = await supabase
-          .from("aura_orders")
-          .select("*")
-          .eq("dealer_attribution_id", dealerId)
-          .order("created_at", { ascending: false })
-          .limit(10);
-
-        if (orders) {
-          setRecentOrders(orders as Order[]);
-        }
-
-        // Calculate stats
-        const { count: totalOrders } = await supabase
-          .from("aura_orders")
-          .select("*", { count: "exact", head: true })
-          .eq("dealer_attribution_id", dealerId);
-
-        const { data: revenueData } = await supabase
-          .from("aura_orders")
-          .select("total")
-          .eq("dealer_attribution_id", dealerId);
-
-        const totalRevenue =
-          (revenueData as { total: number }[] | null)?.reduce((sum, o) => sum + o.total, 0) || 0;
-
-        const dealerInfo = dealerData as { commission_earned: number; commission_pending?: number };
-        setStats({
-          totalOrders: totalOrders || 0,
-          totalRevenue,
-          commissionEarned: dealerInfo.commission_earned,
-          commissionPending: dealerInfo.commission_pending || 0,
-          activeReferrals: totalOrders || 0,
-          conversionRate: 0.12, // Would calculate from actual data
-        });
-      }
-
+    if (!dealerData) {
       setIsLoading(false);
-    };
-
-    if (user && profile?.role === "dealer") {
-      fetchDealerData();
+      return;
     }
-  }, [user, profile, supabase]);
 
-  const copyReferralLink = () => {
-    if (dealer) {
-      const link = `${window.location.origin}/v/${dealer.referral_code}`;
-      navigator.clipboard.writeText(link);
+    setDealer(dealerData as Dealer);
+
+    const dealerId = dealerData.id;
+    const orgId = dealerData.organization_id;
+
+    // Fetch org, orders, commission count, and commission history in parallel
+    const [orgResult, ordersResult, countResult, commissionResult] = await Promise.all([
+      orgId
+        ? supabase.from("organizations").select("*").eq("id", orgId).single()
+        : Promise.resolve({ data: null }),
+      supabase
+        .from("aura_orders")
+        .select("*")
+        .eq("dealer_attribution_id", dealerId)
+        .order("created_at", { ascending: false })
+        .limit(5),
+      supabase
+        .from("aura_orders")
+        .select("*", { count: "exact", head: true })
+        .eq("dealer_attribution_id", dealerId),
+      supabase
+        .from("commission_transactions")
+        .select("*")
+        .eq("dealer_id", dealerId)
+        .order("created_at", { ascending: false })
+        .limit(10),
+    ]);
+
+    if (orgResult.data) setOrganization(orgResult.data as Organization);
+    if (ordersResult.data) setRecentOrders(ordersResult.data as Order[]);
+    if (countResult.count !== null) setTotalOrders(countResult.count);
+    if (commissionResult.data) setCommissionHistory(commissionResult.data as CommissionTransaction[]);
+
+    setIsLoading(false);
+  }, [user, supabase]);
+
+  useEffect(() => {
+    if (user && profile?.role === "dealer") {
+      fetchData();
+    }
+  }, [user, profile, fetchData]);
+
+  const appUrl = typeof window !== "undefined" ? window.location.origin : "";
+  const referralLink = dealer ? `${appUrl}/ref/${dealer.referral_code}` : "";
+
+  const copyReferralLink = async () => {
+    if (!referralLink) return;
+    try {
+      await navigator.clipboard.writeText(referralLink);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Fallback for older browsers
+      const textarea = document.createElement("textarea");
+      textarea.value = referralLink;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
   };
 
-  if (authLoading || isLoading) {
+  const commissionPaid = dealer?.commission_paid ?? 0;
+  const commissionEarned = dealer?.commission_earned ?? 0;
+  const commissionPending = commissionEarned - commissionPaid;
+
+  if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-aura-primary" />
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
       </div>
     );
   }
 
   if (!dealer) {
-    return null;
+    return (
+      <div className="text-center py-20">
+        <ShoppingBag className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+        <h2 className="text-xl font-semibold text-slate-900 mb-2">No Dealer Account Found</h2>
+        <p className="text-slate-500 mb-6">
+          Your dealer profile hasn&apos;t been set up yet. Please contact support.
+        </p>
+        <a href="mailto:partnerships@aura.com">
+          <Button variant="primary" className="bg-blue-600 hover:bg-blue-700 focus:ring-blue-600">
+            Contact Support
+          </Button>
+        </a>
+      </div>
+    );
   }
 
-  const referralLink = `${typeof window !== "undefined" ? window.location.origin : ""}/v/${dealer.referral_code}`;
+  const statusColor = (status: string) => {
+    switch (status) {
+      case "delivered":
+        return "bg-emerald-100 text-emerald-700";
+      case "shipped":
+        return "bg-blue-100 text-blue-700";
+      case "processing":
+        return "bg-amber-100 text-amber-700";
+      case "cancelled":
+        return "bg-red-100 text-red-700";
+      default:
+        return "bg-slate-100 text-slate-700";
+    }
+  };
+
+  const commissionTypeColor = (type: string) => {
+    switch (type) {
+      case "earned":
+        return "text-emerald-600";
+      case "paid":
+        return "text-blue-600";
+      case "adjustment":
+        return "text-amber-600";
+      default:
+        return "text-slate-600";
+    }
+  };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
-      <Header />
+    <div>
+      {/* Welcome Header */}
+      <div className="mb-8">
+        <h1 className="text-2xl lg:text-3xl font-bold text-slate-900">
+          Welcome back, {profile?.full_name?.split(" ")[0] || "Partner"}
+        </h1>
+        <p className="text-slate-500 mt-1">
+          {organization ? `${organization.name} ` : ""}
+          {organization && (
+            <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-blue-100 text-blue-700 capitalize ml-1">
+              {organization.dealer_tier}
+            </span>
+          )}
+        </p>
+      </div>
 
-      <main className="flex-1 py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Dealer Portal</h1>
-            <p className="text-gray-600">
-              Welcome back! Here&apos;s your business overview.
-            </p>
-          </div>
-
-          {/* Stats Grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <Card padding="md">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-aura-primary/10 rounded-lg flex items-center justify-center">
-                  <Package className="w-5 h-5 text-aura-primary" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Total Orders</p>
-                  <p className="text-2xl font-bold">{stats?.totalOrders || 0}</p>
-                </div>
-              </div>
-            </Card>
-
-            <Card padding="md">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                  <DollarSign className="w-5 h-5 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Total Revenue</p>
-                  <p className="text-2xl font-bold">
-                    {formatCurrency(stats?.totalRevenue || 0)}
-                  </p>
-                </div>
-              </div>
-            </Card>
-
-            <Card padding="md">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-aura-accent/10 rounded-lg flex items-center justify-center">
-                  <TrendingUp className="w-5 h-5 text-aura-accent" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Commission Earned</p>
-                  <p className="text-2xl font-bold">
-                    {formatCurrency(stats?.commissionEarned || 0)}
-                  </p>
-                </div>
-              </div>
-            </Card>
-
-            <Card padding="md">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <Users className="w-5 h-5 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Pending Payout</p>
-                  <p className="text-2xl font-bold">
-                    {formatCurrency(stats?.commissionPending || 0)}
-                  </p>
-                </div>
-              </div>
-            </Card>
-          </div>
-
-          <div className="grid lg:grid-cols-3 gap-8">
-            {/* Main Content */}
-            <div className="lg:col-span-2 space-y-8">
-              {/* Recent Orders */}
-              <Card padding="lg">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-semibold">Recent Referral Orders</h2>
-                  <Button variant="ghost" size="sm">
-                    View All
-                    <ArrowUpRight className="w-4 h-4 ml-1" />
-                  </Button>
-                </div>
-
-                {recentOrders.length > 0 ? (
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b">
-                          <th className="text-left py-3 px-2 text-sm font-medium text-gray-500">
-                            Order
-                          </th>
-                          <th className="text-left py-3 px-2 text-sm font-medium text-gray-500">
-                            Date
-                          </th>
-                          <th className="text-left py-3 px-2 text-sm font-medium text-gray-500">
-                            Status
-                          </th>
-                          <th className="text-right py-3 px-2 text-sm font-medium text-gray-500">
-                            Amount
-                          </th>
-                          <th className="text-right py-3 px-2 text-sm font-medium text-gray-500">
-                            Commission
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {recentOrders.map((order) => (
-                          <tr key={order.id} className="border-b last:border-0">
-                            <td className="py-3 px-2 font-medium">
-                              #{order.id.slice(0, 8)}
-                            </td>
-                            <td className="py-3 px-2 text-gray-500">
-                              {formatDate(order.created_at)}
-                            </td>
-                            <td className="py-3 px-2">
-                              <span
-                                className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                  order.status === "delivered"
-                                    ? "bg-green-100 text-green-700"
-                                    : order.status === "shipped"
-                                    ? "bg-blue-100 text-blue-700"
-                                    : "bg-gray-100 text-gray-700"
-                                }`}
-                              >
-                                {order.status}
-                              </span>
-                            </td>
-                            <td className="py-3 px-2 text-right">
-                              {formatCurrency(order.total)}
-                            </td>
-                            <td className="py-3 px-2 text-right text-aura-primary font-medium">
-                              {formatCurrency(order.total * 0.1)}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <Package className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                    <p>No orders yet. Share your referral link to get started!</p>
-                  </div>
-                )}
-              </Card>
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <Card padding="md" className="border border-slate-200 shadow-sm hover:shadow-md">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <DollarSign className="w-5 h-5 text-emerald-600" />
             </div>
-
-            {/* Sidebar */}
-            <div className="space-y-6">
-              {/* Referral Code Card */}
-              <Card padding="lg" variant="bordered">
-                <div className="text-center">
-                  <QrCode className="w-12 h-12 text-aura-primary mx-auto mb-4" />
-                  <h3 className="font-semibold mb-2">Your Referral Code</h3>
-                  <p className="text-3xl font-bold text-aura-primary mb-4">
-                    {dealer.referral_code}
-                  </p>
-
-                  <div className="bg-gray-50 rounded-lg p-3 mb-4">
-                    <p className="text-xs text-gray-500 mb-1">Your Link</p>
-                    <p className="text-sm font-mono break-all">{referralLink}</p>
-                  </div>
-
-                  <div className="flex gap-2">
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      className="flex-1"
-                      onClick={copyReferralLink}
-                    >
-                      <Copy className="w-4 h-4 mr-1" />
-                      {copied ? "Copied!" : "Copy"}
-                    </Button>
-                    <Button variant="outline" size="sm" className="flex-1">
-                      <Download className="w-4 h-4 mr-1" />
-                      QR Code
-                    </Button>
-                  </div>
-                </div>
-              </Card>
-
-              {/* Quick Links */}
-              <Card padding="lg">
-                <h3 className="font-semibold mb-4">Quick Links</h3>
-                <div className="space-y-2">
-                  <a
-                    href="/b2b/products"
-                    className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    <span>Product Catalog</span>
-                    <ExternalLink className="w-4 h-4 text-gray-400" />
-                  </a>
-                  <a
-                    href="/b2b/orders"
-                    className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    <span>Place Wholesale Order</span>
-                    <ExternalLink className="w-4 h-4 text-gray-400" />
-                  </a>
-                  <a
-                    href="/b2b/payouts"
-                    className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    <span>Payout History</span>
-                    <ExternalLink className="w-4 h-4 text-gray-400" />
-                  </a>
-                  <a
-                    href="/b2b/marketing"
-                    className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    <span>Marketing Materials</span>
-                    <ExternalLink className="w-4 h-4 text-gray-400" />
-                  </a>
-                </div>
-              </Card>
-
-              {/* Support */}
-              <Card padding="lg" variant="dark">
-                <h3 className="font-semibold mb-2">Need Help?</h3>
-                <p className="text-gray-300 text-sm mb-4">
-                  Our dealer success team is here to help you grow.
-                </p>
-                <Button variant="secondary" size="sm" className="w-full">
-                  Contact Support
-                </Button>
-              </Card>
+            <div className="min-w-0">
+              <p className="text-xs text-slate-500 font-medium">Total Earned</p>
+              <p className="text-lg lg:text-xl font-bold text-slate-900 truncate">
+                {formatCurrency(commissionEarned)}
+              </p>
             </div>
+          </div>
+        </Card>
+
+        <Card padding="md" className="border border-slate-200 shadow-sm hover:shadow-md">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <Clock className="w-5 h-5 text-amber-600" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs text-slate-500 font-medium">Pending</p>
+              <p className="text-lg lg:text-xl font-bold text-slate-900 truncate">
+                {formatCurrency(commissionPending > 0 ? commissionPending : 0)}
+              </p>
+            </div>
+          </div>
+        </Card>
+
+        <Card padding="md" className="border border-slate-200 shadow-sm hover:shadow-md">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <TrendingUp className="w-5 h-5 text-blue-600" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs text-slate-500 font-medium">Paid Out</p>
+              <p className="text-lg lg:text-xl font-bold text-slate-900 truncate">
+                {formatCurrency(commissionPaid)}
+              </p>
+            </div>
+          </div>
+        </Card>
+
+        <Card padding="md" className="border border-slate-200 shadow-sm hover:shadow-md">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <Package className="w-5 h-5 text-purple-600" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs text-slate-500 font-medium">Referred Orders</p>
+              <p className="text-lg lg:text-xl font-bold text-slate-900">
+                {totalOrders}
+              </p>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      {/* Referral Link Section */}
+      <Card padding="lg" className="border border-blue-200 bg-blue-50/50 shadow-sm mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+          <div className="flex items-center gap-3 flex-shrink-0">
+            <div className="w-11 h-11 rounded-lg bg-blue-600 flex items-center justify-center">
+              <QrCode className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-slate-900">Your Referral Link</h3>
+              <p className="text-sm text-slate-500">Share with customers to earn commissions</p>
+            </div>
+          </div>
+          <div className="flex-1 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            <div className="flex-1 bg-white rounded-lg border border-slate-200 px-4 py-2.5 flex items-center gap-2 min-w-0">
+              <LinkIcon className="w-4 h-4 text-slate-400 flex-shrink-0" />
+              <code className="text-sm text-slate-700 truncate font-mono">{referralLink}</code>
+            </div>
+            <Button
+              variant="primary"
+              size="md"
+              className="bg-blue-600 hover:bg-blue-700 focus:ring-blue-600 flex-shrink-0"
+              onClick={copyReferralLink}
+            >
+              {copied ? (
+                <>
+                  <Check className="w-4 h-4 mr-1.5" />
+                  Copied
+                </>
+              ) : (
+                <>
+                  <Copy className="w-4 h-4 mr-1.5" />
+                  Copy Link
+                </>
+              )}
+            </Button>
           </div>
         </div>
-      </main>
+        <div className="mt-3 flex items-center gap-2 text-xs text-slate-500">
+          <span className="font-medium">Referral Code:</span>
+          <span className="font-mono bg-white px-2 py-0.5 rounded border border-slate-200">
+            {dealer.referral_code}
+          </span>
+          {organization && (
+            <>
+              <span className="mx-1">|</span>
+              <span>Commission rate: {(organization.commission_rate * 100).toFixed(0)}%</span>
+            </>
+          )}
+        </div>
+      </Card>
 
-      <Footer />
+      <div className="grid lg:grid-cols-3 gap-8">
+        {/* Recent Referred Orders */}
+        <div className="lg:col-span-2">
+          <Card padding="lg" className="border border-slate-200 shadow-sm">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-lg font-semibold text-slate-900">Recent Referred Orders</h2>
+              <a
+                href="/b2b/portal/orders"
+                className="text-sm font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1"
+              >
+                View all
+                <ArrowUpRight className="w-3.5 h-3.5" />
+              </a>
+            </div>
+
+            {recentOrders.length > 0 ? (
+              <div className="overflow-x-auto -mx-6">
+                <table className="w-full min-w-[500px]">
+                  <thead>
+                    <tr className="border-b border-slate-100">
+                      <th className="text-left py-3 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                        Order
+                      </th>
+                      <th className="text-left py-3 px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                        Date
+                      </th>
+                      <th className="text-left py-3 px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="text-right py-3 px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                        Total
+                      </th>
+                      <th className="text-right py-3 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                        Commission
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-50">
+                    {recentOrders.map((order) => (
+                      <tr key={order.id} className="hover:bg-slate-50 transition-colors">
+                        <td className="py-3 px-6 font-medium text-sm text-slate-900">
+                          #{order.order_number || order.id.slice(0, 8)}
+                        </td>
+                        <td className="py-3 px-3 text-sm text-slate-500">
+                          {formatDate(order.created_at)}
+                        </td>
+                        <td className="py-3 px-3">
+                          <span
+                            className={`px-2 py-1 rounded-md text-xs font-medium capitalize ${statusColor(order.status)}`}
+                          >
+                            {order.status}
+                          </span>
+                        </td>
+                        <td className="py-3 px-3 text-right text-sm text-slate-900">
+                          {formatCurrency(order.total)}
+                        </td>
+                        <td className="py-3 px-6 text-right text-sm font-medium text-emerald-600">
+                          {formatCurrency(
+                            order.total * (organization?.commission_rate ?? 0.1)
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <Package className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+                <p className="text-sm text-slate-500">
+                  No referred orders yet. Share your link to get started.
+                </p>
+              </div>
+            )}
+          </Card>
+        </div>
+
+        {/* Commission History */}
+        <div>
+          <Card padding="lg" className="border border-slate-200 shadow-sm">
+            <h2 className="text-lg font-semibold text-slate-900 mb-5">Commission History</h2>
+
+            {commissionHistory.length > 0 ? (
+              <div className="space-y-3">
+                {commissionHistory.map((tx) => (
+                  <div
+                    key={tx.id}
+                    className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0"
+                  >
+                    <div>
+                      <p className="text-sm font-medium text-slate-900 capitalize">{tx.type}</p>
+                      <p className="text-xs text-slate-500">
+                        {formatDate(tx.created_at)}
+                      </p>
+                      {tx.notes && (
+                        <p className="text-xs text-slate-400 mt-0.5 truncate max-w-[180px]">
+                          {tx.notes}
+                        </p>
+                      )}
+                    </div>
+                    <span className={`text-sm font-semibold ${commissionTypeColor(tx.type)}`}>
+                      {tx.type === "paid" ? "-" : "+"}
+                      {formatCurrency(tx.amount)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <DollarSign className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                <p className="text-sm text-slate-500">No commission activity yet.</p>
+              </div>
+            )}
+          </Card>
+
+          {/* Quick Links */}
+          <Card padding="lg" className="border border-slate-200 shadow-sm mt-6">
+            <h3 className="text-sm font-semibold text-slate-900 mb-3">Quick Actions</h3>
+            <div className="space-y-1">
+              <a
+                href="/b2b/portal/products"
+                className="flex items-center justify-between p-2.5 rounded-lg hover:bg-slate-50 transition-colors text-sm text-slate-700"
+              >
+                <span>Browse B2B Catalog</span>
+                <ExternalLink className="w-4 h-4 text-slate-400" />
+              </a>
+              <a
+                href="/b2b/portal/orders"
+                className="flex items-center justify-between p-2.5 rounded-lg hover:bg-slate-50 transition-colors text-sm text-slate-700"
+              >
+                <span>Place Wholesale Order</span>
+                <ExternalLink className="w-4 h-4 text-slate-400" />
+              </a>
+            </div>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }
