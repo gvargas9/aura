@@ -9,3 +9,11 @@ export { OrderSummary, BoxOrderSummary } from "./OrderSummary";
 export { RecommendedPairings, HorizontalPairings } from "./RecommendedPairings";
 export { QuantityControl } from "./QuantityControl";
 export { NotificationCenter } from "./NotificationCenter";
+export {
+  Skeleton,
+  ProductCardSkeleton,
+  ProductGridSkeleton,
+  DashboardSkeleton,
+  TableSkeleton,
+  BoxBuilderSkeleton,
+} from "./SkeletonLoader";

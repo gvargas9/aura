@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks";
 import { Card, Button, Input } from "@/components/ui";
@@ -17,6 +17,14 @@ import {
   ChevronUp,
   ShoppingCart,
   X,
+  RefreshCw,
+  BookmarkPlus,
+  Calendar,
+  CreditCard,
+  Download,
+  CheckCircle2,
+  Circle,
+  ArrowRight,
 } from "lucide-react";
 import type { Order, Dealer, Organization, Json } from "@/types";
 
@@ -28,6 +36,30 @@ interface B2BCartStoredItem {
   price: number;
   retailPrice: number;
   image: string | null;
+}
+
+type OrderTab = "all" | "pending" | "processing" | "completed";
+
+const PO_STATUS_STEPS = [
+  { key: "submitted", label: "Submitted" },
+  { key: "approved", label: "Approved" },
+  { key: "invoiced", label: "Invoiced" },
+  { key: "shipped", label: "Shipped" },
+  { key: "delivered", label: "Delivered" },
+];
+
+function getStepIndex(status: string): number {
+  const map: Record<string, number> = {
+    pending: 0,
+    submitted: 0,
+    processing: 1,
+    approved: 1,
+    invoiced: 2,
+    shipped: 3,
+    delivered: 4,
+    cancelled: -1,
+  };
+  return map[status] ?? 0;
 }
 
 export default function B2BOrdersPage() {
@@ -42,10 +74,13 @@ export default function B2BOrdersPage() {
   const [submitError, setSubmitError] = useState("");
   const [showOrderForm, setShowOrderForm] = useState(false);
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<OrderTab>("all");
+  const [savedTemplateSuccess, setSavedTemplateSuccess] = useState(false);
 
   // Form state
   const [poNumber, setPoNumber] = useState("");
   const [notes, setNotes] = useState("");
+  const [requestedDeliveryDate, setRequestedDeliveryDate] = useState("");
   const [shippingAddress, setShippingAddress] = useState({
     firstName: "",
     lastName: "",
@@ -98,8 +133,10 @@ export default function B2BOrdersPage() {
   }, [user, supabase]);
 
   useEffect(() => {
-    if (user && profile?.role === "dealer") {
+    if (user && (profile?.role === "dealer" || profile?.role === "admin")) {
       fetchData();
+    } else if (user && profile) {
+      setIsLoading(false);
     }
   }, [user, profile, fetchData]);
 
@@ -115,7 +152,7 @@ export default function B2BOrdersPage() {
             setShowOrderForm(true);
           }
         } catch {
-          // Invalid JSON, ignore
+          // Invalid JSON
         }
       }
     }
@@ -133,11 +170,46 @@ export default function B2BOrdersPage() {
     if (updated.length === 0) setShowOrderForm(false);
   };
 
+  const handleReorder = (order: Order) => {
+    const items = order.items as unknown as B2BCartStoredItem[];
+    if (!items || items.length === 0) return;
+    const restored = items.map((item) => ({
+      productId: item.productId,
+      sku: item.sku || "",
+      name: item.name,
+      quantity: item.quantity,
+      price: item.price,
+      retailPrice: item.retailPrice || item.price,
+      image: item.image || null,
+    }));
+    setCartItems(restored);
+    localStorage.setItem("aura_b2b_cart", JSON.stringify(restored));
+    setShowOrderForm(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleSaveAsTemplate = async (order: Order) => {
+    const items = order.items as unknown as B2BCartStoredItem[];
+    if (!items || items.length === 0) return;
+    // Save template to localStorage (would be DB in production)
+    const templates = JSON.parse(
+      localStorage.getItem("aura_b2b_templates") || "[]"
+    );
+    templates.push({
+      id: crypto.randomUUID(),
+      name: `Template from ${order.order_number || order.id.slice(0, 8)}`,
+      items: items,
+      createdAt: new Date().toISOString(),
+    });
+    localStorage.setItem("aura_b2b_templates", JSON.stringify(templates));
+    setSavedTemplateSuccess(true);
+    setTimeout(() => setSavedTemplateSuccess(false), 2000);
+  };
+
   const handleSubmitOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !dealer || cartItems.length === 0) return;
 
-    // Validate required fields
     if (
       !shippingAddress.firstName ||
       !shippingAddress.lastName ||
@@ -163,26 +235,35 @@ export default function B2BOrdersPage() {
       image: item.image,
     }));
 
-    const orderNotes = [poNumber ? `PO#: ${poNumber}` : "", notes]
+    const orderNotes = [
+      poNumber ? `PO#: ${poNumber}` : "",
+      requestedDeliveryDate ? `Requested Delivery: ${requestedDeliveryDate}` : "",
+      notes,
+    ]
       .filter(Boolean)
       .join(" | ");
 
     const orderNumber = `B2B-${Date.now().toString(36).toUpperCase()}`;
 
-    const { data, error } = await supabase.from("aura_orders").insert({
-      user_id: user.id,
-      organization_id: dealer.organization_id,
-      order_number: orderNumber,
-      status: "pending" as const,
-      subtotal: cartTotal,
-      discount: 0,
-      shipping: 0,
-      tax: 0,
-      total: cartTotal,
-      items: orderItems as unknown as Json,
-      shipping_address: shippingAddress as unknown as Json,
-      notes: orderNotes || null,
-    }).select().single();
+    const { data, error } = await supabase
+      .from("aura_orders")
+      .insert({
+        user_id: user.id,
+        organization_id: dealer.organization_id,
+        order_number: orderNumber,
+        status: "pending" as const,
+        subtotal: cartTotal,
+        discount: 0,
+        shipping: 0,
+        tax: 0,
+        total: cartTotal,
+        items: orderItems as unknown as Json,
+        shipping_address: shippingAddress as unknown as Json,
+        notes: orderNotes || null,
+        purchase_type: "b2b_wholesale",
+      })
+      .select()
+      .single();
 
     if (error) {
       setSubmitError("Failed to submit order. Please try again.");
@@ -190,23 +271,21 @@ export default function B2BOrdersPage() {
       return;
     }
 
-    // Clear cart
     localStorage.removeItem("aura_b2b_cart");
     setCartItems([]);
     setSubmitSuccess(true);
     setIsSubmitting(false);
 
-    // Add new order to the list
     if (data) {
       setOrders((prev) => [data as Order, ...prev]);
     }
 
-    // Reset form after delay
     setTimeout(() => {
       setShowOrderForm(false);
       setSubmitSuccess(false);
       setPoNumber("");
       setNotes("");
+      setRequestedDeliveryDate("");
       setShippingAddress({
         firstName: "",
         lastName: "",
@@ -220,6 +299,36 @@ export default function B2BOrdersPage() {
       });
     }, 3000);
   };
+
+  const filteredOrders = useMemo(() => {
+    switch (activeTab) {
+      case "pending":
+        return orders.filter((o) => o.status === "pending");
+      case "processing":
+        return orders.filter(
+          (o) => o.status === "processing" || o.status === "shipped"
+        );
+      case "completed":
+        return orders.filter(
+          (o) => o.status === "delivered" || o.status === "cancelled"
+        );
+      default:
+        return orders;
+    }
+  }, [orders, activeTab]);
+
+  const tabCounts = useMemo(() => {
+    return {
+      all: orders.length,
+      pending: orders.filter((o) => o.status === "pending").length,
+      processing: orders.filter(
+        (o) => o.status === "processing" || o.status === "shipped"
+      ).length,
+      completed: orders.filter(
+        (o) => o.status === "delivered" || o.status === "cancelled"
+      ).length,
+    };
+  }, [orders]);
 
   const statusColor = (status: string) => {
     switch (status) {
@@ -262,33 +371,52 @@ export default function B2BOrdersPage() {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-slate-900">Orders</h1>
+          <h1 className="text-2xl lg:text-3xl font-bold text-slate-900">
+            Orders
+          </h1>
           <p className="text-slate-500 mt-1">
-            {organization ? `${organization.name} wholesale orders` : "Manage your B2B orders"}
+            {organization
+              ? `${organization.name} wholesale orders`
+              : "Manage your B2B orders"}
           </p>
         </div>
-        {cartItems.length === 0 && !showOrderForm && (
-          <a href="/b2b/portal/products">
-            <Button
-              variant="primary"
-              className="bg-blue-600 hover:bg-blue-700 focus:ring-blue-600"
-            >
-              <ShoppingCart className="w-4 h-4 mr-2" />
-              Browse Products
-            </Button>
-          </a>
-        )}
+        <div className="flex items-center gap-3">
+          {organization && organization.payment_terms !== "immediate" && (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
+              <CreditCard className="w-3.5 h-3.5" />
+              {organization.payment_terms
+                .replace("_", " ")
+                .replace("net", "Net-")}
+            </span>
+          )}
+          {cartItems.length === 0 && !showOrderForm && (
+            <a href="/b2b/portal/products">
+              <Button
+                variant="primary"
+                className="bg-blue-600 hover:bg-blue-700 focus:ring-blue-600"
+              >
+                <ShoppingCart className="w-4 h-4 mr-2" />
+                Browse Products
+              </Button>
+            </a>
+          )}
+        </div>
       </div>
 
       {/* Order Submission Form */}
       {showOrderForm && (
-        <Card padding="lg" className="border border-blue-200 bg-blue-50/30 shadow-sm mb-8">
+        <Card
+          padding="lg"
+          className="border border-blue-200 bg-blue-50/30 shadow-sm mb-8"
+        >
           {submitSuccess ? (
             <div className="text-center py-8">
               <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
                 <Check className="w-8 h-8 text-emerald-600" />
               </div>
-              <h2 className="text-xl font-semibold text-slate-900 mb-2">Order Submitted</h2>
+              <h2 className="text-xl font-semibold text-slate-900 mb-2">
+                Order Submitted
+              </h2>
               <p className="text-slate-500">
                 Your purchase order has been received and is pending approval.
               </p>
@@ -304,7 +432,8 @@ export default function B2BOrdersPage() {
                     New Purchase Order
                   </h2>
                   <p className="text-sm text-slate-500">
-                    {cartItems.length} item{cartItems.length !== 1 ? "s" : ""} in cart
+                    {cartItems.length} item
+                    {cartItems.length !== 1 ? "s" : ""} in cart
                   </p>
                 </div>
               </div>
@@ -312,7 +441,9 @@ export default function B2BOrdersPage() {
               {/* Cart Items Review */}
               <div className="bg-white rounded-lg border border-slate-200 mb-6">
                 <div className="px-4 py-3 border-b border-slate-100">
-                  <h3 className="text-sm font-semibold text-slate-700">Order Items</h3>
+                  <h3 className="text-sm font-semibold text-slate-700">
+                    Order Items
+                  </h3>
                 </div>
                 <div className="divide-y divide-slate-100">
                   {cartItems.map((item) => (
@@ -356,15 +487,17 @@ export default function B2BOrdersPage() {
                   ))}
                 </div>
                 <div className="px-4 py-3 border-t border-slate-200 flex justify-between">
-                  <span className="font-semibold text-slate-900">Order Total</span>
+                  <span className="font-semibold text-slate-900">
+                    Order Total
+                  </span>
                   <span className="font-bold text-lg text-slate-900">
                     {formatCurrency(cartTotal)}
                   </span>
                 </div>
               </div>
 
-              {/* PO Number and Notes */}
-              <div className="grid sm:grid-cols-2 gap-4 mb-6">
+              {/* PO Number, Notes, and Delivery Date */}
+              <div className="grid sm:grid-cols-3 gap-4 mb-6">
                 <Input
                   label="PO Number (optional)"
                   value={poNumber}
@@ -372,8 +505,20 @@ export default function B2BOrdersPage() {
                   placeholder="e.g. PO-2026-001"
                   className="focus:ring-blue-600"
                 />
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Requested Delivery Date
+                  </label>
+                  <input
+                    type="date"
+                    value={requestedDeliveryDate}
+                    onChange={(e) => setRequestedDeliveryDate(e.target.value)}
+                    min={new Date().toISOString().split("T")[0]}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none"
+                  />
+                </div>
                 <Input
-                  label="Notes (optional)"
+                  label="Delivery Notes"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Special instructions..."
@@ -525,15 +670,60 @@ export default function B2BOrdersPage() {
         </Card>
       )}
 
+      {/* Order Tabs */}
+      <div className="flex items-center gap-1 mb-6 border-b border-slate-200 overflow-x-auto">
+        {(
+          [
+            { key: "all", label: "All Orders" },
+            { key: "pending", label: "Pending Approval" },
+            { key: "processing", label: "In Progress" },
+            { key: "completed", label: "Completed" },
+          ] as { key: OrderTab; label: string }[]
+        ).map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key)}
+            className={`px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
+              activeTab === tab.key
+                ? "border-blue-600 text-blue-700"
+                : "border-transparent text-slate-500 hover:text-slate-700"
+            }`}
+          >
+            {tab.label}
+            {tabCounts[tab.key] > 0 && (
+              <span
+                className={`ml-1.5 px-1.5 py-0.5 text-xs rounded-full ${
+                  activeTab === tab.key
+                    ? "bg-blue-100 text-blue-700"
+                    : "bg-slate-100 text-slate-600"
+                }`}
+              >
+                {tabCounts[tab.key]}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* Template saved notification */}
+      {savedTemplateSuccess && (
+        <div className="mb-4 flex items-center gap-2 px-4 py-3 bg-emerald-50 text-emerald-700 rounded-lg text-sm font-medium border border-emerald-200">
+          <Check className="w-4 h-4" />
+          Order saved as template
+        </div>
+      )}
+
       {/* Order History */}
       <Card padding="lg" className="border border-slate-200 shadow-sm">
-        <h2 className="text-lg font-semibold text-slate-900 mb-5">Order History</h2>
-
-        {orders.length > 0 ? (
+        {filteredOrders.length > 0 ? (
           <div className="space-y-3">
-            {orders.map((order) => {
+            {filteredOrders.map((order) => {
               const isExpanded = expandedOrder === order.id;
-              const items = (order.items as unknown as B2BCartStoredItem[]) || [];
+              const items =
+                (order.items as unknown as B2BCartStoredItem[]) || [];
+              const currentStep = getStepIndex(order.status);
+              const poMatch = order.notes?.match(/PO#:\s*([^\s|]+)/);
+              const poNum = poMatch ? poMatch[1] : null;
 
               return (
                 <div
@@ -550,21 +740,31 @@ export default function B2BOrdersPage() {
                   >
                     <div className="flex items-center gap-3 flex-1 min-w-0">
                       <div
-                        className={`w-8 h-8 rounded-lg flex items-center justify-center ${statusColor(order.status)}`}
+                        className={`w-8 h-8 rounded-lg flex items-center justify-center ${statusColor(
+                          order.status
+                        )}`}
                       >
                         {statusIcon(order.status)}
                       </div>
                       <div className="min-w-0">
                         <p className="text-sm font-semibold text-slate-900">
-                          {order.order_number || `#${order.id.slice(0, 8)}`}
+                          {order.order_number ||
+                            `#${order.id.slice(0, 8)}`}
                         </p>
                         <p className="text-xs text-slate-500">
                           {formatDate(order.created_at)}
+                          {poNum && (
+                            <span className="ml-2 font-mono text-blue-600">
+                              PO: {poNum}
+                            </span>
+                          )}
                         </p>
                       </div>
                     </div>
                     <span
-                      className={`px-2.5 py-1 rounded-md text-xs font-medium capitalize hidden sm:inline-block ${statusColor(order.status)}`}
+                      className={`px-2.5 py-1 rounded-md text-xs font-medium capitalize hidden sm:inline-block ${statusColor(
+                        order.status
+                      )}`}
                     >
                       {order.status}
                     </span>
@@ -583,19 +783,85 @@ export default function B2BOrdersPage() {
                       id={`order-details-${order.id}`}
                       className="border-t border-slate-100 bg-slate-50 p-4"
                     >
-                      {order.notes && (
-                        <p className="text-sm text-slate-600 mb-3">
-                          <span className="font-medium">Notes:</span> {order.notes}
-                        </p>
+                      {/* PO Status Timeline */}
+                      {order.status !== "cancelled" && (
+                        <div className="mb-5">
+                          <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
+                            Order Progress
+                          </h4>
+                          <div className="flex items-center justify-between">
+                            {PO_STATUS_STEPS.map((step, idx) => {
+                              const isCompleted = idx <= currentStep;
+                              const isCurrent = idx === currentStep;
+                              return (
+                                <div
+                                  key={step.key}
+                                  className="flex-1 flex flex-col items-center relative"
+                                >
+                                  {idx > 0 && (
+                                    <div
+                                      className={`absolute top-3 right-1/2 w-full h-0.5 -translate-y-1/2 ${
+                                        idx <= currentStep
+                                          ? "bg-blue-600"
+                                          : "bg-slate-200"
+                                      }`}
+                                      style={{ left: "-50%" }}
+                                    />
+                                  )}
+                                  <div
+                                    className={`relative z-10 w-6 h-6 rounded-full flex items-center justify-center ${
+                                      isCompleted
+                                        ? "bg-blue-600 text-white"
+                                        : "bg-slate-200 text-slate-400"
+                                    } ${
+                                      isCurrent
+                                        ? "ring-2 ring-blue-200"
+                                        : ""
+                                    }`}
+                                  >
+                                    {isCompleted ? (
+                                      <CheckCircle2 className="w-4 h-4" />
+                                    ) : (
+                                      <Circle className="w-4 h-4" />
+                                    )}
+                                  </div>
+                                  <span
+                                    className={`text-xs mt-1.5 font-medium ${
+                                      isCompleted
+                                        ? "text-blue-700"
+                                        : "text-slate-400"
+                                    }`}
+                                  >
+                                    {step.label}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
                       )}
-                      {order.tracking_number && (
-                        <p className="text-sm text-slate-600 mb-3">
-                          <span className="font-medium">Tracking:</span>{" "}
-                          <span className="font-mono">{order.tracking_number}</span>
-                        </p>
-                      )}
+
+                      {/* Order Details */}
+                      <div className="grid sm:grid-cols-2 gap-4 mb-4">
+                        {order.notes && (
+                          <p className="text-sm text-slate-600">
+                            <span className="font-medium">Notes:</span>{" "}
+                            {order.notes}
+                          </p>
+                        )}
+                        {order.tracking_number && (
+                          <p className="text-sm text-slate-600">
+                            <span className="font-medium">Tracking:</span>{" "}
+                            <span className="font-mono">
+                              {order.tracking_number}
+                            </span>
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Line Items */}
                       {items.length > 0 && (
-                        <div className="bg-white rounded-lg border border-slate-200">
+                        <div className="bg-white rounded-lg border border-slate-200 mb-4">
                           <div className="px-3 py-2 border-b border-slate-100 text-xs font-semibold text-slate-500 uppercase tracking-wider">
                             Items
                           </div>
@@ -605,11 +871,15 @@ export default function B2BOrdersPage() {
                                 key={idx}
                                 className="px-3 py-2 flex items-center justify-between text-sm"
                               >
-                                <span className="text-slate-700">{item.name}</span>
+                                <span className="text-slate-700">
+                                  {item.name}
+                                </span>
                                 <div className="flex items-center gap-4 text-slate-500">
                                   <span>x{item.quantity}</span>
                                   <span className="font-medium text-slate-900">
-                                    {formatCurrency(item.price * item.quantity)}
+                                    {formatCurrency(
+                                      item.price * item.quantity
+                                    )}
                                   </span>
                                 </div>
                               </div>
@@ -617,6 +887,28 @@ export default function B2BOrdersPage() {
                           </div>
                         </div>
                       )}
+
+                      {/* Action Buttons */}
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          onClick={() => handleReorder(order)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors border border-blue-100"
+                        >
+                          <RefreshCw className="w-3.5 h-3.5" />
+                          Quick Reorder
+                        </button>
+                        <button
+                          onClick={() => handleSaveAsTemplate(order)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-700 bg-white rounded-lg hover:bg-slate-50 transition-colors border border-slate-200"
+                        >
+                          <BookmarkPlus className="w-3.5 h-3.5" />
+                          Save as Template
+                        </button>
+                        <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-700 bg-white rounded-lg hover:bg-slate-50 transition-colors border border-slate-200">
+                          <Download className="w-3.5 h-3.5" />
+                          Invoice
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -627,7 +919,9 @@ export default function B2BOrdersPage() {
           <div className="text-center py-12">
             <Package className="w-10 h-10 text-slate-300 mx-auto mb-3" />
             <p className="text-sm text-slate-500">
-              No orders yet. Browse products to place your first wholesale order.
+              {activeTab === "all"
+                ? "No orders yet. Browse products to place your first wholesale order."
+                : `No ${activeTab} orders.`}
             </p>
           </div>
         )}

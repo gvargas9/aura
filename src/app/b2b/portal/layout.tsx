@@ -4,7 +4,6 @@ import { useState, useEffect, createContext, useContext } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { useAuth } from "@/hooks";
 import {
   LayoutDashboard,
   Package,
@@ -16,29 +15,56 @@ import {
   Building2,
   Loader2,
   ChevronRight,
+  BarChart3,
+  MapPin,
+  FileText,
+  BookmarkCheck,
+  CreditCard,
 } from "lucide-react";
-import type { Dealer, Organization } from "@/types";
+import type { Dealer, Organization, Profile } from "@/types";
 
 interface DealerContextValue {
   dealer: Dealer | null;
   organization: Organization | null;
+  profile: Profile | null;
 }
 
 const DealerContext = createContext<DealerContextValue>({
   dealer: null,
   organization: null,
+  profile: null,
 });
 
 export function useDealerContext() {
   return useContext(DealerContext);
 }
 
+const TIER_CONFIG: Record<string, { color: string; bg: string; border: string }> = {
+  bronze: { color: "text-amber-700", bg: "bg-amber-50", border: "border-amber-200" },
+  silver: { color: "text-slate-600", bg: "bg-slate-100", border: "border-slate-300" },
+  gold: { color: "text-yellow-700", bg: "bg-yellow-50", border: "border-yellow-300" },
+  platinum: { color: "text-indigo-700", bg: "bg-indigo-50", border: "border-indigo-200" },
+};
+
 const navItems = [
-  { href: "/b2b/portal", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/b2b/portal", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/b2b/portal/products", label: "Products", icon: Package },
   { href: "/b2b/portal/orders", label: "Orders", icon: ShoppingCart },
+  { href: "/b2b/portal/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/b2b/portal/locations", label: "Locations", icon: MapPin },
   { href: "/account", label: "My Account", icon: User },
 ];
+
+function TierBadge({ tier }: { tier: string }) {
+  const config = TIER_CONFIG[tier] || TIER_CONFIG.bronze;
+  return (
+    <span
+      className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold capitalize border ${config.color} ${config.bg} ${config.border}`}
+    >
+      {tier}
+    </span>
+  );
+}
 
 export default function PortalLayout({
   children,
@@ -47,34 +73,45 @@ export default function PortalLayout({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, profile, isLoading: authLoading, isAuthenticated, signOut } = useAuth();
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [dealer, setDealer] = useState<Dealer | null>(null);
   const [organization, setOrganization] = useState<Organization | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const supabase = createClient();
-
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      router.push("/auth/login?redirectTo=/b2b/portal");
-      return;
-    }
+    const supabase = createClient();
 
-    if (!authLoading && profile && profile.role !== "dealer" && profile.role !== "admin") {
-      router.push("/b2b");
-      return;
-    }
-  }, [authLoading, isAuthenticated, profile, router]);
+    async function checkAuthAndLoadData() {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
-  useEffect(() => {
-    const fetchDealerData = async () => {
-      if (!user || !profile) return;
+      if (!session?.user) {
+        router.push("/auth/login?redirectTo=/b2b/portal");
+        return;
+      }
+
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", session.user.id)
+        .single();
+
+      if (
+        !profileData ||
+        (profileData.role !== "dealer" && profileData.role !== "admin")
+      ) {
+        router.push("/b2b");
+        return;
+      }
+
+      setProfile(profileData as Profile);
 
       const { data: dealerData } = await supabase
         .from("dealers")
         .select("*")
-        .eq("profile_id", user.id)
+        .eq("profile_id", session.user.id)
         .maybeSingle();
 
       if (dealerData) {
@@ -93,15 +130,17 @@ export default function PortalLayout({
         }
       }
 
-      setIsLoading(false);
-    };
-
-    if (user && profile && (profile.role === "dealer" || profile.role === "admin")) {
-      fetchDealerData();
+      setLoading(false);
     }
-  }, [user, profile, supabase]);
 
-  if (authLoading || isLoading) {
+    checkAuthAndLoadData();
+  }, [router]);
+
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [pathname]);
+
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <div className="text-center">
@@ -112,17 +151,27 @@ export default function PortalLayout({
     );
   }
 
-  if (!profile || (profile.role !== "dealer" && profile.role !== "admin")) {
+  if (!profile) {
     return null;
   }
 
   const handleSignOut = async () => {
-    await signOut();
+    const supabase = createClient();
+    await supabase.auth.signOut();
     router.push("/b2b");
   };
 
+  const isActive = (href: string, exact?: boolean) => {
+    if (exact) return pathname === href;
+    return pathname === href || pathname.startsWith(href + "/");
+  };
+
+  const availableCredit = organization
+    ? organization.credit_limit - organization.current_balance
+    : 0;
+
   return (
-    <DealerContext.Provider value={{ dealer, organization }}>
+    <DealerContext.Provider value={{ dealer, organization, profile }}>
       <div className="min-h-screen bg-slate-50">
         {/* Mobile Header */}
         <header className="lg:hidden sticky top-0 z-50 bg-white border-b border-slate-200">
@@ -146,7 +195,9 @@ export default function PortalLayout({
                   <Building2 className="w-4 h-4 text-white" />
                 </div>
               )}
-              <span className="font-semibold text-slate-900 text-sm">Aura Partner Portal</span>
+              <span className="font-semibold text-slate-900 text-sm">
+                Aura Partner Portal
+              </span>
             </div>
             <div className="w-9" />
           </div>
@@ -165,7 +216,14 @@ export default function PortalLayout({
                   <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center">
                     <Building2 className="w-4 h-4 text-white" />
                   </div>
-                  <span className="font-semibold text-slate-900">Partner Portal</span>
+                  <div>
+                    <span className="font-semibold text-slate-900 text-sm block">
+                      Partner Portal
+                    </span>
+                    {organization && (
+                      <TierBadge tier={organization.dealer_tier} />
+                    )}
+                  </div>
                 </div>
                 <button
                   onClick={() => setSidebarOpen(false)}
@@ -177,25 +235,42 @@ export default function PortalLayout({
               </div>
               <nav className="p-3">
                 {navItems.map((item) => {
-                  const isActive = pathname === item.href;
+                  const active = isActive(item.href, item.exact);
                   return (
                     <Link
                       key={item.href}
                       href={item.href}
                       onClick={() => setSidebarOpen(false)}
                       className={`flex items-center gap-3 px-3 py-2.5 rounded-lg mb-1 text-sm font-medium transition-colors ${
-                        isActive
+                        active
                           ? "bg-blue-50 text-blue-700"
                           : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                       }`}
                     >
                       <item.icon className="w-5 h-5" />
                       {item.label}
-                      {isActive && <ChevronRight className="w-4 h-4 ml-auto" />}
+                      {active && (
+                        <ChevronRight className="w-4 h-4 ml-auto" />
+                      )}
                     </Link>
                   );
                 })}
               </nav>
+              {/* Credit info in mobile sidebar */}
+              {organization && organization.credit_limit > 0 && (
+                <div className="px-4 py-3 mx-3 rounded-lg bg-slate-50 border border-slate-200">
+                  <div className="flex items-center gap-2 text-xs text-slate-500 mb-1">
+                    <CreditCard className="w-3.5 h-3.5" />
+                    Available Credit
+                  </div>
+                  <p className="text-sm font-semibold text-slate-900">
+                    ${availableCredit.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                  </p>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    Terms: {organization.payment_terms.replace("_", " ").replace("net", "Net-")}
+                  </p>
+                </div>
+              )}
               <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-200">
                 <button
                   onClick={handleSignOut}
@@ -213,47 +288,84 @@ export default function PortalLayout({
           {/* Desktop Sidebar */}
           <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 bg-white border-r border-slate-200">
             {/* Org Header */}
-            <div className="flex items-center gap-3 p-5 border-b border-slate-200">
-              {organization?.logo_url ? (
-                <img
-                  src={organization.logo_url}
-                  alt={`${organization.name} logo`}
-                  className="w-9 h-9 rounded-lg object-cover"
-                />
-              ) : (
-                <div className="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center">
-                  <Building2 className="w-5 h-5 text-white" />
-                </div>
-              )}
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-slate-900 truncate">Aura Partner Portal</p>
-                {organization && (
-                  <p className="text-xs text-slate-500 truncate">{organization.name}</p>
+            <div className="p-5 border-b border-slate-200">
+              <div className="flex items-center gap-3">
+                {organization?.logo_url ? (
+                  <img
+                    src={organization.logo_url}
+                    alt={`${organization.name} logo`}
+                    className="w-9 h-9 rounded-lg object-cover"
+                  />
+                ) : (
+                  <div className="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center">
+                    <Building2 className="w-5 h-5 text-white" />
+                  </div>
                 )}
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-slate-900 truncate">
+                    Aura Partner Portal
+                  </p>
+                  {organization && (
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <p className="text-xs text-slate-500 truncate">
+                        {organization.name}
+                      </p>
+                      <TierBadge tier={organization.dealer_tier} />
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
             {/* Navigation */}
             <nav className="flex-1 p-3 space-y-1">
               {navItems.map((item) => {
-                const isActive = pathname === item.href;
+                const active = isActive(item.href, item.exact);
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                      isActive
+                      active
                         ? "bg-blue-50 text-blue-700"
                         : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                     }`}
                   >
                     <item.icon className="w-5 h-5" />
                     {item.label}
-                    {isActive && <ChevronRight className="w-4 h-4 ml-auto" />}
+                    {active && (
+                      <ChevronRight className="w-4 h-4 ml-auto" />
+                    )}
                   </Link>
                 );
               })}
             </nav>
+
+            {/* Credit Balance Footer */}
+            {organization && organization.credit_limit > 0 && (
+              <div className="px-4 py-3 mx-3 mb-3 rounded-lg bg-slate-50 border border-slate-200">
+                <div className="flex items-center gap-2 text-xs text-slate-500 mb-1">
+                  <CreditCard className="w-3.5 h-3.5" />
+                  Available Credit
+                </div>
+                <p className="text-sm font-semibold text-slate-900">
+                  ${availableCredit.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                </p>
+                <div className="mt-1.5 w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-blue-600 rounded-full transition-all"
+                    style={{
+                      width: `${Math.min(100, organization.credit_limit > 0 ? (organization.current_balance / organization.credit_limit) * 100 : 0)}%`,
+                    }}
+                  />
+                </div>
+                <p className="text-xs text-slate-400 mt-1">
+                  {organization.payment_terms === "immediate"
+                    ? "Pay on order"
+                    : organization.payment_terms.replace("_", " ").replace("net", "Net-")}
+                </p>
+              </div>
+            )}
 
             {/* User Footer */}
             <div className="p-4 border-t border-slate-200">
@@ -267,7 +379,9 @@ export default function PortalLayout({
                   <p className="text-sm font-medium text-slate-900 truncate">
                     {profile?.full_name || "Dealer"}
                   </p>
-                  <p className="text-xs text-slate-500 truncate">{profile?.email}</p>
+                  <p className="text-xs text-slate-500 truncate">
+                    {profile?.email}
+                  </p>
                 </div>
               </div>
               <button

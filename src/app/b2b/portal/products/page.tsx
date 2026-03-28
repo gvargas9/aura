@@ -11,12 +11,15 @@ import {
   Plus,
   Minus,
   Package,
-  Filter,
   X,
   ArrowRight,
   Loader2,
   Tag,
+  Star,
+  Heart,
   ChevronDown,
+  Box,
+  AlertCircle,
 } from "lucide-react";
 import type { Product, Organization } from "@/types";
 
@@ -31,22 +34,44 @@ interface PriceRule {
   is_active: boolean;
 }
 
+interface PriceListEntry {
+  id: string;
+  price_list_id: string;
+  product_id: string;
+  price: number;
+  min_quantity: number;
+  max_quantity: number | null;
+}
+
 interface B2BCartItem {
   product: Product;
   quantity: number;
   b2bPrice: number;
 }
 
+const DIETARY_FILTERS = [
+  { key: "Vegan", label: "Vegan", emoji: "🌱" },
+  { key: "Keto", label: "Keto", emoji: "🥑" },
+  { key: "Gluten-Free", label: "Gluten-Free", emoji: "🌾" },
+  { key: "High Protein", label: "High Protein", emoji: "💪" },
+  { key: "Organic", label: "Organic", emoji: "🍃" },
+  { key: "Dairy-Free", label: "Dairy-Free", emoji: "🥛" },
+];
+
 export default function B2BProductsPage() {
   const { user, profile } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [priceRules, setPriceRules] = useState<PriceRule[]>([]);
+  const [priceListEntries, setPriceListEntries] = useState<PriceListEntry[]>([]);
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [cart, setCart] = useState<B2BCartItem[]>([]);
+  const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [activeDietaryFilters, setActiveDietaryFilters] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [cartOpen, setCartOpen] = useState(false);
+  const [quantityInputs, setQuantityInputs] = useState<Record<string, string>>({});
 
   const supabase = createClient();
 
@@ -54,7 +79,6 @@ export default function B2BProductsPage() {
     if (!user) return;
     setIsLoading(true);
 
-    // Get dealer record
     const { data: dealerData } = await supabase
       .from("dealers")
       .select("*")
@@ -68,40 +92,79 @@ export default function B2BProductsPage() {
 
     const orgId = dealerData.organization_id;
 
-    // Fetch org, products, and price rules in parallel
-    const [orgResult, productsResult, rulesResult] = await Promise.all([
-      orgId
-        ? supabase.from("organizations").select("*").eq("id", orgId).single()
-        : Promise.resolve({ data: null }),
-      supabase
-        .from("aura_products")
-        .select("*")
-        .eq("is_active", true)
-        .order("name"),
-      orgId
-        ? supabase
-            .from("organization_price_rules")
-            .select("*")
-            .eq("organization_id", orgId)
-            .eq("is_active", true)
-        : Promise.resolve({ data: [] }),
-    ]);
+    const [orgResult, productsResult, rulesResult, priceListResult] =
+      await Promise.all([
+        orgId
+          ? supabase
+              .from("organizations")
+              .select("*")
+              .eq("id", orgId)
+              .single()
+          : Promise.resolve({ data: null }),
+        supabase
+          .from("aura_products")
+          .select("*")
+          .eq("is_active", true)
+          .order("name"),
+        orgId
+          ? supabase
+              .from("organization_price_rules")
+              .select("*")
+              .eq("organization_id", orgId)
+              .eq("is_active", true)
+          : Promise.resolve({ data: [] }),
+        orgId
+          ? supabase
+              .from("price_list_entries")
+              .select("*, price_lists!inner(organization_id, is_active)")
+              .eq("price_lists.organization_id", orgId)
+              .eq("price_lists.is_active", true)
+          : Promise.resolve({ data: [] }),
+      ]);
 
     if (orgResult.data) setOrganization(orgResult.data as Organization);
     if (productsResult.data) setProducts(productsResult.data as Product[]);
     if (rulesResult.data) setPriceRules(rulesResult.data as PriceRule[]);
+    if (priceListResult.data)
+      setPriceListEntries(priceListResult.data as PriceListEntry[]);
+
+    // Load favorites from localStorage
+    const storedFavs = localStorage.getItem("aura_b2b_favorites");
+    if (storedFavs) {
+      try {
+        setFavorites(new Set(JSON.parse(storedFavs)));
+      } catch {
+        // ignore
+      }
+    }
 
     setIsLoading(false);
   }, [user, supabase]);
 
   useEffect(() => {
-    if (user && profile?.role === "dealer") {
+    if (user && (profile?.role === "dealer" || profile?.role === "admin")) {
       fetchData();
+    } else if (user && profile) {
+      setIsLoading(false);
     }
   }, [user, profile, fetchData]);
 
   const getB2BPrice = useCallback(
-    (product: Product): number => {
+    (product: Product, quantity?: number): number => {
+      // Check price list entries for volume pricing
+      const entries = priceListEntries
+        .filter((e) => e.product_id === product.id)
+        .sort((a, b) => a.min_quantity - b.min_quantity);
+
+      if (entries.length > 0 && quantity) {
+        for (let i = entries.length - 1; i >= 0; i--) {
+          if (quantity >= entries[i].min_quantity) {
+            return entries[i].price;
+          }
+        }
+        return entries[0].price;
+      }
+
       // Check for product-specific fixed price
       const productRule = priceRules.find(
         (r) => r.product_id === product.id && r.fixed_price !== null
@@ -127,19 +190,37 @@ export default function B2BProductsPage() {
         return product.price * (1 - categoryRule.discount_percentage / 100);
       }
 
-      // No B2B pricing available - return retail
       return product.price;
     },
-    [priceRules]
+    [priceRules, priceListEntries]
+  );
+
+  const getVolumeTiers = useCallback(
+    (product: Product): { min: number; max: number | null; price: number }[] => {
+      const entries = priceListEntries
+        .filter((e) => e.product_id === product.id)
+        .sort((a, b) => a.min_quantity - b.min_quantity);
+
+      if (entries.length === 0) return [];
+
+      return entries.map((e) => ({
+        min: e.min_quantity,
+        max: e.max_quantity,
+        price: e.price,
+      }));
+    },
+    [priceListEntries]
   );
 
   const hasB2BPricing = useCallback(
     (product: Product): boolean => {
-      return priceRules.some(
-        (r) => r.product_id === product.id || r.category === product.category
+      return (
+        priceRules.some(
+          (r) => r.product_id === product.id || r.category === product.category
+        ) || priceListEntries.some((e) => e.product_id === product.id)
       );
     },
-    [priceRules]
+    [priceRules, priceListEntries]
   );
 
   const categories = useMemo(() => {
@@ -152,24 +233,64 @@ export default function B2BProductsPage() {
       const matchesSearch =
         !searchQuery ||
         p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.sku.toLowerCase().includes(searchQuery.toLowerCase());
+        p.sku.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (p.brand && p.brand.toLowerCase().includes(searchQuery.toLowerCase()));
       const matchesCategory =
         selectedCategory === "all" || p.category === selectedCategory;
-      return matchesSearch && matchesCategory;
+      const matchesDietary =
+        activeDietaryFilters.size === 0 ||
+        Array.from(activeDietaryFilters).every(
+          (filter) =>
+            p.dietary_labels?.some(
+              (dl) => dl.toLowerCase() === filter.toLowerCase()
+            ) ||
+            p.tags?.some((t) => t.toLowerCase() === filter.toLowerCase())
+        );
+      return matchesSearch && matchesCategory && matchesDietary;
     });
-  }, [products, searchQuery, selectedCategory]);
+  }, [products, searchQuery, selectedCategory, activeDietaryFilters]);
 
-  const addToCart = (product: Product, qty: number = 10) => {
+  const toggleFavorite = (productId: string) => {
+    setFavorites((prev) => {
+      const next = new Set(prev);
+      if (next.has(productId)) {
+        next.delete(productId);
+      } else {
+        next.add(productId);
+      }
+      localStorage.setItem("aura_b2b_favorites", JSON.stringify(Array.from(next)));
+      return next;
+    });
+  };
+
+  const toggleDietaryFilter = (key: string) => {
+    setActiveDietaryFilters((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  };
+
+  const addToCart = (product: Product, qty: number) => {
+    if (qty <= 0) return;
     setCart((prev) => {
       const existing = prev.find((item) => item.product.id === product.id);
       if (existing) {
+        const newQty = existing.quantity + qty;
         return prev.map((item) =>
           item.product.id === product.id
-            ? { ...item, quantity: item.quantity + qty }
+            ? { ...item, quantity: newQty, b2bPrice: getB2BPrice(product, newQty) }
             : item
         );
       }
-      return [...prev, { product, quantity: qty, b2bPrice: getB2BPrice(product) }];
+      return [
+        ...prev,
+        { product, quantity: qty, b2bPrice: getB2BPrice(product, qty) },
+      ];
     });
     setCartOpen(true);
   };
@@ -181,7 +302,13 @@ export default function B2BProductsPage() {
     }
     setCart((prev) =>
       prev.map((item) =>
-        item.product.id === productId ? { ...item, quantity } : item
+        item.product.id === productId
+          ? {
+              ...item,
+              quantity,
+              b2bPrice: getB2BPrice(item.product, quantity),
+            }
+          : item
       )
     );
   };
@@ -205,6 +332,9 @@ export default function B2BProductsPage() {
     );
   }, [cart]);
 
+  const minOrderAmount = organization?.min_order_amount ?? 0;
+  const meetsMinimum = cartTotal >= minOrderAmount || minOrderAmount === 0;
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -217,7 +347,9 @@ export default function B2BProductsPage() {
     <div>
       {/* Page Header */}
       <div className="mb-6">
-        <h1 className="text-2xl lg:text-3xl font-bold text-slate-900">B2B Product Catalog</h1>
+        <h1 className="text-2xl lg:text-3xl font-bold text-slate-900">
+          B2B Product Catalog
+        </h1>
         <p className="text-slate-500 mt-1">
           {organization
             ? `Wholesale pricing for ${organization.name}`
@@ -225,21 +357,67 @@ export default function B2BProductsPage() {
         </p>
       </div>
 
+      {/* Dietary Filter Pills */}
+      <div className="flex flex-wrap gap-2 mb-4">
+        {DIETARY_FILTERS.map((filter) => {
+          const isActive = activeDietaryFilters.has(filter.key);
+          return (
+            <button
+              key={filter.key}
+              onClick={() => toggleDietaryFilter(filter.key)}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all border ${
+                isActive
+                  ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                  : "bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+              }`}
+            >
+              <span>{filter.emoji}</span>
+              {filter.label}
+              {isActive && <X className="w-3 h-3 ml-0.5" />}
+            </button>
+          );
+        })}
+      </div>
+
       <div className="flex flex-col lg:flex-row gap-6">
+        {/* Left: Category Sidebar on desktop */}
+        <div className="hidden lg:block lg:w-48 flex-shrink-0">
+          <div className="sticky top-8">
+            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
+              Categories
+            </h3>
+            <nav className="space-y-1">
+              {categories.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedCategory(cat)}
+                  className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    selectedCategory === cat
+                      ? "bg-blue-50 text-blue-700"
+                      : "text-slate-600 hover:bg-slate-100"
+                  }`}
+                >
+                  {cat === "all" ? "All Products" : cat}
+                </button>
+              ))}
+            </nav>
+          </div>
+        </div>
+
         {/* Products Section */}
         <div className="flex-1 min-w-0">
-          {/* Search and Filters */}
+          {/* Search and Mobile Category Filter */}
           <div className="flex flex-col sm:flex-row gap-3 mb-6">
             <div className="flex-1">
               <Input
-                placeholder="Search products by name or SKU..."
+                placeholder="Search products by name, SKU, or brand..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 leftIcon={<Search className="w-4 h-4" />}
                 className="focus:ring-blue-600 focus:border-blue-600"
               />
             </div>
-            <div className="relative">
+            <div className="relative lg:hidden">
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
@@ -256,6 +434,13 @@ export default function B2BProductsPage() {
             </div>
           </div>
 
+          {/* Results count */}
+          <p className="text-sm text-slate-500 mb-4">
+            {filteredProducts.length} product
+            {filteredProducts.length !== 1 ? "s" : ""}
+            {selectedCategory !== "all" && ` in ${selectedCategory}`}
+          </p>
+
           {/* Products Grid */}
           {filteredProducts.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -263,15 +448,25 @@ export default function B2BProductsPage() {
                 const b2bPrice = getB2BPrice(product);
                 const hasDiscount = b2bPrice < product.price;
                 const discountPct = hasDiscount
-                  ? Math.round(((product.price - b2bPrice) / product.price) * 100)
+                  ? Math.round(
+                      ((product.price - b2bPrice) / product.price) * 100
+                    )
                   : 0;
-                const inCart = cart.find((item) => item.product.id === product.id);
+                const inCart = cart.find(
+                  (item) => item.product.id === product.id
+                );
+                const isFav = favorites.has(product.id);
+                const volumeTiers = getVolumeTiers(product);
+                const qtyValue =
+                  quantityInputs[product.id] !== undefined
+                    ? quantityInputs[product.id]
+                    : "10";
 
                 return (
                   <Card
                     key={product.id}
                     padding="none"
-                    className="border border-slate-200 shadow-sm hover:shadow-md transition-shadow"
+                    className="border border-slate-200 shadow-sm hover:shadow-md transition-shadow group"
                   >
                     {/* Product Image */}
                     <div className="relative aspect-square bg-slate-100">
@@ -291,60 +486,143 @@ export default function B2BProductsPage() {
                           {discountPct}% OFF
                         </span>
                       )}
+                      {product.is_bunker_safe && (
+                        <span className="absolute bottom-2 left-2 bg-slate-900/80 text-white text-xs font-medium px-2 py-1 rounded-md flex items-center gap-1">
+                          <Box className="w-3 h-3" />
+                          Case of 12
+                        </span>
+                      )}
                       {inCart && (
-                        <span className="absolute top-2 right-2 bg-emerald-600 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center">
+                        <span className="absolute top-2 right-10 bg-emerald-600 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center">
                           {inCart.quantity}
                         </span>
                       )}
+                      <button
+                        onClick={() => toggleFavorite(product.id)}
+                        className={`absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center transition-all ${
+                          isFav
+                            ? "bg-red-50 text-red-500"
+                            : "bg-white/80 text-slate-400 opacity-0 group-hover:opacity-100"
+                        }`}
+                        aria-label={
+                          isFav
+                            ? `Remove ${product.name} from favorites`
+                            : `Add ${product.name} to favorites`
+                        }
+                      >
+                        <Heart
+                          className={`w-4 h-4 ${isFav ? "fill-red-500" : ""}`}
+                        />
+                      </button>
                     </div>
 
                     {/* Product Info */}
                     <div className="p-4">
-                      <p className="text-xs text-slate-400 font-mono mb-1">{product.sku}</p>
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="text-xs text-slate-400 font-mono">
+                          {product.sku}
+                        </p>
+                        {product.dietary_labels &&
+                          product.dietary_labels.length > 0 && (
+                            <div className="flex gap-1">
+                              {product.dietary_labels.slice(0, 2).map((dl) => (
+                                <span
+                                  key={dl}
+                                  className="text-xs bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded"
+                                >
+                                  {dl}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                      </div>
                       <h3 className="font-semibold text-slate-900 text-sm mb-2 line-clamp-2">
                         {product.name}
                       </h3>
 
-                      <div className="flex items-baseline gap-2 mb-1">
-                        <span className="text-lg font-bold text-blue-700">
-                          {formatCurrency(b2bPrice)}
-                        </span>
-                        {hasDiscount && (
-                          <span className="text-sm text-slate-400 line-through">
-                            {formatCurrency(product.price)}
+                      {/* Pricing */}
+                      <div className="mb-1">
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-lg font-bold text-blue-700">
+                            Your Price: {formatCurrency(b2bPrice)}
                           </span>
+                        </div>
+                        {hasDiscount && (
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-sm text-slate-400 line-through">
+                              Retail: {formatCurrency(product.price)}
+                            </span>
+                            <span className="text-xs font-semibold text-emerald-600">
+                              You Save: {discountPct}%
+                            </span>
+                          </div>
                         )}
                       </div>
 
-                      {hasB2BPricing(product) && (
-                        <p className="text-xs text-blue-600 flex items-center gap-1 mb-3">
+                      {hasB2BPricing(product) && !hasDiscount && (
+                        <p className="text-xs text-blue-600 flex items-center gap-1 mb-2">
                           <Tag className="w-3 h-3" />
                           B2B Price
                         </p>
                       )}
 
+                      {/* Volume break table */}
+                      {volumeTiers.length > 0 && (
+                        <div className="mb-3 border border-slate-100 rounded-md overflow-hidden">
+                          <table className="w-full text-xs">
+                            <thead>
+                              <tr className="bg-slate-50">
+                                <th className="text-left px-2 py-1 text-slate-500 font-medium">
+                                  Qty
+                                </th>
+                                <th className="text-right px-2 py-1 text-slate-500 font-medium">
+                                  Unit Price
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {volumeTiers.map((tier, i) => (
+                                <tr
+                                  key={i}
+                                  className="border-t border-slate-50"
+                                >
+                                  <td className="px-2 py-1 text-slate-700">
+                                    {tier.max
+                                      ? `${tier.min}-${tier.max}`
+                                      : `${tier.min}+`}
+                                  </td>
+                                  <td className="px-2 py-1 text-right font-medium text-blue-700">
+                                    {formatCurrency(tier.price)}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+
+                      {/* Add to cart */}
                       <div className="flex items-center gap-2 mt-3">
-                        <select
-                          defaultValue="10"
-                          id={`qty-${product.id}`}
+                        <input
+                          type="number"
+                          min={1}
+                          value={qtyValue}
+                          onChange={(e) =>
+                            setQuantityInputs((prev) => ({
+                              ...prev,
+                              [product.id]: e.target.value,
+                            }))
+                          }
+                          className="w-20 px-2 py-1.5 border border-slate-200 rounded-lg text-sm text-center focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none"
                           aria-label={`Quantity for ${product.name}`}
-                          className="w-20 px-2 py-1.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none"
-                        >
-                          <option value="10">10</option>
-                          <option value="25">25</option>
-                          <option value="50">50</option>
-                          <option value="100">100</option>
-                          <option value="250">250</option>
-                        </select>
+                        />
                         <Button
                           variant="primary"
                           size="sm"
                           className="flex-1 bg-blue-600 hover:bg-blue-700 focus:ring-blue-600"
                           onClick={() => {
-                            const select = document.getElementById(
-                              `qty-${product.id}`
-                            ) as HTMLSelectElement;
-                            addToCart(product, parseInt(select.value, 10));
+                            const qty = parseInt(qtyValue, 10);
+                            if (qty > 0) addToCart(product, qty);
                           }}
                         >
                           <Plus className="w-4 h-4 mr-1" />
@@ -359,7 +637,9 @@ export default function B2BProductsPage() {
           ) : (
             <div className="text-center py-16">
               <Search className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-              <p className="text-slate-500 text-sm">No products match your search.</p>
+              <p className="text-slate-500 text-sm">
+                No products match your search.
+              </p>
             </div>
           )}
         </div>
@@ -373,6 +653,9 @@ export default function B2BProductsPage() {
               savingsTotal={savingsTotal}
               updateCartQuantity={updateCartQuantity}
               removeFromCart={removeFromCart}
+              minOrderAmount={minOrderAmount}
+              meetsMinimum={meetsMinimum}
+              paymentTerms={organization?.payment_terms || "immediate"}
             />
           </div>
         </div>
@@ -397,7 +680,10 @@ export default function B2BProductsPage() {
       {/* Mobile Cart Drawer */}
       {cartOpen && (
         <div className="lg:hidden fixed inset-0 z-50">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setCartOpen(false)} />
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setCartOpen(false)}
+          />
           <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl max-h-[80vh] overflow-y-auto animate-slide-up shadow-xl">
             <div className="sticky top-0 bg-white px-4 pt-4 pb-2 border-b border-slate-200 flex items-center justify-between">
               <h3 className="font-semibold text-slate-900">
@@ -418,6 +704,9 @@ export default function B2BProductsPage() {
                 savingsTotal={savingsTotal}
                 updateCartQuantity={updateCartQuantity}
                 removeFromCart={removeFromCart}
+                minOrderAmount={minOrderAmount}
+                meetsMinimum={meetsMinimum}
+                paymentTerms={organization?.payment_terms || "immediate"}
                 compact
               />
             </div>
@@ -434,6 +723,9 @@ function CartSidebar({
   savingsTotal,
   updateCartQuantity,
   removeFromCart,
+  minOrderAmount,
+  meetsMinimum,
+  paymentTerms,
   compact = false,
 }: {
   cart: B2BCartItem[];
@@ -441,6 +733,9 @@ function CartSidebar({
   savingsTotal: number;
   updateCartQuantity: (productId: string, quantity: number) => void;
   removeFromCart: (productId: string) => void;
+  minOrderAmount: number;
+  meetsMinimum: boolean;
+  paymentTerms: string;
   compact?: boolean;
 }) {
   // Persist cart to localStorage for the orders page
@@ -465,7 +760,12 @@ function CartSidebar({
 
   if (cart.length === 0) {
     return (
-      <Card padding="lg" className={`border border-slate-200 shadow-sm ${compact ? "border-0 shadow-none p-0" : ""}`}>
+      <Card
+        padding="lg"
+        className={`border border-slate-200 shadow-sm ${
+          compact ? "border-0 shadow-none p-0" : ""
+        }`}
+      >
         <div className="text-center py-6">
           <ShoppingCart className="w-8 h-8 text-slate-300 mx-auto mb-2" />
           <p className="text-sm text-slate-500">Your B2B cart is empty</p>
@@ -478,7 +778,12 @@ function CartSidebar({
   }
 
   return (
-    <Card padding="lg" className={`border border-slate-200 shadow-sm ${compact ? "border-0 shadow-none p-0" : ""}`}>
+    <Card
+      padding="lg"
+      className={`border border-slate-200 shadow-sm ${
+        compact ? "border-0 shadow-none p-0" : ""
+      }`}
+    >
       {!compact && (
         <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
           <ShoppingCart className="w-5 h-5 text-blue-600" />
@@ -515,7 +820,10 @@ function CartSidebar({
               <div className="flex items-center gap-2 mt-1.5">
                 <button
                   onClick={() =>
-                    updateCartQuantity(item.product.id, Math.max(0, item.quantity - 10))
+                    updateCartQuantity(
+                      item.product.id,
+                      Math.max(0, item.quantity - 1)
+                    )
                   }
                   className="w-6 h-6 rounded border border-slate-200 flex items-center justify-center hover:bg-slate-100 transition-colors"
                   aria-label={`Decrease quantity of ${item.product.name}`}
@@ -537,7 +845,7 @@ function CartSidebar({
                 />
                 <button
                   onClick={() =>
-                    updateCartQuantity(item.product.id, item.quantity + 10)
+                    updateCartQuantity(item.product.id, item.quantity + 1)
                   }
                   className="w-6 h-6 rounded border border-slate-200 flex items-center justify-center hover:bg-slate-100 transition-colors"
                   aria-label={`Increase quantity of ${item.product.name}`}
@@ -560,6 +868,22 @@ function CartSidebar({
         ))}
       </div>
 
+      {/* Min order indicator */}
+      {minOrderAmount > 0 && (
+        <div
+          className={`mt-3 flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium ${
+            meetsMinimum
+              ? "bg-emerald-50 text-emerald-700"
+              : "bg-amber-50 text-amber-700"
+          }`}
+        >
+          <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+          {meetsMinimum
+            ? "Minimum order amount met"
+            : `Minimum order: ${formatCurrency(minOrderAmount)} (${formatCurrency(minOrderAmount - cartTotal)} more needed)`}
+        </div>
+      )}
+
       {/* Totals */}
       <div className="mt-4 pt-4 border-t border-slate-200 space-y-2">
         {savingsTotal > 0 && (
@@ -576,6 +900,11 @@ function CartSidebar({
             {formatCurrency(cartTotal)}
           </span>
         </div>
+        {paymentTerms !== "immediate" && (
+          <p className="text-xs text-slate-500">
+            Payment: {paymentTerms.replace("_", " ").replace("net", "Net-")}
+          </p>
+        )}
       </div>
 
       <a href="/b2b/portal/orders">
@@ -583,6 +912,7 @@ function CartSidebar({
           variant="primary"
           size="lg"
           className="w-full mt-4 bg-blue-600 hover:bg-blue-700 focus:ring-blue-600"
+          disabled={!meetsMinimum && minOrderAmount > 0}
         >
           Proceed to Order
           <ArrowRight className="w-4 h-4 ml-2" />
