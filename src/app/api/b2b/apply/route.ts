@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { applyRateLimit, rateLimiters } from "@/lib/api/rate-limit";
+import { validateEmail, validatePhone, sanitizeString, enforceMaxLength } from "@/lib/api/validation";
+import { safeError } from "@/lib/api/safe-error";
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limit: 3 requests/minute (B2B applications are infrequent)
+    const rateLimitResponse = await applyRateLimit(request, rateLimiters.b2bApply);
+    if (rateLimitResponse) return rateLimitResponse;
+
     const body = await request.json();
     const { full_name, email, phone, organization_name, business_type, message } = body;
 
@@ -13,13 +20,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    // Validate email using robust validation
+    if (!validateEmail(email)) {
       return NextResponse.json(
         { error: "Invalid email address format" },
         { status: 400 }
       );
     }
+
+    // Validate phone if provided
+    if (phone && !validatePhone(phone)) {
+      return NextResponse.json(
+        { error: "Invalid phone number format" },
+        { status: 400 }
+      );
+    }
+
+    // Sanitize all text inputs
+    const sanitizedName = sanitizeString(enforceMaxLength(full_name, 200));
+    const sanitizedOrgName = sanitizeString(enforceMaxLength(organization_name, 300));
+    const sanitizedBusinessType = sanitizeString(enforceMaxLength(business_type, 100));
+    const sanitizedMessage = message ? sanitizeString(enforceMaxLength(message, 2000)) : null;
+    const sanitizedPhone = phone ? sanitizeString(phone) : null;
 
     // Use service role client to bypass RLS for admin-level insert
     const supabase = createClient(
@@ -48,10 +70,10 @@ export async function POST(request: NextRequest) {
         .update({
           address: {
             dealer_application: {
-              organization_name,
-              business_type,
-              phone: phone || null,
-              message: message || null,
+              organization_name: sanitizedOrgName,
+              business_type: sanitizedBusinessType,
+              phone: sanitizedPhone,
+              message: sanitizedMessage,
               applied_at: new Date().toISOString(),
               status: "pending_review",
             },
@@ -71,12 +93,12 @@ export async function POST(request: NextRequest) {
       channel: "b2b_application",
       direction: "inbound",
       content: JSON.stringify({
-        full_name,
-        email,
-        phone: phone || null,
-        organization_name,
-        business_type,
-        message: message || null,
+        full_name: sanitizedName,
+        email: email.trim().toLowerCase(),
+        phone: sanitizedPhone,
+        organization_name: sanitizedOrgName,
+        business_type: sanitizedBusinessType,
+        message: sanitizedMessage,
       }),
       metadata: {
         type: "dealer_application",
@@ -92,7 +114,7 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     console.error("B2B application error:", err);
     return NextResponse.json(
-      { error: "Internal server error" },
+      safeError(err, "Internal server error"),
       { status: 500 }
     );
   }

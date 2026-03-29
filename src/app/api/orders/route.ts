@@ -5,6 +5,8 @@ import {
   requireAdmin,
   isAuthError,
 } from "@/lib/api/auth";
+import { validateShippingAddress, sanitizeString, validateUUID } from "@/lib/api/validation";
+import { safeError } from "@/lib/api/safe-error";
 import type { ApiResponse, PaginatedResponse } from "@/types";
 import type { Order, OrderStatus } from "@/types/database";
 
@@ -139,6 +141,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate user_id is a valid UUID
+    if (!validateUUID(user_id)) {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: "Invalid user_id format" },
+        { status: 400 }
+      );
+    }
+
     if (!Array.isArray(items) || items.length === 0) {
       return NextResponse.json<ApiResponse>(
         { success: false, error: "Items must be a non-empty array" },
@@ -149,6 +159,15 @@ export async function POST(request: NextRequest) {
     if (typeof total !== "number" || total < 0) {
       return NextResponse.json<ApiResponse>(
         { success: false, error: "Total must be a non-negative number" },
+        { status: 400 }
+      );
+    }
+
+    // Validate shipping address
+    const addressValidation = validateShippingAddress(shipping_address);
+    if (!addressValidation.valid) {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: addressValidation.error || "Invalid shipping address" },
         { status: 400 }
       );
     }
@@ -194,7 +213,7 @@ export async function POST(request: NextRequest) {
         items,
         shipping_address,
         billing_address: body.billing_address || null,
-        notes: body.notes || null,
+        notes: body.notes ? sanitizeString(String(body.notes).slice(0, 1000)) : null,
       })
       .select()
       .single();
@@ -214,7 +233,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Orders POST error:", error);
     return NextResponse.json<ApiResponse>(
-      { success: false, error: "Internal server error" },
+      { success: false, ...safeError(error, "Internal server error") },
       { status: 500 }
     );
   }

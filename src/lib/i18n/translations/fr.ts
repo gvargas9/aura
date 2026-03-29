@@ -1,0 +1,116 @@
+export const fr: Record<string, string> = {
+  // Navigation
+  "nav.products": "Produits",
+  "nav.buildBox": "Composez Votre Boite",
+  "nav.howItWorks": "Comment Ca Marche",
+  "nav.forBusiness": "Pour les Entreprises",
+  "nav.cart": "Panier",
+  "nav.home": "Accueil",
+  "nav.orders": "Commandes",
+  "nav.account": "Compte",
+  "nav.signIn": "Se Connecter",
+  "nav.buildYourBox": "Composez Votre Boite",
+
+  // Hero
+  "hero.badge": "Repas Premium Longue Conservation",
+  "hero.title": "Cuisine Gastronomique Qui Va",
+  "hero.titleHighlight": "Partout.",
+  "hero.subtitle":
+    "Composez votre boite parfaite avec plus de 50 repas naturels. 2 ans de conservation. Sans refrigeration. Livraison gratuite.",
+  "hero.perMeal": "/repas",
+  "hero.startingAt": "A partir de",
+  "hero.perMonth": "/mois",
+  "hero.buildBox": "Composez Votre Boite",
+  "hero.browseProducts": "Voir les Produits",
+
+  // Product
+  "product.addToBox": "Ajouter a la Boite",
+  "product.addedToBox": "Ajoute a la Boite",
+  "product.subscribeAndSave": "Abonnez-vous et Economisez",
+  "product.oneTimePurchase": "Achat Unique",
+  "product.save": "Economisez {{percent}}%",
+  "product.shelfLife": "{{months}} Mois de Conservation",
+  "product.bunkerSafe": "Compatible Bunker",
+  "product.inStock": "En Stock",
+  "product.outOfStock": "Rupture de Stock",
+  "product.reviews": "{{count}} avis",
+
+  // Box Builder
+  "box.myOrder": "Ma Commande",
+  "box.positions": "{{count}} positions",
+  "box.slotsRemaining": "Ajoutez {{count}} articles de plus",
+  "box.confirmOrder": "Confirmer la Commande",
+  "box.auraFill": "Laissez Aura Remplir Ma Boite",
+  "box.findingMeals": "Recherche de vos repas parfaits...",
+
+  // Checkout
+  "checkout.title": "Paiement",
+  "checkout.review": "Verification",
+  "checkout.discounts": "Reductions",
+  "checkout.shipping": "Livraison",
+  "checkout.payment": "Paiement",
+  "checkout.subtotal": "Sous-total",
+  "checkout.discount": "Reduction",
+  "checkout.freeShipping": "GRATUIT",
+  "checkout.total": "Total",
+  "checkout.promoCode": "Code Promo",
+  "checkout.apply": "Appliquer",
+
+  // Auth
+  "auth.welcomeBack": "Bon Retour",
+  "auth.signIn": "Se Connecter",
+  "auth.signUp": "S'inscrire",
+  "auth.email": "Email",
+  "auth.password": "Mot de Passe",
+  "auth.forgotPassword": "Mot de passe oublie?",
+  "auth.noAccount": "Pas encore de compte?",
+  "auth.signUpFree": "Inscrivez-vous gratuitement",
+
+  // Dashboard
+  "dashboard.welcome": "Bon retour, {{name}}",
+  "dashboard.totalOrders": "Total des Commandes",
+  "dashboard.activeSubscriptions": "Abonnements Actifs",
+  "dashboard.creditsBalance": "Solde de Credits",
+
+  // Box Tiers
+  "tier.starter": "Decouverte",
+  "tier.voyager": "Voyageur",
+  "tier.bunker": "Bunker",
+  "tier.starter.description":
+    "Parfait pour une personne - 8 repas premium",
+  "tier.voyager.description": "Ideal pour les couples - 12 repas premium",
+  "tier.bunker.description": "Pack familial - 24 repas premium",
+
+  // Locale Settings
+  "locale.title": "Langue et Devise",
+  "locale.language": "Langue",
+  "locale.currency": "Devise",
+  "locale.dateFormat": "Format de Date",
+  "locale.numberFormat": "Format des Nombres",
+  "locale.preview": "Apercu",
+  "locale.saved": "Preferences enregistrees",
+  "locale.datePreview": "Apercu de la date",
+  "locale.numberPreview": "Apercu des nombres",
+  "locale.pricePreview": "Apercu du prix",
+
+  // Common
+  "common.loading": "Chargement...",
+  "common.save": "Enregistrer",
+  "common.cancel": "Annuler",
+  "common.delete": "Supprimer",
+  "common.edit": "Modifier",
+  "common.search": "Rechercher",
+  "common.filter": "Filtrer",
+  "common.all": "Tout",
+  "common.viewAll": "Tout Voir",
+  "common.learnMore": "En Savoir Plus",
+  "common.getStarted": "Commencer",
+  "common.perMonth": "/mois",
+  "common.searchProducts": "Rechercher des produits",
+
+  // Footer
+  "footer.rights": "Tous droits reserves.",
+  "footer.privacy": "Politique de Confidentialite",
+  "footer.terms": "Conditions d'Utilisation",
+  "footer.contact": "Contactez-nous",
+};

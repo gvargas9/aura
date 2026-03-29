@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { requireAuth, isAuthError } from "@/lib/api/auth";
+import { applyRateLimit, rateLimiters } from "@/lib/api/rate-limit";
+import { sanitizeString, validateUUID, enforceMaxLength } from "@/lib/api/validation";
+import { safeError } from "@/lib/api/safe-error";
 import type { ApiResponse, ReviewSummary } from "@/types";
 
 interface ReviewWithProfile {
@@ -160,6 +163,10 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
+    // Rate limit: 5 requests/minute for review submissions
+    const rateLimitResponse = await applyRateLimit(request, rateLimiters.reviewWrite);
+    if (rateLimitResponse) return rateLimitResponse;
+
     const supabase = await createClient();
     const auth = await requireAuth(supabase);
 
@@ -177,6 +184,14 @@ export async function POST(request: NextRequest) {
     if (!productId) {
       return NextResponse.json<ApiResponse>(
         { success: false, error: "productId is required" },
+        { status: 400 }
+      );
+    }
+
+    // Validate productId is a valid UUID
+    if (!validateUUID(productId)) {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: "Invalid productId format" },
         { status: 400 }
       );
     }
@@ -263,6 +278,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Sanitize text inputs
+    const sanitizedTitle = title ? sanitizeString(enforceMaxLength(String(title), 200)) : null;
+    const sanitizedBody = reviewBody ? sanitizeString(enforceMaxLength(String(reviewBody), 5000)) : null;
+
     const { data: review, error: insertError } = await supabase
       .from("product_reviews")
       .insert({
@@ -270,8 +289,8 @@ export async function POST(request: NextRequest) {
         user_id: auth.user.id,
         order_id: verifiedOrderId,
         rating: Math.round(rating),
-        title: title || null,
-        body: reviewBody || null,
+        title: sanitizedTitle,
+        body: sanitizedBody,
         taste_rating: tasteRating ?? null,
         value_rating: valueRating ?? null,
         preparation_ease: preparationEase ?? null,
@@ -302,7 +321,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Reviews POST error:", error);
     return NextResponse.json<ApiResponse>(
-      { success: false, error: "Internal server error" },
+      { success: false, ...safeError(error, "Internal server error") },
       { status: 500 }
     );
   }

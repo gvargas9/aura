@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
+import { applyRateLimit, rateLimiters } from "@/lib/api/rate-limit";
+import { safeError } from "@/lib/api/safe-error";
 
 function generateGiftCardCode(): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -18,6 +20,10 @@ function getServiceClient() {
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limit: 5 requests/minute
+    const rateLimitResponse = await applyRateLimit(request, rateLimiters.giftCardPurchase);
+    if (rateLimitResponse) return rateLimitResponse;
+
     const supabase = await createClient();
     const {
       data: { user },
@@ -172,7 +178,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Gift card purchase error:", error);
     return NextResponse.json(
-      { error: "An unexpected error occurred" },
+      safeError(error, "An unexpected error occurred"),
       { status: 500 }
     );
   }

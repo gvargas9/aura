@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks";
 import { NotificationCenter } from "./NotificationCenter";
 import { SearchModal } from "./SearchModal";
+import { LocaleSelector } from "./LocaleSelector";
 
 interface NavItem {
   label: string;
@@ -129,6 +130,9 @@ export function Header() {
               >
                 <Search className="w-[18px] h-[18px]" />
               </button>
+
+              {/* Language / Currency */}
+              <LocaleSelector compact className="hidden sm:flex" />
 
               {/* Notifications */}
               {isAuthenticated && <NotificationCenter />}

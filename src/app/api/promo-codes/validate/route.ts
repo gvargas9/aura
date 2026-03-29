@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { requireAuth, isAuthError } from "@/lib/api/auth";
+import { applyRateLimit, rateLimiters } from "@/lib/api/rate-limit";
+import { safeError } from "@/lib/api/safe-error";
 import type { ApiResponse } from "@/types";
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limit: 20 requests/minute
+    const rateLimitResponse = await applyRateLimit(request, rateLimiters.promoValidate);
+    if (rateLimitResponse) return rateLimitResponse;
+
     const supabase = await createClient();
     const auth = await requireAuth(supabase);
 
@@ -204,7 +210,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Promo code validation error:", error);
     return NextResponse.json<ApiResponse>(
-      { success: false, error: "Internal server error" },
+      { success: false, ...safeError(error, "Internal server error") },
       { status: 500 }
     );
   }

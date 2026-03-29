@@ -19,3 +19,5 @@ export {
 } from "./SkeletonLoader";
 export { AuraChatWidget } from "./AuraChatWidget";
 export { SearchModal } from "./SearchModal";
+export { LocaleSelector, LocaleSelectorInline } from "./LocaleSelector";
+export { PriceDisplay } from "./PriceDisplay";

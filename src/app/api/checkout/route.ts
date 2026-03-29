@@ -3,6 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { stripe, getOrCreateCustomer } from "@/lib/stripe/server";
 import { BOX_CONFIGS } from "@/types";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
+import { applyRateLimit, rateLimiters } from "@/lib/api/rate-limit";
+import { safeError } from "@/lib/api/safe-error";
 
 // Stripe Price IDs for subscriptions
 const SUBSCRIPTION_PRICE_IDS: Record<string, string> = {
@@ -33,6 +35,10 @@ function getServiceClient() {
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limit: 10 requests/minute
+    const rateLimitResponse = await applyRateLimit(request, rateLimiters.checkout);
+    if (rateLimitResponse) return rateLimitResponse;
+
     const supabase = await createClient();
     const {
       data: { user },
@@ -562,7 +568,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Checkout error:", error);
     return NextResponse.json(
-      { error: "Failed to create checkout session" },
+      safeError(error, "Failed to create checkout session"),
       { status: 500 }
     );
   }

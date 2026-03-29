@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin, isAuthError } from "@/lib/api/auth";
+import { validatePrice, sanitizeString } from "@/lib/api/validation";
+import { safeError } from "@/lib/api/safe-error";
 import type { ApiResponse, PaginatedResponse } from "@/types";
 import type { Product } from "@/types/database";
 
@@ -249,9 +251,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (typeof price !== "number" || price < 0) {
+    if (typeof price !== "number" || price < 0 || !validatePrice(price)) {
       return NextResponse.json<ApiResponse>(
-        { success: false, error: "Price must be a non-negative number" },
+        { success: false, error: "Price must be a non-negative number with at most 2 decimal places (max $99,999)" },
+        { status: 400 }
+      );
+    }
+
+    // Sanitize text inputs
+    const sanitizedName = sanitizeString(name);
+    const sanitizedDescription = body.description ? sanitizeString(body.description) : null;
+    const sanitizedShortDesc = body.short_description ? sanitizeString(body.short_description) : null;
+
+    if (!sanitizedName) {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: "Product name cannot be empty after sanitization" },
         { status: 400 }
       );
     }
@@ -274,9 +288,9 @@ export async function POST(request: NextRequest) {
       .from("aura_products")
       .insert({
         sku,
-        name,
-        description: body.description || null,
-        short_description: body.short_description || null,
+        name: sanitizedName,
+        description: sanitizedDescription,
+        short_description: sanitizedShortDesc,
         price,
         compare_at_price: body.compare_at_price || null,
         image_url: body.image_url || null,
@@ -326,7 +340,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Products POST error:", error);
     return NextResponse.json<ApiResponse>(
-      { success: false, error: "Internal server error" },
+      { success: false, ...safeError(error, "Internal server error") },
       { status: 500 }
     );
   }

@@ -9,12 +9,30 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
- * Format currency in USD
+ * Format currency.
+ *
+ * Defaults to USD for backward compatibility.  Pass a currency code
+ * (e.g. "MXN", "EUR") to format in another currency.  This does NOT
+ * perform exchange-rate conversion -- use `convertPrice()` from
+ * `@/lib/i18n` for that.
  */
-export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("en-US", {
+export function formatCurrency(
+  amount: number,
+  currency: string = "USD"
+): string {
+  // Map currency codes to sensible Intl locales for formatting.
+  const localeMap: Record<string, string> = {
+    USD: "en-US",
+    MXN: "es-MX",
+    EUR: "fr-FR",
+    BRL: "pt-BR",
+  };
+
+  return new Intl.NumberFormat(localeMap[currency] ?? "en-US", {
     style: "currency",
-    currency: "USD",
+    currency,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(amount);
 }
 

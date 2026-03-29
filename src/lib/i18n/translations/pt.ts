@@ -1,0 +1,116 @@
+export const pt: Record<string, string> = {
+  // Navigation
+  "nav.products": "Produtos",
+  "nav.buildBox": "Monte sua Caixa",
+  "nav.howItWorks": "Como Funciona",
+  "nav.forBusiness": "Para Empresas",
+  "nav.cart": "Carrinho",
+  "nav.home": "Inicio",
+  "nav.orders": "Pedidos",
+  "nav.account": "Conta",
+  "nav.signIn": "Entrar",
+  "nav.buildYourBox": "Monte sua Caixa",
+
+  // Hero
+  "hero.badge": "Refeicoes Premium de Longa Duracao",
+  "hero.title": "Comida Gourmet que Vai a",
+  "hero.titleHighlight": "Qualquer Lugar.",
+  "hero.subtitle":
+    "Monte sua caixa perfeita com mais de 50 refeicoes naturais. 2 anos de validade. Sem refrigeracao. Entrega gratis na sua porta.",
+  "hero.perMeal": "/refeicao",
+  "hero.startingAt": "A partir de",
+  "hero.perMonth": "/mes",
+  "hero.buildBox": "Monte sua Caixa",
+  "hero.browseProducts": "Ver Produtos",
+
+  // Product
+  "product.addToBox": "Adicionar a Caixa",
+  "product.addedToBox": "Adicionado a Caixa",
+  "product.subscribeAndSave": "Assine e Economize",
+  "product.oneTimePurchase": "Compra Avulsa",
+  "product.save": "Economize {{percent}}%",
+  "product.shelfLife": "{{months}} Meses de Validade",
+  "product.bunkerSafe": "Apto para Bunker",
+  "product.inStock": "Em Estoque",
+  "product.outOfStock": "Esgotado",
+  "product.reviews": "{{count}} avaliacoes",
+
+  // Box Builder
+  "box.myOrder": "Meu Pedido",
+  "box.positions": "{{count}} posicoes",
+  "box.slotsRemaining": "Adicione mais {{count}} itens",
+  "box.confirmOrder": "Confirmar Pedido",
+  "box.auraFill": "Deixe a Aura Montar Minha Caixa",
+  "box.findingMeals": "Encontrando suas refeicoes perfeitas...",
+
+  // Checkout
+  "checkout.title": "Finalizar Compra",
+  "checkout.review": "Revisar",
+  "checkout.discounts": "Descontos",
+  "checkout.shipping": "Frete",
+  "checkout.payment": "Pagamento",
+  "checkout.subtotal": "Subtotal",
+  "checkout.discount": "Desconto",
+  "checkout.freeShipping": "GRATIS",
+  "checkout.total": "Total",
+  "checkout.promoCode": "Codigo Promocional",
+  "checkout.apply": "Aplicar",
+
+  // Auth
+  "auth.welcomeBack": "Bem-vindo de Volta",
+  "auth.signIn": "Entrar",
+  "auth.signUp": "Cadastrar",
+  "auth.email": "Email",
+  "auth.password": "Senha",
+  "auth.forgotPassword": "Esqueceu sua senha?",
+  "auth.noAccount": "Nao tem uma conta?",
+  "auth.signUpFree": "Cadastre-se gratis",
+
+  // Dashboard
+  "dashboard.welcome": "Bem-vindo, {{name}}",
+  "dashboard.totalOrders": "Total de Pedidos",
+  "dashboard.activeSubscriptions": "Assinaturas Ativas",
+  "dashboard.creditsBalance": "Saldo de Creditos",
+
+  // Box Tiers
+  "tier.starter": "Inicial",
+  "tier.voyager": "Viajante",
+  "tier.bunker": "Bunker",
+  "tier.starter.description":
+    "Perfeito para uma pessoa - 8 refeicoes premium",
+  "tier.voyager.description": "Ideal para casais - 12 refeicoes premium",
+  "tier.bunker.description": "Pacote familiar - 24 refeicoes premium",
+
+  // Locale Settings
+  "locale.title": "Idioma e Moeda",
+  "locale.language": "Idioma",
+  "locale.currency": "Moeda",
+  "locale.dateFormat": "Formato de Data",
+  "locale.numberFormat": "Formato de Numeros",
+  "locale.preview": "Pre-visualizacao",
+  "locale.saved": "Preferencias salvas",
+  "locale.datePreview": "Pre-visualizacao da data",
+  "locale.numberPreview": "Pre-visualizacao de numeros",
+  "locale.pricePreview": "Pre-visualizacao de preco",
+
+  // Common
+  "common.loading": "Carregando...",
+  "common.save": "Salvar Alteracoes",
+  "common.cancel": "Cancelar",
+  "common.delete": "Excluir",
+  "common.edit": "Editar",
+  "common.search": "Buscar",
+  "common.filter": "Filtrar",
+  "common.all": "Todos",
+  "common.viewAll": "Ver Tudo",
+  "common.learnMore": "Saiba Mais",
+  "common.getStarted": "Comecar",
+  "common.perMonth": "/mes",
+  "common.searchProducts": "Buscar produtos",
+
+  // Footer
+  "footer.rights": "Todos os direitos reservados.",
+  "footer.privacy": "Politica de Privacidade",
+  "footer.terms": "Termos de Servico",
+  "footer.contact": "Fale Conosco",
+};

@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { applyRateLimit, rateLimiters } from "@/lib/api/rate-limit";
+import { sanitizeString, enforceMaxLength } from "@/lib/api/validation";
+import { safeError } from "@/lib/api/safe-error";
 
 interface ChatRequestBody {
   message: string;
@@ -110,9 +113,23 @@ function shouldSearchProducts(message: string): boolean {
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limit: 10 requests/minute
+    const rateLimitResponse = await applyRateLimit(request, rateLimiters.chat);
+    if (rateLimitResponse) return rateLimitResponse;
+
     const body: ChatRequestBody = await request.json();
 
     if (!body.message || typeof body.message !== "string") {
+      return NextResponse.json(
+        { error: "Message is required" },
+        { status: 400 }
+      );
+    }
+
+    // Sanitize and enforce max length
+    const sanitizedMessage = sanitizeString(enforceMaxLength(body.message, 2000));
+
+    if (!sanitizedMessage) {
       return NextResponse.json(
         { error: "Message is required" },
         { status: 400 }
@@ -125,6 +142,9 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Use sanitized message from here on
+    body.message = sanitizedMessage;
 
     const apiKey = process.env.GOOGLE_GEMINI_API_KEY;
     if (!apiKey) {
@@ -233,9 +253,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json<ChatResponseBody>({ reply, suggestions });
   } catch (error) {
     console.error("Chat API error:", error);
+    const { error: errorMessage } = safeError(error, "Something went wrong on my end. Please try again in a moment!");
     return NextResponse.json<ChatResponseBody>({
-      reply:
-        "Something went wrong on my end. Please try again in a moment!",
+      reply: errorMessage,
     });
   }
 }
