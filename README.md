@@ -69,19 +69,22 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 | Metric | Count |
 |--------|-------|
-| **Routes** | 90 |
-| **Source Files** | 148 |
-| **Lines of Code** | 47,167 |
-| **UI Components** | 20 |
-| **Pages** | 48 |
-| **API Endpoints** | 41 |
+| **Routes** | 96 |
+| **Source Files** | 170 |
+| **Lines of Code** | 51,563 |
+| **UI Components** | 22 |
+| **Pages** | 50 |
+| **API Endpoints** | 45 |
 | **Edge Functions** | 7 |
-| **Custom Hooks** | 6 |
+| **Custom Hooks** | 7 |
+| **Lib Modules** | 35 |
 | **Database Tables** | 42+ |
 | **DB Migrations** | 6 |
 | **E2E Tests** | 166 (15 files) |
 | **n8n Workflows** | 3 |
 | **Storefronts** | 4 |
+| **Languages** | 4 (EN/ES/FR/PT) |
+| **Currencies** | 4 (USD/MXN/EUR/BRL) |
 
 ## Architecture
 

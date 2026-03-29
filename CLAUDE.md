@@ -97,6 +97,24 @@ if (isAuthError(auth)) return auth.response;
 - Admin: `/admin` → role check handled in layout component (NOT middleware)
 - B2B Portal: `/b2b/portal` → role check in layout (dealer or admin)
 
+**Security** (`src/lib/api/`):
+```typescript
+import { applyRateLimit, rateLimiters } from "@/lib/api/rate-limit";
+import { sanitizeString, validateEmail, validateUUID } from "@/lib/api/validation";
+import { safeError } from "@/lib/api/safe-error";
+// Apply at top of API routes:
+const rl = await applyRateLimit(request, rateLimiters.write); // 20/min
+if (rl) return rl; // Returns 429 if exceeded
+```
+
+**i18n** (`src/lib/i18n/`):
+```typescript
+import { t, formatLocalCurrency, convertPrice } from "@/lib/i18n";
+import { useLocale } from "@/hooks";
+// In components:
+const { locale, currency, t, formatPrice } = useLocale();
+```
+
 **Pricing Engine** (`src/lib/pricing/`):
 ```typescript
 import { resolvePrice, resolveCartPricing } from "@/lib/pricing/engine";
@@ -241,15 +259,18 @@ Located in `/workflows/` and deployed to `automation.inspiration-ai.com`:
 
 | Metric | Count |
 |--------|-------|
-| Routes | 90 |
-| Source Files | 148 |
-| Lines of Code | 47,167 |
-| UI Components | 20 |
-| Pages | 48 |
-| API Endpoints | 41 |
+| Routes | 96 |
+| Source Files | 170 |
+| Lines of Code | 51,563 |
+| UI Components | 22 |
+| Pages | 50 |
+| API Endpoints | 45 |
 | Edge Functions | 7 |
-| Custom Hooks | 6 |
+| Custom Hooks | 7 |
+| Lib Modules | 35 |
 | Database Tables | 42+ |
 | Migrations | 6 |
 | E2E Tests | 166 (15 files) |
 | n8n Workflows | 3 |
+| Languages | 4 (EN/ES/FR/PT) |
+| Currencies | 4 (USD/MXN/EUR/BRL) |

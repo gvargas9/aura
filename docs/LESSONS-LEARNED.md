@@ -91,3 +91,17 @@ Gemini's `gemini-embedding-001` outputs 3072 dimensions. pgvector indexes (IVFFl
 
 ### Why Mock Mode for Shipping
 Not all development environments have EasyPost API keys. Mock mode returns realistic carrier data so the full checkout → shipping → tracking flow can be developed and tested without credentials. The `mock: true` flag in responses lets the UI optionally indicate demo mode.
+
+## Phase 3 Lessons
+
+### In-Memory Rate Limiting — Good Enough for Now
+In-memory Map-based rate limiting works for single-instance deployments (Vercel serverless, single Node process). For multi-instance production (multiple Vercel regions, Kubernetes pods), upgrade to Redis-based rate limiting. The interface is already abstracted so swapping implementations is straightforward.
+
+### CSRF Via Origin/Referer — Simple but Effective
+Checking `Origin` header against the app domain is sufficient CSRF protection for JSON APIs that require `Content-Type: application/json`. Browsers enforce CORS preflight for cross-origin JSON requests, so the combination of CORS + Origin check blocks CSRF attacks without requiring tokens.
+
+### Lightweight i18n Without Libraries
+Building a custom i18n system (~200 lines) instead of using next-intl or react-i18next avoided: route segment configuration, middleware complexity, bundle size increase, and SSR complications. The tradeoff: no automatic language detection from URL segments, no server-side translation. For an MVP this is the right call — can migrate to next-intl for full SSR i18n support later.
+
+### Churn Scoring — Start Rule-Based, Enhance with ML
+A rule-based churn model (weighted factors) is immediately useful without training data. Using Gemini to generate personalized retention recommendations adds AI value without requiring a trained ML model. As order volume grows, the scoring weights can be calibrated from actual churn data.

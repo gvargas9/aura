@@ -2,6 +2,48 @@
 
 All notable changes to the Aura platform are documented in this file.
 
+## [2026-03-28] — Security, AI Analytics & i18n (Phase 3)
+
+### Added — Security Hardening
+- In-memory rate limiting with IP-based tracking and auto-cleanup (`src/lib/api/rate-limit.ts`)
+- Per-endpoint limits: auth 5/min, write 20/min, chat 10/min, checkout 10/min
+- Input validation library: email, phone, UUID, price, sanitizeString, sanitizeHtml (`src/lib/api/validation.ts`)
+- CSRF protection on all mutation API routes (`src/lib/api/csrf.ts`)
+- Security headers: CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy
+- Secure cookie configuration: HttpOnly, Secure in production, SameSite=Lax
+- Safe error responses: no internal details leaked in production (`src/lib/api/safe-error.ts`)
+- Applied rate limiting + validation to 9 API routes
+- Full security audit report (`docs/SECURITY-AUDIT.md`)
+
+### Added — Churn Prediction AI
+- Rule-based churn scoring engine with Gemini-powered retention recommendations (`src/lib/ai/churn.ts`)
+- Scoring factors: order frequency, value trend, subscription pauses, support tickets, engagement
+- Risk levels: low (0-0.25), medium (0.26-0.50), high (0.51-0.75), critical (0.76-1.0)
+- Batch scoring with profiles.churn_risk_score updates
+- `/api/analytics/churn` (GET scores, POST batch recalculate)
+- `/api/cron/churn-scoring` for daily automated scoring
+- n8n alerts for critical-risk customers
+
+### Added — Demand Forecasting AI
+- Demand forecasting engine with trend detection and seasonality (`src/lib/ai/forecast.ts`)
+- Calculates: avg daily demand, days until stockout, recommended reorder date/quantity
+- Reorder report generator: urgent/upcoming/stable categorization with cost estimates
+- `/api/analytics/demand` (GET forecast, POST generate report)
+- `/api/cron/demand-forecast` for daily automated forecasting
+- Admin analytics dashboard (`/admin/analytics`) with churn + demand tabs
+
+### Added — Internationalization (i18n)
+- Lightweight translation system with 4 languages: English, Spanish, French, Portuguese
+- ~90 translation keys covering nav, hero, product, checkout, auth, dashboard
+- Multi-currency support: USD, MXN, EUR, BRL with static exchange rates
+- `useLocale` hook with browser language detection and localStorage persistence
+- `LocaleSelector` component in Header (language + currency dropdown)
+- `PriceDisplay` component for multi-currency price rendering
+- Locale settings page (`/account/locale`) with live formatting previews
+- Enhanced `formatCurrency()` with currency parameter (backward compatible)
+
+---
+
 ## [2026-03-28] — Core Platform Complete (Phase 2)
 
 ### Added — AI Recommendations & Smart Fill
