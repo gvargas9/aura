@@ -290,11 +290,12 @@ function AnimatedCounter({
   active: boolean;
 }) {
   const [count, setCount] = useState(0);
-  const hasAnimated = useRef(false);
+  const [hasRun, setHasRun] = useState(false);
 
   useEffect(() => {
-    if (!active || hasAnimated.current) return;
-    hasAnimated.current = true;
+    if (!active || hasRun) return;
+    setHasRun(true);
+    setCount(0);
     const startTime = Date.now();
     const timer = setInterval(() => {
       const elapsed = Date.now() - startTime;
@@ -304,12 +305,17 @@ function AnimatedCounter({
       if (progress >= 1) clearInterval(timer);
     }, 16);
     return () => clearInterval(timer);
-  }, [active, end, duration]);
+  }, [active, hasRun, end, duration]);
+
+  // Reset when leaving the slide so it re-animates on return
+  useEffect(() => {
+    if (!active) setHasRun(false);
+  }, [active]);
 
   return (
     <span>
       {prefix}
-      {count}
+      {count.toLocaleString()}
       {suffix}
     </span>
   );
