@@ -24,35 +24,31 @@ test.describe("Build-a-Box Flow", () => {
     page,
   }) => {
     // The URL should default to voyager size
-    // BoxSizeSelector shows the voyager option as selected (border-aura-primary)
-    const voyagerButton = page.locator("button", { hasText: "voyager" });
+    // TierSelector shows the voyager option as selected (border-aura-primary)
+    const voyagerButton = page.locator("button", { hasText: "Voyager" });
     await expect(voyagerButton.first()).toBeVisible();
 
-    // The sidebar should show "My Order" with 0 positions
-    await expect(page.getByText("My Order")).toBeVisible();
-    await expect(page.getByText("0 positions")).toBeVisible();
+    // The sidebar should show "Your Box" with "0 of 12 filled"
+    await expect(page.getByText("Your Box")).toBeVisible();
+    await expect(page.getByText("0 of 12 filled")).toBeVisible();
   });
 
   test("should be able to switch box sizes", async ({ page }) => {
-    // Scroll to box size selector section
-    const sizeSection = page.getByText("Choose Your Box Size");
-    await sizeSection.scrollIntoViewIfNeeded();
-
-    // Click on Starter
-    const starterButton = page.locator("button", { hasText: "starter" }).first();
-    await starterButton.click();
+    // Click on Starter tier button
+    const starterButton = page.locator("button", { hasText: "Starter" }).first();
+    await starterButton.click({ timeout: 15000 });
 
     // The starter button should now have the selected style
     await expect(starterButton).toHaveClass(/border-aura-primary/);
 
     // Click on Bunker
-    const bunkerButton = page.locator("button", { hasText: "bunker" }).first();
+    const bunkerButton = page.locator("button", { hasText: "Bunker" }).first();
     await bunkerButton.click();
 
     await expect(bunkerButton).toHaveClass(/border-aura-primary/);
 
     // Click back on Voyager
-    const voyagerButton = page.locator("button", { hasText: "voyager" }).first();
+    const voyagerButton = page.locator("button", { hasText: "Voyager" }).first();
     await voyagerButton.click();
 
     await expect(voyagerButton).toHaveClass(/border-aura-primary/);
@@ -61,19 +57,14 @@ test.describe("Build-a-Box Flow", () => {
   test("should add a product to the box when clicking add button", async ({
     page,
   }) => {
-    // The featured product has an "Add to order" button
-    const addButton = page.getByRole("button", { name: /add to order/i });
+    // Product cards have an "Add {name} to box" aria-label button
+    const addButton = page.getByRole("button", { name: /add .+ to box/i });
 
     if (await addButton.isVisible()) {
       await addButton.click();
 
-      // The sidebar position count should update from 0 to 1
-      await expect(page.getByText("1 positions")).toBeVisible();
-
-      // The button text should change to "Added to box"
-      await expect(
-        page.getByRole("button", { name: /added to box/i })
-      ).toBeVisible();
+      // The sidebar counter should update from 0 to 1
+      await expect(page.getByText("1 of 12 filled")).toBeVisible();
     }
   });
 
@@ -81,39 +72,37 @@ test.describe("Build-a-Box Flow", () => {
     page,
   }) => {
     // Verify initial state is 0
-    await expect(page.getByText("0 positions")).toBeVisible();
+    await expect(page.getByText("0 of 12 filled")).toBeVisible();
 
     // Add the featured product
-    const addButton = page.getByRole("button", { name: /add to order/i });
+    const addButton = page.getByRole("button", { name: /add .+ to box/i });
     if (await addButton.isVisible()) {
       await addButton.click();
 
       // Counter should update
-      await expect(page.getByText("1 positions")).toBeVisible();
+      await expect(page.getByText("1 of 12 filled")).toBeVisible();
     }
   });
 
   test("should remove a product from the box", async ({ page }) => {
     // First add a product
-    const addButton = page.getByRole("button", { name: /add to order/i });
+    const addButton = page.getByRole("button", { name: /add .+ to box/i });
     if (await addButton.isVisible()) {
       await addButton.click();
-      await expect(page.getByText("1 positions")).toBeVisible();
+      await expect(page.getByText("1 of 12 filled")).toBeVisible();
 
-      // Find the remove button (minus icon) in the sidebar order items
-      // Each order item in sidebar has a minus button to remove
+      // Find the remove button (X overlay) on the first filled slot in the sidebar grid
+      // Each filled slot has a hover overlay button with aria-label "Remove ..."
       const removeButton = page
-        .locator("aside .bg-gray-50")
-        .first()
-        .locator("button")
+        .locator("aside")
+        .getByRole("button", { name: /remove/i })
         .first();
 
-      if (await removeButton.isVisible()) {
-        await removeButton.click();
+      // Force click since the button is only visible on hover
+      await removeButton.click({ force: true });
 
-        // Counter should go back to 0
-        await expect(page.getByText("0 positions")).toBeVisible();
-      }
+      // Counter should go back to 0
+      await expect(page.getByText("0 of 12 filled")).toBeVisible();
     }
   });
 
@@ -121,15 +110,15 @@ test.describe("Build-a-Box Flow", () => {
     page,
   }) => {
     // First add one product to make the Aura Fill button appear
-    const addButton = page.getByRole("button", { name: /add to order/i });
+    const addButton = page.getByRole("button", { name: /add .+ to box/i });
     if (await addButton.isVisible()) {
       await addButton.click();
-      await expect(page.getByText("1 positions")).toBeVisible();
+      await expect(page.getByText("1 of 12 filled")).toBeVisible();
     }
 
-    // Click "Let Aura Fill My Box" button in the sidebar
+    // Click "Aura Fill Remaining" button in the sidebar
     const auraFillButton = page.getByRole("button", {
-      name: /let aura fill my box/i,
+      name: /aura fill remaining/i,
     });
 
     if (await auraFillButton.isVisible()) {
@@ -137,7 +126,7 @@ test.describe("Build-a-Box Flow", () => {
 
       // Wait for products to be added - the position count should equal maxSlots
       // Default is voyager with 12 slots
-      await expect(page.getByText("12 positions")).toBeVisible({
+      await expect(page.getByText("12 of 12 filled")).toBeVisible({
         timeout: 5000,
       });
     }
@@ -146,18 +135,18 @@ test.describe("Build-a-Box Flow", () => {
   test("should show checkout button as disabled when box is not full", async ({
     page,
   }) => {
-    // The checkout button in the sidebar shows "Add X more items" when not full
+    // The checkout button in the sidebar shows "Add X more meals" when not full
     // It should be disabled
     // First we need at least one product for the button to appear
-    const addButton = page.getByRole("button", { name: /add to order/i });
+    const addButton = page.getByRole("button", { name: /add .+ to box/i });
     if (await addButton.isVisible()) {
       await addButton.click();
 
-      // Look for the checkout button with "Add X more items" text
-      const checkoutButton = page.locator("aside button.btn-accent");
+      // Look for the checkout button with "Add X more meals" text
+      const checkoutButton = page.locator("aside button", { hasText: /more meals|proceed to checkout/i });
       await expect(checkoutButton).toBeVisible();
       await expect(checkoutButton).toBeDisabled();
-      await expect(checkoutButton).toContainText(/add \d+ more items/i);
+      await expect(checkoutButton).toContainText(/add \d+ more meals/i);
     }
   });
 
@@ -165,29 +154,29 @@ test.describe("Build-a-Box Flow", () => {
     page,
   }) => {
     // Add one product first
-    const addButton = page.getByRole("button", { name: /add to order/i });
+    const addButton = page.getByRole("button", { name: /add .+ to box/i });
     if (await addButton.isVisible()) {
       await addButton.click();
     }
 
     // Use Aura Fill to complete the box
     const auraFillButton = page.getByRole("button", {
-      name: /let aura fill my box/i,
+      name: /aura fill remaining/i,
     });
 
     if (await auraFillButton.isVisible()) {
       await auraFillButton.click();
 
       // Wait for box to be full
-      await expect(page.getByText("12 positions")).toBeVisible({
+      await expect(page.getByText("12 of 12 filled")).toBeVisible({
         timeout: 5000,
       });
 
-      // The checkout button should now say "Confirm Order" and be enabled
-      const confirmButton = page.locator("aside button.btn-accent");
+      // The checkout button should now say "Proceed to Checkout" and be enabled
+      const confirmButton = page.locator("aside button", { hasText: /more meals|proceed to checkout/i });
       await expect(confirmButton).toBeVisible();
       await expect(confirmButton).toBeEnabled();
-      await expect(confirmButton).toContainText(/confirm order/i);
+      await expect(confirmButton).toContainText(/proceed to checkout/i);
     }
   });
 });

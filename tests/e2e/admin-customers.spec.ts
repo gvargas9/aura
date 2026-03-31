@@ -187,9 +187,10 @@ test.describe("Admin Customers Page", () => {
       page.getByText("Profile & Actions")
     ).toBeVisible({ timeout: 5000 });
 
-    // Should show Recent Orders and Subscriptions sections
-    await expect(page.getByText(/Recent Orders/)).toBeVisible();
-    await expect(page.getByText(/Subscriptions/)).toBeVisible();
+    // Should show Recent Orders and Subscriptions sections within the expanded detail row
+    const expandedDetail = page.locator('td[colspan="5"]');
+    await expect(expandedDetail.getByText(/Recent Orders/)).toBeVisible();
+    await expect(expandedDetail.getByText(/Subscriptions/)).toBeVisible();
   });
 
   test("should show role change dropdown in expanded customer detail", async ({

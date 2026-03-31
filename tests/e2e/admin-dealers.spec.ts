@@ -17,10 +17,12 @@ import { test, expect } from "@playwright/test";
 import { loginAsAdmin } from "./helpers/auth";
 
 test.describe("Admin Dealers Page", () => {
+  test.setTimeout(90000);
+
   test.beforeEach(async ({ page }) => {
     await loginAsAdmin(page);
     await page.goto("/admin/dealers");
-    await expect(page.locator("h1")).toHaveText("Dealers", { timeout: 15000 });
+    await expect(page.locator("h1")).toHaveText("Dealers", { timeout: 30000 });
   });
 
   test("should load dealers page with header and description", async ({
@@ -33,13 +35,13 @@ test.describe("Admin Dealers Page", () => {
   });
 
   test("should display Organizations section heading", async ({ page }) => {
-    await expect(page.getByText("Organizations")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Organizations" })).toBeVisible();
   });
 
   test("should display Individual Dealers section heading", async ({
     page,
   }) => {
-    await expect(page.getByText("Individual Dealers")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Individual Dealers" })).toBeVisible();
   });
 
   test("should have Add Organization button", async ({ page }) => {

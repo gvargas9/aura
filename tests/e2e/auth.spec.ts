@@ -70,7 +70,7 @@ test.describe("Authentication Flows", () => {
       await page.goto("/auth/login");
       await page.fill('input[type="email"]', "invalid@example.com");
       await page.fill('input[type="password"]', "wrongpassword");
-      await page.click('button[type="submit"]');
+      await page.locator('main button[type="submit"]').click();
 
       // Expect an error message to appear
       await expect(page.locator(".bg-red-50")).toBeVisible({ timeout: 10000 });
@@ -84,14 +84,14 @@ test.describe("Authentication Flows", () => {
       await page.goto("/auth/signup");
 
       // Heading
-      await expect(page.getByText(/create.*account/i)).toBeVisible();
+      await expect(page.getByRole('heading', { name: /create.*account/i })).toBeVisible();
 
       // Form fields - full name, email, password, confirm password
       await expect(page.locator('input[type="email"]')).toBeVisible();
       await expect(page.locator('input[type="password"]').first()).toBeVisible();
 
-      // Submit button
-      await expect(page.locator('button[type="submit"]')).toBeVisible();
+      // Submit button (scoped to main to avoid AuraChatWidget submit)
+      await expect(page.locator('main button[type="submit"]')).toBeVisible();
     });
   });
 
@@ -102,11 +102,11 @@ test.describe("Authentication Flows", () => {
       // Email input should be present
       await expect(page.locator('input[type="email"]')).toBeVisible();
 
-      // Submit button
-      await expect(page.locator('button[type="submit"]')).toBeVisible();
+      // Submit button (scoped to main to avoid AuraChatWidget submit)
+      await expect(page.locator('main button[type="submit"]')).toBeVisible();
 
-      // Back to login link
-      await expect(page.getByRole("link", { name: /login|sign in|back/i })).toBeVisible();
+      // Back to login link (scoped to main to avoid header Sign In link)
+      await expect(page.locator('main').getByRole("link", { name: /back to sign in/i })).toBeVisible();
     });
   });
 

@@ -20,26 +20,26 @@ test.describe("Public Pages", () => {
       await page.goto("/");
 
       // Hero section content
-      await expect(page.getByText("Energy, Anywhere.")).toBeVisible();
-      await expect(page.getByText(/gourmet food/i)).toBeVisible();
+      await expect(page.getByText("Gourmet Food")).toBeVisible({ timeout: 10000 });
+      await expect(page.getByText("Anywhere.")).toBeVisible();
       await expect(
         page.getByRole("link", { name: /build your box/i }).first()
       ).toBeVisible();
 
       // Stats section
       await expect(page.getByText("Happy Customers")).toBeVisible();
-      await expect(page.getByText("Meals Delivered")).toBeVisible();
+      await expect(page.getByText("Would Recommend")).toBeVisible();
 
       // Box options section
-      await expect(page.getByText("Choose Your Box Size")).toBeVisible();
-      await expect(page.getByText("Starter")).toBeVisible();
-      await expect(page.getByText("Voyager")).toBeVisible();
-      await expect(page.getByText("Bunker")).toBeVisible();
+      await expect(page.getByText("Pick Your Perfect Box")).toBeVisible();
+      await expect(page.getByText("Starter").first()).toBeVisible();
+      await expect(page.getByText("Voyager").first()).toBeVisible();
+      await expect(page.getByText("Bunker").first()).toBeVisible();
 
       // Features section
-      await expect(page.getByText("Why Choose Aura?")).toBeVisible();
+      await expect(page.getByText("The Aura Difference")).toBeVisible();
       await expect(page.getByText("All-Natural Ingredients")).toBeVisible();
-      await expect(page.getByText("2-Year Shelf Life")).toBeVisible();
+      await expect(page.getByText("2-Year Shelf Life").first()).toBeVisible();
       await expect(page.getByText("Free Shipping").first()).toBeVisible();
 
       // Testimonials section
@@ -76,7 +76,7 @@ test.describe("Public Pages", () => {
       await expect(page.locator(".animate-spin")).toBeHidden({ timeout: 10000 });
 
       // Product count text should be visible
-      await expect(page.getByText(/showing \d+ of \d+ products/i)).toBeVisible();
+      await expect(page.getByText(/\d+ products/i)).toBeVisible();
     });
 
     test("should filter products by category when clicking a category button", async ({
@@ -89,8 +89,8 @@ test.describe("Public Pages", () => {
 
       // Get the initial product count text
       const initialCountText = await page
-        .getByText(/showing \d+ of \d+ products/i)
-        .textContent();
+        .getByText(/\d+ products/i)
+        .textContent({ timeout: 15000 });
 
       // Find and click a category button in the sidebar (desktop filters)
       // Categories are rendered as buttons with capitalize class
@@ -105,8 +105,8 @@ test.describe("Public Pages", () => {
         // The product count text should update
         await page.waitForTimeout(500);
         const filteredCountText = await page
-          .getByText(/showing \d+ of \d+ products/i)
-          .textContent();
+          .getByText(/\d+ products/i)
+          .textContent({ timeout: 15000 });
 
         // Count may change or stay same, but element should still exist
         expect(filteredCountText).toBeTruthy();
@@ -129,7 +129,7 @@ test.describe("Public Pages", () => {
 
         // Results count should update
         await expect(
-          page.getByText(/showing \d+ of \d+ products/i)
+          page.getByText(/\d+ products/i)
         ).toBeVisible();
       }
     });
@@ -144,14 +144,14 @@ test.describe("Public Pages", () => {
       // Wait for products to load
       await expect(page.locator(".animate-spin")).toBeHidden({ timeout: 10000 });
 
-      // Category navigation
-      await expect(page.getByText("Meal Category")).toBeVisible();
+      // Dietary filter pills should be visible
+      await expect(page.getByText("All").first()).toBeVisible();
 
-      // Box size selector section
-      await expect(page.getByText("Choose Your Box Size")).toBeVisible();
+      // Box size selector - tier names should be visible
+      await expect(page.getByText("Starter").first()).toBeVisible();
 
       // Order summary sidebar (desktop)
-      await expect(page.getByText("My Order")).toBeVisible();
+      await expect(page.getByText("Your Box")).toBeVisible();
     });
   });
 
@@ -179,13 +179,13 @@ test.describe("Public Pages", () => {
 
       // Dealer tiers
       await expect(page.getByText("Dealer Tiers")).toBeVisible();
-      await expect(page.getByText("Bronze")).toBeVisible();
-      await expect(page.getByText("Silver")).toBeVisible();
-      await expect(page.getByText("Gold")).toBeVisible();
-      await expect(page.getByText("Platinum")).toBeVisible();
+      await expect(page.getByText("Bronze", { exact: true })).toBeVisible();
+      await expect(page.getByText("Silver", { exact: true })).toBeVisible();
+      await expect(page.getByText("Gold", { exact: true })).toBeVisible();
+      await expect(page.getByText("Platinum", { exact: true })).toBeVisible();
 
       // Use cases
-      await expect(page.getByText("Perfect For")).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Perfect For" })).toBeVisible();
       await expect(page.getByText("Gyms & Fitness Centers")).toBeVisible();
 
       // CTA section

@@ -142,7 +142,7 @@ test.describe("Admin Products Page", () => {
 
     // Additional fields should also be visible
     await expect(page.getByText("Short Description")).toBeVisible();
-    await expect(page.getByText("Description")).toBeVisible();
+    await expect(page.getByText("Description", { exact: true })).toBeVisible();
     await expect(page.getByText("Stock Level")).toBeVisible();
     await expect(page.getByText("Bunker Safe")).toBeVisible();
   });

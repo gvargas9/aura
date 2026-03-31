@@ -7,7 +7,7 @@ interface ChatMessage {
   id: string;
   role: "user" | "assistant";
   content: string;
-  timestamp: Date;
+  timestamp: Date | null;
 }
 
 interface ChatResponse {
@@ -20,7 +20,7 @@ const WELCOME_MESSAGE: ChatMessage = {
   role: "assistant",
   content:
     "Hi! I'm Aura, your food assistant. I can help you find meals, track orders, or build your perfect box. What can I help you with?",
-  timestamp: new Date(),
+  timestamp: null,
 };
 
 const QUICK_ACTIONS = [
@@ -30,7 +30,8 @@ const QUICK_ACTIONS = [
   "Dietary options",
 ];
 
-function formatTime(date: Date): string {
+function formatTime(date: Date | null): string {
+  if (!date) return "";
   return date.toLocaleTimeString("en-US", {
     hour: "numeric",
     minute: "2-digit",
@@ -175,6 +176,15 @@ export function AuraChatWidget() {
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, []);
+
+  // Set welcome message timestamp on client only to avoid hydration mismatch
+  useEffect(() => {
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === "welcome" && !m.timestamp ? { ...m, timestamp: new Date() } : m
+      )
+    );
   }, []);
 
   useEffect(() => {

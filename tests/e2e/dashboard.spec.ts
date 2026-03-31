@@ -33,10 +33,11 @@ test.describe("User Dashboard", () => {
         timeout: 15000,
       });
 
-      // Stat cards
-      await expect(page.getByText("Total Orders")).toBeVisible();
-      await expect(page.getByText("Active Subscriptions")).toBeVisible();
-      await expect(page.getByText("Credits Balance")).toBeVisible();
+      // Stat cards — scope to the stats grid to avoid matching section headings
+      const statsGrid = page.locator(".grid.sm\\:grid-cols-3");
+      await expect(statsGrid.getByText("Total Orders")).toBeVisible();
+      await expect(statsGrid.getByText("Active Subscriptions")).toBeVisible();
+      await expect(statsGrid.getByText("Credits Balance")).toBeVisible();
     });
 
     test("should show quick action links", async ({ page }) => {
@@ -63,8 +64,8 @@ test.describe("User Dashboard", () => {
         timeout: 15000,
       });
 
-      // Account info card
-      const accountSection = page.locator("text=Account").first();
+      // Account info card — match the h2 heading exactly
+      const accountSection = page.locator("h2", { hasText: /^Account$/ });
       await expect(accountSection).toBeVisible();
 
       // Email and role should be displayed
@@ -77,7 +78,10 @@ test.describe("User Dashboard", () => {
         timeout: 15000,
       });
 
-      await expect(page.getByText("Active Subscriptions")).toBeVisible();
+      // Match the section heading (h2), not the stat card label
+      await expect(
+        page.locator("h2", { hasText: "Active Subscriptions" })
+      ).toBeVisible();
     });
 
     test("should show Recent Orders section", async ({ page }) => {
