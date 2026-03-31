@@ -15,6 +15,9 @@ import {
   Check,
   AlertCircle,
   Store,
+  Code,
+  Copy,
+  Globe,
 } from "lucide-react";
 
 interface Storefront {
@@ -22,6 +25,7 @@ interface Storefront {
   name: string;
   slug: string;
   domain: string | null;
+  custom_domain: string | null;
   logo_url: string | null;
   theme: {
     primaryColor: string;
@@ -88,6 +92,8 @@ export default function AdminStorefrontEditPage() {
   const [featuredCategories, setFeaturedCategories] = useState<string[]>([]);
   const [showB2BLink, setShowB2BLink] = useState(false);
   const [showAcademy, setShowAcademy] = useState(false);
+  const [customDomain, setCustomDomain] = useState("");
+  const [embedCopied, setEmbedCopied] = useState(false);
 
   const fetchData = useCallback(async () => {
     const supabase = createClient();
@@ -127,6 +133,7 @@ export default function AdminStorefrontEditPage() {
     setFeaturedCategories(sf.settings?.featuredCategories || []);
     setShowB2BLink(sf.settings?.showB2BLink || false);
     setShowAcademy(sf.settings?.showAcademy || false);
+    setCustomDomain(sf.custom_domain || "");
 
     setLoading(false);
   }, [id]);
@@ -159,6 +166,7 @@ export default function AdminStorefrontEditPage() {
         name,
         slug,
         domain: domain || null,
+        custom_domain: customDomain || null,
         logo_url: logoUrl || null,
         organization_id: organizationId || null,
         is_active: isActive,
@@ -468,6 +476,71 @@ export default function AdminStorefrontEditPage() {
                 onChange={(e) => setFontFamily(e.target.value)}
                 placeholder="Inter, system-ui, sans-serif"
               />
+            </Card>
+
+            {/* Custom Domain */}
+            <Card variant="bordered" padding="lg">
+              <div className="flex items-center gap-2 mb-4">
+                <Globe className="w-4 h-4 text-gray-400" />
+                <h2 className="text-base font-semibold text-gray-900">
+                  Custom Domain
+                </h2>
+              </div>
+              <Input
+                label="Custom Domain"
+                value={customDomain}
+                onChange={(e) => setCustomDomain(e.target.value.toLowerCase().trim())}
+                placeholder="shop.yourbrand.com"
+              />
+              <p className="text-xs text-gray-400 mt-2">
+                Point your domain&apos;s DNS (CNAME) to your Aura app domain.
+                Once configured, visitors to this domain will see your storefront.
+              </p>
+            </Card>
+
+            {/* Embed Widget */}
+            <Card variant="bordered" padding="lg">
+              <div className="flex items-center gap-2 mb-4">
+                <Code className="w-4 h-4 text-gray-400" />
+                <h2 className="text-base font-semibold text-gray-900">
+                  Embed Widget
+                </h2>
+              </div>
+              <p className="text-sm text-gray-500 mb-3">
+                Add this snippet to any website to embed your product grid in an iframe.
+              </p>
+              <div className="relative">
+                <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg text-xs overflow-x-auto whitespace-pre-wrap">
+{`<iframe
+  src="${process.env.NEXT_PUBLIC_APP_URL || "https://aura.com"}/embed/${slug}"
+  width="100%"
+  height="600"
+  frameborder="0"
+  style="border: none; border-radius: 12px;"
+  title="${name} Products"
+></iframe>`}
+                </pre>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const snippet = `<iframe src="${process.env.NEXT_PUBLIC_APP_URL || "https://aura.com"}/embed/${slug}" width="100%" height="600" frameborder="0" style="border: none; border-radius: 12px;" title="${name} Products"></iframe>`;
+                    navigator.clipboard.writeText(snippet);
+                    setEmbedCopied(true);
+                    setTimeout(() => setEmbedCopied(false), 2000);
+                  }}
+                  className="absolute top-2 right-2 p-1.5 rounded-md bg-gray-700 hover:bg-gray-600 transition-colors"
+                  aria-label="Copy embed code"
+                >
+                  {embedCopied ? (
+                    <Check className="w-3.5 h-3.5 text-green-400" />
+                  ) : (
+                    <Copy className="w-3.5 h-3.5 text-gray-300" />
+                  )}
+                </button>
+              </div>
+              <p className="text-xs text-gray-400 mt-2">
+                The widget is lightweight, has no navigation chrome, and links back to your store.
+              </p>
             </Card>
           </div>
 

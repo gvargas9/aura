@@ -35,8 +35,27 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const organizationJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "Aura",
+    url: process.env.NEXT_PUBLIC_APP_URL || "https://aura.com",
+    logo: `${process.env.NEXT_PUBLIC_APP_URL || "https://aura.com"}/logo.png`,
+    description:
+      "AI-Native Omni-Commerce Food Platform. Premium shelf-stable food subscriptions.",
+    sameAs: [],
+  };
+
   return (
     <html lang="en" className={inter.variable} data-scroll-behavior="smooth">
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(organizationJsonLd),
+          }}
+        />
+      </head>
       <body className="antialiased min-h-screen bg-gradient-to-b from-white to-aura-light">
         {children}
         <AuraChatWidget />
