@@ -119,17 +119,19 @@ export async function POST(request: NextRequest) {
         performed_by: auth.user.id,
       } as never);
 
-    // Fire-and-forget: sync activity to MenuMaster
-    logSampleActivity({
-      leadExternalId: lead_email ?? undefined,
-      type: "sample_given",
-      subject: `${quantity} sample(s) distributed to ${lead_name}`,
-      description: notes ? sanitizeString(notes) : undefined,
-      dealerId: alloc.dealer_id,
-      dealerName: alloc.dealers?.business_name,
-      productId: alloc.product_id,
-      quantity,
-    });
+    // Fire-and-forget: sync activity to MenuMaster (if lead has a MenuMaster ID)
+    const leadExtId = (alloc as Record<string, unknown>).lead_external_id as string | undefined;
+    if (leadExtId) {
+      const mmLeadId = parseInt(leadExtId, 10);
+      if (!isNaN(mmLeadId)) {
+        logSampleActivity({
+          leadId: mmLeadId,
+          subject: `${quantity} sample(s) distributed to ${lead_name}`,
+          description: notes ? sanitizeString(notes) : `Sample delivery by dealer`,
+          activityType: "note",
+        });
+      }
+    }
 
     return NextResponse.json({ success: true, status: newStatus });
   } catch (error) {

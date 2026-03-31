@@ -1,14 +1,24 @@
-export {
-  syncLeadToMenuMaster,
-  syncAccountToMenuMaster,
-  logSampleActivity,
-  updateLeadInMenuMaster,
-} from "./client";
-
 export type {
-  MenuMasterLead,
-  MenuMasterAccount,
-  MenuMasterActivity,
   MenuMasterConfig,
+  MenuMasterLead,
+  MenuMasterContact,
+  MenuMasterCustomer,
+  MenuMasterActivity,
+  MenuMasterOpportunity,
   MenuMasterWebhookEvent,
 } from "./types";
+
+export {
+  syncLeadToMenuMaster,
+  updateLeadInMenuMaster,
+  getLeadsFromMenuMaster,
+  syncContactToMenuMaster,
+  updateContactInMenuMaster,
+  syncCustomerToMenuMaster,
+  updateCustomerInMenuMaster,
+  logActivityToMenuMaster,
+  logSampleActivity,
+  syncOpportunityToMenuMaster,
+  updateOpportunityInMenuMaster,
+  checkMenuMasterHealth,
+} from "./client";

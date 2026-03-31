@@ -4,7 +4,7 @@ import { requireAdmin, isAuthError } from "@/lib/api/auth";
 import { applyRateLimit, rateLimiters } from "@/lib/api/rate-limit";
 import { safeError } from "@/lib/api/safe-error";
 import { validateUUID, sanitizeString } from "@/lib/api/validation";
-import { syncAccountToMenuMaster } from "@/lib/menumaster";
+import { syncCustomerToMenuMaster } from "@/lib/menumaster";
 
 // ---------------------------------------------------------------------------
 // GET /api/sync/dealers — List dealers with sync status (admin only)
@@ -100,15 +100,17 @@ export async function POST(request: NextRequest) {
     const currentMetadata = dealerData.metadata ?? {};
 
     if (action === "sync") {
-      // Sync dealer to MenuMaster as an account
-      const syncResult = await syncAccountToMenuMaster({
-        name: dealerData.business_name || dealerData.organizations?.name || "Unknown",
+      // Sync dealer to MenuMaster as a customer
+      const syncResult = await syncCustomerToMenuMaster({
+        firstName: dealerData.profiles?.full_name?.split(" ")[0] ?? "Unknown",
+        lastName: dealerData.profiles?.full_name?.split(" ").slice(1).join(" ") ?? "",
         email: dealerData.profiles?.email ?? "",
-        organizationId: dealerData.organization_id ?? undefined,
-        dealerTier: dealerData.organizations?.dealer_tier,
-        status: "active",
-        metadata: {
+        company: dealerData.organizations?.name ?? undefined,
+        externalId: dealerData.id,
+        customFields: {
           aura_dealer_id: dealerData.id,
+          dealer_tier: dealerData.organizations?.dealer_tier,
+          organization_id: dealerData.organization_id,
           synced_by: auth.user.id,
         },
       });

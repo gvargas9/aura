@@ -1,7 +1,21 @@
+/**
+ * MenuMaster CRM Webhook Client
+ *
+ * Fire-and-forget outbound calls to MenuMaster's webhook API.
+ * Aligned with WEBHOOK_API.md v3.0.0.
+ *
+ * Auth: X-API-Token header with sk_live_{64_hex} format
+ * Base: /api/webhooks/crm/{businessId}/
+ *
+ * Never throws — logs errors and returns false on failure.
+ */
+
 import type {
   MenuMasterLead,
-  MenuMasterAccount,
+  MenuMasterContact,
+  MenuMasterCustomer,
   MenuMasterActivity,
+  MenuMasterOpportunity,
 } from "./types";
 
 // ---------------------------------------------------------------------------
@@ -19,8 +33,7 @@ function isConfigured(): boolean {
 
 function buildUrl(path: string): string {
   const base = MENUMASTER_API_URL.replace(/\/+$/, "");
-  const businessPath = `/api/webhooks/crm/${MENUMASTER_BUSINESS_ID}`;
-  return `${base}${businessPath}${path}`;
+  return `${base}/api/webhooks/crm/${MENUMASTER_BUSINESS_ID}${path}`;
 }
 
 function defaultHeaders(): Record<string, string> {
@@ -35,17 +48,11 @@ function defaultHeaders(): Record<string, string> {
 // ---------------------------------------------------------------------------
 
 async function menuMasterRequest(
-  method: "POST" | "PATCH",
+  method: "GET" | "POST" | "PATCH",
   path: string,
-  body: unknown
-): Promise<boolean> {
-  if (!isConfigured()) {
-    console.warn(
-      "[menumaster] Not configured — skipping request to",
-      path
-    );
-    return false;
-  }
+  body?: unknown
+): Promise<{ success: boolean; data?: Record<string, unknown> }> {
+  if (!isConfigured()) return { success: false };
 
   const url = buildUrl(path);
   const controller = new AbortController();
@@ -55,85 +62,205 @@ async function menuMasterRequest(
     const response = await fetch(url, {
       method,
       headers: defaultHeaders(),
-      body: JSON.stringify(body),
+      body: body ? JSON.stringify(body) : undefined,
       signal: controller.signal,
     });
 
+    const data = await response.json().catch(() => ({}));
+
     if (!response.ok) {
       console.error(
-        `[menumaster] ${method} ${path} returned ${response.status}: ${response.statusText}`
+        `[menumaster] ${method} ${path} → ${response.status}: ${JSON.stringify(data)}`
       );
-      return false;
+      return { success: false, data };
     }
 
-    console.log(`[menumaster] ${method} ${path} succeeded`);
-    return true;
+    console.log(`[menumaster] ${method} ${path} → OK`);
+    return { success: true, data };
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
-    console.error(`[menumaster] Failed ${method} ${path}: ${message}`);
-    return false;
+    console.error(`[menumaster] ${method} ${path} failed: ${message}`);
+    return { success: false };
   } finally {
     clearTimeout(timeout);
   }
 }
 
 // ---------------------------------------------------------------------------
-// Domain-specific sync functions
+// Leads — POST /api/webhooks/crm/:businessId/leads
 // ---------------------------------------------------------------------------
 
 /**
- * Sync a lead to MenuMaster CRM.
- * Fire-and-forget — never throws.
+ * Create a lead in MenuMaster CRM.
+ * Required: email
  */
-export async function syncLeadToMenuMaster(
-  lead: MenuMasterLead
-): Promise<boolean> {
+export async function syncLeadToMenuMaster(lead: MenuMasterLead) {
   return menuMasterRequest("POST", "/leads", {
     ...lead,
-    timestamp: new Date().toISOString(),
-    source_system: "aura",
+    source: lead.source ?? "aura_platform",
   });
 }
 
 /**
- * Sync an account/organization to MenuMaster CRM.
- * Fire-and-forget — never throws.
- */
-export async function syncAccountToMenuMaster(
-  account: MenuMasterAccount
-): Promise<boolean> {
-  return menuMasterRequest("POST", "/accounts", {
-    ...account,
-    timestamp: new Date().toISOString(),
-    source_system: "aura",
-  });
-}
-
-/**
- * Log a sample distribution or other activity to MenuMaster CRM.
- * Fire-and-forget — never throws.
- */
-export async function logSampleActivity(
-  activity: MenuMasterActivity
-): Promise<boolean> {
-  return menuMasterRequest("POST", "/activities", {
-    ...activity,
-    timestamp: new Date().toISOString(),
-    source_system: "aura",
-  });
-}
-
-/**
- * Update an existing lead in MenuMaster CRM.
- * Fire-and-forget — never throws.
+ * Update an existing lead by MenuMaster lead ID.
+ * PATCH /api/webhooks/crm/:businessId/leads/:leadId
  */
 export async function updateLeadInMenuMaster(
-  externalId: string,
+  leadId: number,
   updates: Partial<MenuMasterLead>
-): Promise<boolean> {
-  return menuMasterRequest("PATCH", `/leads/${externalId}`, {
-    ...updates,
-    updated_at: new Date().toISOString(),
-    source_system: "aura",
+) {
+  return menuMasterRequest("PATCH", `/leads/${leadId}`, updates);
+}
+
+/**
+ * Get all leads (optionally filtered).
+ * GET /api/webhooks/crm/:businessId/leads
+ */
+export async function getLeadsFromMenuMaster(params?: {
+  status?: string;
+  source?: string;
+  assignedTo?: number;
+  page?: number;
+  limit?: number;
+}) {
+  const query = params
+    ? "?" + new URLSearchParams(
+        Object.entries(params)
+          .filter(([, v]) => v !== undefined)
+          .map(([k, v]) => [k, String(v)])
+      ).toString()
+    : "";
+  return menuMasterRequest("GET", `/leads${query}`);
+}
+
+// ---------------------------------------------------------------------------
+// Contacts — POST /api/webhooks/crm/:businessId/contacts
+// ---------------------------------------------------------------------------
+
+/**
+ * Create a contact in MenuMaster CRM.
+ * Required: email
+ */
+export async function syncContactToMenuMaster(contact: MenuMasterContact) {
+  return menuMasterRequest("POST", "/contacts", contact);
+}
+
+/**
+ * Update an existing contact.
+ * PATCH /api/webhooks/crm/:businessId/contacts/:contactId
+ */
+export async function updateContactInMenuMaster(
+  contactId: number,
+  updates: Partial<MenuMasterContact>
+) {
+  return menuMasterRequest("PATCH", `/contacts/${contactId}`, updates);
+}
+
+// ---------------------------------------------------------------------------
+// Customers — POST /api/webhooks/crm/:businessId/customers
+// ---------------------------------------------------------------------------
+
+/**
+ * Create a customer in MenuMaster CRM.
+ * Required: email
+ */
+export async function syncCustomerToMenuMaster(customer: MenuMasterCustomer) {
+  return menuMasterRequest("POST", "/customers", customer);
+}
+
+/**
+ * Update an existing customer.
+ * PATCH /api/webhooks/crm/:businessId/customers/:customerId
+ */
+export async function updateCustomerInMenuMaster(
+  customerId: number,
+  updates: Partial<MenuMasterCustomer>
+) {
+  return menuMasterRequest("PATCH", `/customers/${customerId}`, updates);
+}
+
+// ---------------------------------------------------------------------------
+// Activities — POST /api/webhooks/crm/:businessId/activities
+// ---------------------------------------------------------------------------
+
+/**
+ * Create an activity on a CRM entity.
+ * Required: entityType, entityId, activityType, subject
+ */
+export async function logActivityToMenuMaster(activity: MenuMasterActivity) {
+  return menuMasterRequest("POST", "/activities", activity);
+}
+
+/**
+ * Log a sample-related activity on a lead.
+ * Convenience wrapper for sample tracking.
+ */
+export async function logSampleActivity(params: {
+  leadId: number;
+  subject: string;
+  description: string;
+  activityType?: "meeting" | "note" | "task";
+  status?: "pending" | "completed";
+  assignedTo?: number;
+  externalId?: string;
+}) {
+  return logActivityToMenuMaster({
+    entityType: "lead",
+    entityId: params.leadId,
+    activityType: params.activityType ?? "note",
+    subject: params.subject,
+    description: params.description,
+    status: params.status ?? "completed",
+    activityDate: new Date().toISOString(),
+    assignedTo: params.assignedTo,
+    externalId: params.externalId,
   });
+}
+
+// ---------------------------------------------------------------------------
+// Opportunities — POST /api/webhooks/crm/:businessId/opportunities
+// ---------------------------------------------------------------------------
+
+/**
+ * Create an opportunity in MenuMaster CRM.
+ */
+export async function syncOpportunityToMenuMaster(opp: MenuMasterOpportunity) {
+  return menuMasterRequest("POST", "/opportunities", opp);
+}
+
+/**
+ * Update an existing opportunity.
+ * PATCH /api/webhooks/crm/:businessId/opportunities/:oppId
+ */
+export async function updateOpportunityInMenuMaster(
+  oppId: number,
+  updates: Partial<MenuMasterOpportunity>
+) {
+  return menuMasterRequest("PATCH", `/opportunities/${oppId}`, updates);
+}
+
+// ---------------------------------------------------------------------------
+// Health check
+// ---------------------------------------------------------------------------
+
+/**
+ * Check if MenuMaster webhook service is reachable.
+ * GET /api/webhooks/health (no auth required, no businessId)
+ */
+export async function checkMenuMasterHealth(): Promise<boolean> {
+  if (!MENUMASTER_API_URL) return false;
+
+  const url = `${MENUMASTER_API_URL.replace(/\/+$/, "")}/api/webhooks/health`;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 5000);
+
+  try {
+    const response = await fetch(url, { signal: controller.signal });
+    const data = await response.json().catch(() => ({}));
+    return data?.success === true;
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(timeout);
+  }
 }
