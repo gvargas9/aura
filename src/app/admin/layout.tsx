@@ -24,6 +24,7 @@ import {
   ChefHat,
   Store,
   TrendingUp,
+  PackageOpen,
 } from "lucide-react";
 
 const navItems = [
@@ -34,6 +35,7 @@ const navItems = [
   { label: "Subscriptions", href: "/admin/subscriptions", icon: RefreshCcw },
   { label: "Inventory", href: "/admin/inventory", icon: Warehouse },
   { label: "Dealers", href: "/admin/dealers", icon: Handshake },
+  { label: "Samples", href: "/admin/samples", icon: PackageOpen },
   { label: "Storefronts", href: "/admin/storefronts", icon: Store },
   { label: "Vending", href: "/admin/vending", icon: MonitorSmartphone },
   { label: "Recipes", href: "/admin/recipes", icon: ChefHat },

@@ -21,6 +21,7 @@ import {
   BookmarkCheck,
   CreditCard,
   Palette,
+  PackageOpen,
 } from "lucide-react";
 import type { Dealer, Organization, Profile } from "@/types";
 
@@ -54,6 +55,7 @@ const navItems = [
   { href: "/b2b/portal/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/b2b/portal/locations", label: "Locations", icon: MapPin },
   { href: "/b2b/portal/branding", label: "Branding", icon: Palette },
+  { href: "/b2b/portal/samples", label: "Samples", icon: PackageOpen },
   { href: "/account", label: "My Account", icon: User },
 ];
 
