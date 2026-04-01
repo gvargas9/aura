@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Header, Footer } from "@/components/ui";
 import { ProductGridSkeleton } from "@/components/ui/SkeletonLoader";
-import { useAuth, useWishlist } from "@/hooks";
+import { useAuth, useWishlist, useLocale } from "@/hooks";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -42,20 +42,20 @@ const DIETARY_COLORS: Record<string, string> = {
   "dairy-free": "bg-sky-100 text-sky-700",
 };
 
-const DIETARY_FILTER_OPTIONS = [
-  { label: "All", value: "" },
-  { label: "Vegan", value: "vegan" },
-  { label: "Keto", value: "keto" },
-  { label: "Gluten-Free", value: "gluten-free" },
-  { label: "Paleo", value: "paleo" },
-  { label: "High Protein", value: "high-protein" },
+const DIETARY_FILTER_KEYS = [
+  { key: "products.filter.all", value: "" },
+  { key: "products.filter.vegan", value: "vegan" },
+  { key: "products.filter.keto", value: "keto" },
+  { key: "products.filter.glutenFree", value: "gluten-free" },
+  { key: "products.filter.paleo", value: "paleo" },
+  { key: "products.filter.highProtein", value: "high-protein" },
 ];
 
-const SORT_OPTIONS = [
-  { label: "Newest", value: "newest" },
-  { label: "Price: Low to High", value: "price_asc" },
-  { label: "Price: High to Low", value: "price_desc" },
-  { label: "Name A-Z", value: "name" },
+const SORT_KEYS = [
+  { key: "products.sortNewest", value: "newest" },
+  { key: "products.sortPriceLow", value: "price_asc" },
+  { key: "products.sortPriceHigh", value: "price_desc" },
+  { key: "products.sortName", value: "name" },
 ];
 
 /* ============================================================
@@ -77,6 +77,7 @@ function CatalogProductCard({
 }) {
   const [isHovered, setIsHovered] = useState(false);
   const router = useRouter();
+  const { t } = useLocale();
 
   const dietaryLabels = product.dietary_labels || [];
   const shelfLife = product.shelf_life_months;
@@ -205,7 +206,7 @@ function CatalogProductCard({
             {product.is_bunker_safe && (
               <span className="bg-aura-dark/80 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 w-fit">
                 <Shield className="w-2.5 h-2.5" />
-                Bunker Safe
+                {t("product.bunkerSafe")}
               </span>
             )}
           </div>
@@ -241,7 +242,7 @@ function CatalogProductCard({
           <div className="absolute bottom-3 left-3">
             <span className="bg-white/90 backdrop-blur-sm text-gray-700 text-[10px] font-medium px-2 py-0.5 rounded-full flex items-center gap-1">
               <Clock className="w-2.5 h-2.5" />
-              {shelfLife} months
+              {t("product.shelfLife", { months: String(shelfLife) })}
             </span>
           </div>
         )}
@@ -258,7 +259,7 @@ function CatalogProductCard({
             aria-label={`Quick add ${product.name} to box`}
           >
             <Plus className="w-4 h-4" />
-            Quick Add to Box
+            {t("products.quickAdd")}
           </button>
         </div>
       </div>
@@ -337,7 +338,7 @@ function CatalogProductCard({
           <div className="mt-2 bg-aura-light rounded-lg px-2.5 py-1.5 flex items-center gap-1.5">
             <Leaf className="w-3 h-3 text-aura-primary" />
             <span className="text-[10px] font-medium text-aura-primary">
-              Subscribe & Save {discountPercent}%
+              {t("product.subscribeAndSave")} {discountPercent}%
             </span>
           </div>
         )}
@@ -365,13 +366,14 @@ function FilterSidebar({
   onClose?: () => void;
 }) {
   const [priceRange, setPriceRange] = useState([0, 50]);
+  const { t } = useLocale();
 
   return (
     <div className="space-y-6">
       {/* Header (mobile) */}
       {onClose && (
         <div className="flex items-center justify-between pb-4 border-b border-gray-100">
-          <h3 className="font-semibold text-lg">Filters</h3>
+          <h3 className="font-semibold text-lg">{t("products.filters")}</h3>
           <button
             onClick={onClose}
             className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center"
@@ -383,11 +385,11 @@ function FilterSidebar({
       )}
 
       {/* Results count */}
-      <p className="text-sm text-gray-500">{productCount} products</p>
+      <p className="text-sm text-gray-500">{t("products.showing", { count: String(productCount) })}</p>
 
       {/* Category */}
       <div>
-        <h4 className="text-sm font-semibold text-gray-900 mb-3">Category</h4>
+        <h4 className="text-sm font-semibold text-gray-900 mb-3">{t("products.category")}</h4>
         <div className="space-y-1.5">
           <button
             onClick={() => onFiltersChange({ ...filters, category: undefined })}
@@ -398,7 +400,7 @@ function FilterSidebar({
                 : "text-gray-600 hover:bg-gray-50"
             )}
           >
-            All Categories
+            {t("products.allCategories")}
           </button>
           {categories.map((cat) => (
             <button
@@ -419,9 +421,9 @@ function FilterSidebar({
 
       {/* Dietary */}
       <div>
-        <h4 className="text-sm font-semibold text-gray-900 mb-3">Dietary</h4>
+        <h4 className="text-sm font-semibold text-gray-900 mb-3">{t("products.dietary")}</h4>
         <div className="flex flex-wrap gap-2">
-          {DIETARY_FILTER_OPTIONS.slice(1).map((opt) => (
+          {DIETARY_FILTER_KEYS.slice(1).map((opt) => (
             <button
               key={opt.value}
               onClick={() => {
@@ -435,7 +437,7 @@ function FilterSidebar({
                   : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"
               )}
             >
-              {opt.label}
+              {t(opt.key)}
             </button>
           ))}
         </div>
@@ -444,7 +446,7 @@ function FilterSidebar({
       {/* Price Range */}
       <div>
         <h4 className="text-sm font-semibold text-gray-900 mb-3">
-          Price Range
+          {t("products.priceRange")}
         </h4>
         <div className="px-1">
           <input
@@ -475,7 +477,7 @@ function FilterSidebar({
       {/* Quick filters */}
       <div>
         <h4 className="text-sm font-semibold text-gray-900 mb-3">
-          Quick Filters
+          {t("products.quickFilters")}
         </h4>
         <div className="space-y-2">
           <label className="flex items-center gap-2.5 cursor-pointer group">
@@ -491,7 +493,7 @@ function FilterSidebar({
               className="w-4 h-4 rounded border-gray-300 text-aura-primary focus:ring-aura-primary/20"
             />
             <span className="text-sm text-gray-600 group-hover:text-gray-900">
-              Bunker Safe Only
+              {t("products.bunkerSafeOnly")}
             </span>
           </label>
           <label className="flex items-center gap-2.5 cursor-pointer group">
@@ -507,7 +509,7 @@ function FilterSidebar({
               className="w-4 h-4 rounded border-gray-300 text-aura-primary focus:ring-aura-primary/20"
             />
             <span className="text-sm text-gray-600 group-hover:text-gray-900">
-              In Stock Only
+              {t("products.inStockOnly")}
             </span>
           </label>
         </div>
@@ -518,7 +520,7 @@ function FilterSidebar({
         onClick={() => onFiltersChange({})}
         className="w-full text-sm text-aura-primary hover:text-aura-secondary font-medium py-2 transition-colors"
       >
-        Clear All Filters
+        {t("products.clearAllFilters")}
       </button>
     </div>
   );
@@ -540,6 +542,7 @@ export default function ProductsPage() {
   const supabase = createClient();
   const { isAuthenticated } = useAuth();
   const { toggle: toggleWishlist, isWishlisted } = useWishlist();
+  const { t } = useLocale();
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -616,7 +619,7 @@ export default function ProductsPage() {
   }, [filteredProducts, filters.sortBy]);
 
   const currentSort =
-    SORT_OPTIONS.find((s) => s.value === filters.sortBy) || SORT_OPTIONS[0];
+    SORT_KEYS.find((s) => s.value === filters.sortBy) || SORT_KEYS[0];
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
@@ -629,11 +632,10 @@ export default function ProductsPage() {
           <div className="absolute top-0 right-0 w-96 h-96 bg-aura-primary/10 rounded-full blur-[100px]" />
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <h1 className="text-3xl lg:text-4xl font-bold text-white mb-2">
-              Our Products
+              {t("products.title")}
             </h1>
             <p className="text-lg text-white/60 max-w-xl">
-              50+ premium, shelf-stable meals crafted with all-natural
-              ingredients. Filter by diet, browse by category.
+              {t("products.subtitle")}
             </p>
           </div>
         </section>
@@ -649,7 +651,7 @@ export default function ProductsPage() {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search meals, ingredients..."
+                  placeholder={t("products.searchPlaceholder")}
                   className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-aura-primary/20 focus:border-aura-primary outline-none transition-all bg-gray-50/50"
                   aria-label="Search products"
                 />
@@ -666,7 +668,7 @@ export default function ProductsPage() {
 
               {/* Dietary filter pills (desktop) */}
               <div className="hidden lg:flex items-center gap-1.5">
-                {DIETARY_FILTER_OPTIONS.map((opt) => (
+                {DIETARY_FILTER_KEYS.map((opt) => (
                   <button
                     key={opt.value}
                     onClick={() =>
@@ -682,7 +684,7 @@ export default function ProductsPage() {
                         : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"
                     )}
                   >
-                    {opt.label}
+                    {t(opt.key)}
                   </button>
                 ))}
               </div>
@@ -694,7 +696,7 @@ export default function ProductsPage() {
                   className="hidden sm:flex items-center gap-2 px-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-600 hover:border-gray-300 transition-colors"
                   aria-label="Sort products"
                 >
-                  {currentSort.label}
+                  {t(currentSort.key)}
                   <ChevronDown className="w-3.5 h-3.5" />
                 </button>
                 {sortOpen && (
@@ -704,7 +706,7 @@ export default function ProductsPage() {
                       onClick={() => setSortOpen(false)}
                     />
                     <div className="absolute right-0 top-full mt-1 bg-white rounded-xl shadow-xl border border-gray-100 py-1 z-20 min-w-[180px]">
-                      {SORT_OPTIONS.map((opt) => (
+                      {SORT_KEYS.map((opt) => (
                         <button
                           key={opt.value}
                           onClick={() => {
@@ -718,7 +720,7 @@ export default function ProductsPage() {
                               : "text-gray-600 hover:bg-gray-50"
                           )}
                         >
-                          {opt.label}
+                          {t(opt.key)}
                         </button>
                       ))}
                     </div>
@@ -761,7 +763,7 @@ export default function ProductsPage() {
                 aria-label="Open filters"
               >
                 <SlidersHorizontal className="w-4 h-4" />
-                <span className="hidden sm:inline">Filters</span>
+                <span className="hidden sm:inline">{t("products.filters")}</span>
               </button>
             </div>
           </div>
@@ -815,7 +817,7 @@ export default function ProductsPage() {
                   )}
                   {filters.isBunkerSafe && (
                     <span className="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded-full">
-                      Bunker Safe
+                      {t("product.bunkerSafe")}
                       <button
                         onClick={() =>
                           setFilters({ ...filters, isBunkerSafe: undefined })
@@ -835,10 +837,10 @@ export default function ProductsPage() {
                 <div className="text-center py-20">
                   <Package className="w-16 h-16 text-gray-200 mx-auto mb-4" />
                   <h3 className="font-semibold text-gray-900 mb-2">
-                    No products found
+                    {t("products.noResults")}
                   </h3>
                   <p className="text-sm text-gray-500 mb-4">
-                    Try adjusting your filters or search query
+                    {t("products.noResultsHint")}
                   </p>
                   <button
                     onClick={() => {
@@ -847,7 +849,7 @@ export default function ProductsPage() {
                     }}
                     className="text-sm font-medium text-aura-primary hover:text-aura-secondary"
                   >
-                    Clear all filters
+                    {t("products.clearAll")}
                   </button>
                 </div>
               ) : viewMode === "grid" ? (
