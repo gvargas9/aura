@@ -2,8 +2,6 @@
 # See https://supabase.com/docs/guides/cli/config
 
 [project]
-id = "aura-platform"
-name = "Aura"
 
 [api]
 enabled = true
@@ -15,7 +13,7 @@ max_rows = 1000
 [db]
 port = 54322
 shadow_port = 54320
-major_version = 15
+major_version = 17
 
 [studio]
 enabled = true
@@ -60,6 +58,26 @@ enabled = true
 [analytics]
 enabled = false
 
-[functions]
+[edge_runtime]
 enabled = true
+
+[functions.resolve-price]
+verify_jwt = true
+
+[functions.validate-promo]
+verify_jwt = true
+
+[functions.process-order]
+verify_jwt = true
+
+[functions.redeem-gift-card]
+verify_jwt = true
+
+[functions.generate-product-image]
+verify_jwt = true
+
+[functions.subscription-webhook]
+verify_jwt = false
+
+[functions.dealer-commission]
 verify_jwt = true
