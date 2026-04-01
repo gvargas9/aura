@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useStorefront } from "../layout";
 import { Card } from "@/components/ui/Card";
 import { formatCurrency } from "@/lib/utils";
+import { useLocale } from "@/hooks/useLocale";
 import { Package, Search, Loader2, Filter, X } from "lucide-react";
 
 interface Product {
@@ -23,6 +24,7 @@ interface Product {
 
 export default function StorefrontProductsPage() {
   const { storefront } = useStorefront();
+  const { t } = useLocale();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
@@ -79,10 +81,10 @@ export default function StorefrontProductsPage() {
         style={{ backgroundColor: "var(--sf-dark)" }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-          <h1 className="text-3xl font-bold text-white">Products</h1>
+          <h1 className="text-3xl font-bold text-white">{t("store.products")}</h1>
           <p className="text-gray-400 mt-1">
             {storefront.settings.tagline ||
-              `Browse our curated selection for ${storefront.settings.targetAudience || "every need"}`}
+              `${t("store.browseSelection")} ${storefront.settings.targetAudience || t("store.everyNeed")}`}
           </p>
         </div>
       </div>
@@ -95,7 +97,7 @@ export default function StorefrontProductsPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
               type="text"
-              placeholder="Search products..."
+              placeholder={t("store.searchProducts")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm bg-white focus:ring-2 focus:border-transparent outline-none transition-all"
@@ -123,7 +125,7 @@ export default function StorefrontProductsPage() {
               className="sm:hidden flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-xl text-sm text-gray-600 bg-white"
             >
               <Filter className="w-4 h-4" />
-              Filters
+              {t("store.filters")}
               {activeCategory && (
                 <span
                   className="w-2 h-2 rounded-full"
@@ -222,11 +224,11 @@ export default function StorefrontProductsPage() {
 
         {/* Results count */}
         <p className="text-sm text-gray-500 mb-4">
-          {loading ? "Loading..." : `${filtered.length} products`}
+          {loading ? t("common.loading") : `${filtered.length} ${t("store.productsCount")}`}
           {activeCategory && (
             <span>
               {" "}
-              in{" "}
+              {t("store.in")}{" "}
               <span className="capitalize font-medium text-gray-700">
                 {activeCategory}
               </span>
@@ -242,9 +244,9 @@ export default function StorefrontProductsPage() {
         ) : filtered.length === 0 ? (
           <div className="text-center py-20">
             <Package className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500 mb-1">No products found</p>
+            <p className="text-gray-500 mb-1">{t("store.noProductsFound")}</p>
             <p className="text-sm text-gray-400">
-              Try adjusting your search or filters.
+              {t("store.tryAdjusting")}
             </p>
           </div>
         ) : (
@@ -270,7 +272,7 @@ export default function StorefrontProductsPage() {
                   )}
                   {product.is_bunker_safe && (
                     <span className="absolute top-2 right-2 bg-amber-500 text-white text-xs font-semibold px-2 py-0.5 rounded-full">
-                      Bunker Safe
+                      {t("store.bunkerSafe")}
                     </span>
                   )}
                 </div>
