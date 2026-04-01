@@ -3,9 +3,9 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { useAuth } from "@/hooks";
+import { useAuth, useLocale } from "@/hooks";
 import { Card, Button, Header, Footer } from "@/components/ui";
-import { cn, formatCurrency, formatDate } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import type { Order, OrderItem } from "@/types";
 import type { Json } from "@/types/database";
 import {
@@ -61,18 +61,21 @@ function parseAddress(
   return null;
 }
 
-function statusLabel(status: string): string {
-  const labels: Record<string, string> = {
-    pre_transit: "Label Created",
-    in_transit: "In Transit",
-    out_for_delivery: "Out for Delivery",
-    delivered: "Delivered",
-    pending: "Pending",
-    processing: "Processing",
-    shipped: "Shipped",
-    cancelled: "Cancelled",
-  };
-  return labels[status] ?? status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g, " ");
+const STATUS_KEY_MAP: Record<string, string> = {
+  pre_transit: "orders.statusLabelCreated",
+  in_transit: "orders.statusInTransit",
+  out_for_delivery: "orders.statusOutForDelivery",
+  delivered: "orders.statusDelivered",
+  pending: "orders.statusPending",
+  processing: "orders.statusProcessing",
+  shipped: "orders.statusShipped",
+  cancelled: "orders.statusCancelled",
+};
+
+function statusLabel(status: string, t: (key: string) => string): string {
+  const key = STATUS_KEY_MAP[status];
+  if (key) return t(key);
+  return status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g, " ");
 }
 
 function statusColor(status: string): string {
@@ -140,6 +143,7 @@ export default function OrderTrackingPage() {
   const params = useParams();
   const orderId = params.id as string;
   const { profile, isLoading: authLoading, isAuthenticated } = useAuth();
+  const { t, formatPrice, formatDate } = useLocale();
 
   const [order, setOrder] = useState<Order | null>(null);
   const [tracking, setTracking] = useState<TrackingInfo | null>(null);
@@ -237,14 +241,13 @@ export default function OrderTrackingPage() {
           <div className="max-w-3xl mx-auto px-4 sm:px-6 py-16 text-center">
             <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              Order Not Found
+              {t("orders.orderNotFound")}
             </h1>
             <p className="text-gray-500 mb-6">
-              We could not find this order. It may have been removed or you do
-              not have access.
+              {t("orders.orderNotFoundMessage")}
             </p>
             <Button variant="primary" onClick={() => router.push("/orders")}>
-              Back to Orders
+              {t("orders.backToOrders")}
             </Button>
           </div>
         </main>
@@ -274,17 +277,17 @@ export default function OrderTrackingPage() {
             className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 mb-6 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to Orders
+            {t("orders.backToOrders")}
           </button>
 
           {/* Order Header */}
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-                Order {order.order_number}
+                {t("orders.orderNumber")} {order.order_number}
               </h1>
               <p className="text-gray-500 mt-1">
-                Placed on {formatDate(order.created_at)}
+                {t("orders.placedOn", { date: formatDate(order.created_at) })}
               </p>
             </div>
             <span
@@ -293,7 +296,7 @@ export default function OrderTrackingPage() {
                 statusColor(order.status)
               )}
             >
-              {statusLabel(order.status)}
+              {statusLabel(order.status, t)}
             </span>
           </div>
 
@@ -317,20 +320,19 @@ export default function OrderTrackingPage() {
                   <div>
                     <h2 className="font-semibold text-gray-900">
                       {isDelivered
-                        ? "Delivered"
+                        ? t("orders.delivered")
                         : tracking?.status === "out_for_delivery"
-                          ? "Out for Delivery"
-                          : "In Transit"}
+                          ? t("orders.outForDelivery")
+                          : t("orders.inTransit")}
                     </h2>
                     {tracking?.estimatedDelivery && !isDelivered && (
                       <p className="text-sm text-gray-500">
-                        Estimated delivery:{" "}
-                        {formatDate(tracking.estimatedDelivery)}
+                        {t("orders.estimatedDelivery", { date: formatDate(tracking.estimatedDelivery) })}
                       </p>
                     )}
                     {order.delivered_at && isDelivered && (
                       <p className="text-sm text-gray-500">
-                        Delivered on {formatDate(order.delivered_at)}
+                        {t("orders.deliveredOn", { date: formatDate(order.delivered_at) })}
                       </p>
                     )}
                   </div>
@@ -340,7 +342,7 @@ export default function OrderTrackingPage() {
               {/* Progress steps */}
               <div className="relative">
                 <div className="flex items-center justify-between">
-                  {["Label Created", "Shipped", "In Transit", "Delivered"].map(
+                  {[t("orders.labelCreated"), t("orders.shipped"), t("orders.inTransit"), t("orders.delivered")].map(
                     (step, idx) => {
                       const progressMap: Record<string, number> = {
                         pre_transit: 0,
@@ -415,13 +417,13 @@ export default function OrderTrackingPage() {
               {order.tracking_number && (
                 <Card padding="lg">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                    Shipment Details
+                    {t("orders.shipmentDetails")}
                   </h3>
 
                   <div className="grid sm:grid-cols-2 gap-4 mb-6">
                     <div>
                       <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
-                        Tracking Number
+                        {t("orders.trackingNumber")}
                       </p>
                       <div className="flex items-center gap-2">
                         <code className="text-sm font-mono text-gray-900 bg-gray-50 px-2 py-1 rounded">
@@ -444,7 +446,7 @@ export default function OrderTrackingPage() {
                     {carrier && (
                       <div>
                         <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
-                          Carrier & Service
+                          {t("orders.carrierService")}
                         </p>
                         <p className="text-sm text-gray-900 font-medium">
                           {carrier}
@@ -461,7 +463,7 @@ export default function OrderTrackingPage() {
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 text-sm font-medium text-aura-primary hover:underline mb-6"
                     >
-                      Track on {carrier ?? "carrier"} website
+                      {t("orders.trackOnCarrier", { carrier: carrier ?? "carrier" })}
                       <ExternalLink className="w-3.5 h-3.5" />
                     </a>
                   )}
@@ -471,7 +473,7 @@ export default function OrderTrackingPage() {
                     <div className="flex items-center justify-center py-8">
                       <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
                       <span className="ml-2 text-sm text-gray-500">
-                        Loading tracking events...
+                        {t("orders.loadingTracking")}
                       </span>
                     </div>
                   ) : tracking && tracking.events.length > 0 ? (
@@ -523,7 +525,7 @@ export default function OrderTrackingPage() {
                   ) : (
                     !trackingLoading && (
                       <p className="text-sm text-gray-500 py-4">
-                        No tracking events available yet. Check back soon.
+                        {t("orders.noTrackingEvents")}
                       </p>
                     )
                   )}
@@ -534,7 +536,7 @@ export default function OrderTrackingPage() {
               {isShipped && (
                 <Card padding="lg">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                    Shipment Route
+                    {t("orders.shipmentRoute")}
                   </h3>
                   <div className="flex items-center gap-4">
                     <div className="flex-1 text-center">
@@ -544,7 +546,7 @@ export default function OrderTrackingPage() {
                       <p className="text-sm font-semibold text-gray-900">
                         El Paso, TX
                       </p>
-                      <p className="text-xs text-gray-500">Origin</p>
+                      <p className="text-xs text-gray-500">{t("orders.origin")}</p>
                     </div>
 
                     <div className="flex-1 flex items-center justify-center">
@@ -560,9 +562,9 @@ export default function OrderTrackingPage() {
                       <p className="text-sm font-semibold text-gray-900">
                         {address
                           ? `${address.city ?? ""}${address.city && address.state ? ", " : ""}${address.state ?? ""}`
-                          : "Destination"}
+                          : t("orders.destination")}
                       </p>
-                      <p className="text-xs text-gray-500">Destination</p>
+                      <p className="text-xs text-gray-500">{t("orders.destination")}</p>
                     </div>
                   </div>
                 </Card>
@@ -571,7 +573,7 @@ export default function OrderTrackingPage() {
               {/* Order Items */}
               <Card padding="lg">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  Order Items
+                  {t("orders.orderItems")}
                 </h3>
                 {items.length > 0 ? (
                   <div className="divide-y divide-gray-100">
@@ -596,48 +598,48 @@ export default function OrderTrackingPage() {
                             {item.name}
                           </p>
                           <p className="text-xs text-gray-500">
-                            Qty: {item.quantity}
+                            {t("orders.qty", { count: String(item.quantity) })}
                           </p>
                         </div>
                         <p className="text-sm font-medium text-gray-900">
-                          {formatCurrency(item.price * item.quantity)}
+                          {formatPrice(item.price * item.quantity)}
                         </p>
                       </div>
                     ))}
                   </div>
                 ) : (
                   <p className="text-sm text-gray-500">
-                    Item details are not available.
+                    {t("orders.itemDetailsNotAvailable")}
                   </p>
                 )}
 
                 {/* Totals */}
                 <div className="mt-4 pt-4 border-t border-gray-100 space-y-2 text-sm">
                   <div className="flex justify-between text-gray-500">
-                    <span>Subtotal</span>
-                    <span>{formatCurrency(order.subtotal)}</span>
+                    <span>{t("orders.subtotal")}</span>
+                    <span>{formatPrice(order.subtotal)}</span>
                   </div>
                   {order.discount > 0 && (
                     <div className="flex justify-between text-green-600">
-                      <span>Discount</span>
-                      <span>-{formatCurrency(order.discount)}</span>
+                      <span>{t("orders.discount")}</span>
+                      <span>-{formatPrice(order.discount)}</span>
                     </div>
                   )}
                   <div className="flex justify-between text-gray-500">
-                    <span>Shipping</span>
+                    <span>{t("orders.shipping")}</span>
                     <span>
                       {order.shipping > 0
-                        ? formatCurrency(order.shipping)
-                        : "Free"}
+                        ? formatPrice(order.shipping)
+                        : t("orders.freeShipping")}
                     </span>
                   </div>
                   <div className="flex justify-between text-gray-500">
-                    <span>Tax</span>
-                    <span>{formatCurrency(order.tax)}</span>
+                    <span>{t("orders.tax")}</span>
+                    <span>{formatPrice(order.tax)}</span>
                   </div>
                   <div className="flex justify-between font-semibold text-gray-900 pt-2 border-t border-gray-100">
-                    <span>Total</span>
-                    <span>{formatCurrency(order.total)}</span>
+                    <span>{t("orders.total")}</span>
+                    <span>{formatPrice(order.total)}</span>
                   </div>
                 </div>
               </Card>
@@ -650,7 +652,7 @@ export default function OrderTrackingPage() {
                 <Card padding="lg">
                   <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
                     <MapPin className="w-4 h-4 text-gray-500" />
-                    Shipping Address
+                    {t("orders.shippingAddress")}
                   </h3>
                   <div className="text-sm text-gray-600 space-y-0.5">
                     {(address.firstName || address.lastName) && (
@@ -686,7 +688,7 @@ export default function OrderTrackingPage() {
                 <Card padding="lg">
                   <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
                     <Truck className="w-4 h-4 text-gray-500" />
-                    Shipping Label
+                    {t("orders.shippingLabel")}
                   </h3>
                   <a
                     href={labelUrl}
@@ -694,7 +696,7 @@ export default function OrderTrackingPage() {
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1.5 text-sm font-medium text-aura-primary hover:underline"
                   >
-                    Download Label (PDF)
+                    {t("orders.downloadLabel")}
                     <ExternalLink className="w-3.5 h-3.5" />
                   </a>
                 </Card>
@@ -703,11 +705,10 @@ export default function OrderTrackingPage() {
               {/* Need Help */}
               <Card padding="lg">
                 <h3 className="text-sm font-semibold text-gray-900 mb-3">
-                  Need Help?
+                  {t("orders.needHelp")}
                 </h3>
                 <p className="text-sm text-gray-500 mb-4">
-                  Having an issue with your order? Our support team is here for
-                  you.
+                  {t("orders.needHelpMessage")}
                 </p>
                 <div className="space-y-3">
                   <a
