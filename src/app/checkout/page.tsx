@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Header, Footer, Button, Input, Card } from "@/components/ui";
 import { useAuth } from "@/hooks";
+import { useLocale } from "@/hooks/useLocale";
 import { BOX_CONFIGS } from "@/types";
 import { formatCurrency } from "@/lib/utils";
 import {
@@ -69,17 +70,20 @@ const US_STATES = [
   "VA","WA","WV","WI","WY",
 ];
 
-const STEPS = [
-  { id: 1, label: "Review", icon: Package },
-  { id: 2, label: "Discounts", icon: Tag },
-  { id: 3, label: "Shipping", icon: MapPin },
-  { id: 4, label: "Payment", icon: CreditCard },
-];
+const STEP_ICONS = [Package, Tag, MapPin, CreditCard] as const;
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { user, profile, isLoading: authLoading, isAuthenticated } = useAuth();
+  const { t } = useLocale();
   const supabase = createClient();
+
+  const STEPS = [
+    { id: 1, label: t("checkout.review"), icon: STEP_ICONS[0] },
+    { id: 2, label: t("checkout.discounts"), icon: STEP_ICONS[1] },
+    { id: 3, label: t("checkout.shipping"), icon: STEP_ICONS[2] },
+    { id: 4, label: t("checkout.payment"), icon: STEP_ICONS[3] },
+  ];
 
   const [boxConfig, setBoxConfig] = useState<BoxConfig | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
@@ -457,7 +461,7 @@ export default function CheckoutPage() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <Loader2 className="w-8 h-8 animate-spin text-aura-primary mx-auto mb-3" />
-          <p className="text-sm text-gray-500">Loading your order...</p>
+          <p className="text-sm text-gray-500">{t("checkout.loadingOrder")}</p>
         </div>
       </div>
     );
@@ -487,11 +491,11 @@ export default function CheckoutPage() {
             className="inline-flex items-center text-gray-600 hover:text-aura-primary mb-6 transition-colors"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Box Builder
+            {t("checkout.backToBoxBuilder")}
           </Link>
 
-          <h1 className="text-3xl font-bold mb-2">Checkout</h1>
-          <p className="text-gray-500 mb-8">Complete your order securely</p>
+          <h1 className="text-3xl font-bold mb-2">{t("checkout.title")}</h1>
+          <p className="text-gray-500 mb-8">{t("checkout.completeOrder")}</p>
 
           {/* Step Indicator */}
           <nav className="mb-8" aria-label="Checkout steps">
@@ -549,18 +553,18 @@ export default function CheckoutPage() {
               {/* Step 1: Order Review */}
               {currentStep === 1 && (
                 <Card padding="lg">
-                  <h2 className="text-xl font-semibold mb-6">Review Your Order</h2>
+                  <h2 className="text-xl font-semibold mb-6">{t("checkout.reviewOrder")}</h2>
 
                   {/* Purchase Type Toggle */}
                   <div className="mb-6">
                     <label className="block text-sm font-medium text-gray-700 mb-3">
-                      How would you like to purchase?
+                      {t("checkout.howToPurchase")}
                     </label>
                     <div className="grid grid-cols-3 gap-3">
                       {[
-                        { value: "subscription" as const, label: "Subscribe", desc: "Save " + config.subscriptionSavings + "%", icon: Sparkles },
-                        { value: "one_time" as const, label: "One-Time", desc: "No commitment", icon: Package },
-                        { value: "gift" as const, label: "Gift", desc: "Send to someone", icon: Gift },
+                        { value: "subscription" as const, label: t("checkout.subscribe"), desc: t("product.save", { percent: String(config.subscriptionSavings) }), icon: Sparkles },
+                        { value: "one_time" as const, label: t("checkout.oneTime"), desc: t("checkout.noCommitment"), icon: Package },
+                        { value: "gift" as const, label: t("checkout.gift"), desc: t("checkout.sendToSomeone"), icon: Gift },
                       ].map((option) => {
                         const Icon = option.icon;
                         return (
@@ -580,7 +584,7 @@ export default function CheckoutPage() {
                             </p>
                             {option.value === "subscription" && (
                               <span className="absolute -top-2 -right-2 bg-aura-accent text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                                BEST
+                                {t("checkout.best")}
                               </span>
                             )}
                           </button>
@@ -590,7 +594,7 @@ export default function CheckoutPage() {
                     {purchaseType === "subscription" && (
                       <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2 text-sm text-green-700">
                         <Percent className="w-4 h-4 flex-shrink-0" />
-                        Subscribe and save {formatCurrency(config.oneTimePrice - config.price)} per box. Free shipping on every delivery.
+                        {t("checkout.subscribeAndSave", { amount: formatCurrency(config.oneTimePrice - config.price) })}
                       </div>
                     )}
                   </div>
@@ -602,10 +606,10 @@ export default function CheckoutPage() {
                     </div>
                     <div className="flex-1">
                       <h3 className="font-semibold capitalize">
-                        {boxConfig.size} Box {purchaseType === "subscription" ? "Subscription" : ""}
+                        {boxConfig.size} Box {purchaseType === "subscription" ? t("checkout.subscription") : ""}
                       </h3>
                       <p className="text-gray-600 text-sm">
-                        {config.slots} premium meals {purchaseType === "subscription" ? "delivered monthly" : ""}
+                        {t("checkout.premiumMeals", { count: String(config.slots) })} {purchaseType === "subscription" ? t("checkout.deliveredMonthly") : ""}
                       </p>
                     </div>
                     <div className="text-right">
@@ -622,7 +626,7 @@ export default function CheckoutPage() {
                   </div>
 
                   {/* Products List with images */}
-                  <h3 className="font-medium mb-3">Selected Meals ({products.length})</h3>
+                  <h3 className="font-medium mb-3">{t("checkout.selectedMeals", { count: String(products.length) })}</h3>
                   <div className="space-y-2 mb-6 max-h-80 overflow-y-auto pr-1">
                     {Object.values(productCounts).map(({ product, count }) => (
                       <div
@@ -646,7 +650,7 @@ export default function CheckoutPage() {
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">{product.name}</p>
                           {count > 1 && (
-                            <p className="text-xs text-gray-500">Qty: {count}</p>
+                            <p className="text-xs text-gray-500">{t("checkout.qty", { count: String(count) })}</p>
                           )}
                         </div>
                         <span className="text-sm text-gray-600 font-medium flex-shrink-0">
@@ -661,17 +665,17 @@ export default function CheckoutPage() {
                     <div className="border-t pt-6 space-y-4">
                       <h3 className="font-medium flex items-center gap-2">
                         <Gift className="w-5 h-5 text-aura-primary" />
-                        Gift Details
+                        {t("checkout.giftDetails")}
                       </h3>
                       <div className="grid sm:grid-cols-2 gap-4">
                         <Input
-                          label="Recipient Name *"
-                          placeholder="Their name"
+                          label={t("checkout.recipientName")}
+                          placeholder={t("checkout.theirName")}
                           value={giftInfo.recipientName}
                           onChange={(e) => setGiftInfo((p) => ({ ...p, recipientName: e.target.value }))}
                         />
                         <Input
-                          label="Recipient Email *"
+                          label={t("checkout.recipientEmail")}
                           type="email"
                           placeholder="their@email.com"
                           value={giftInfo.recipientEmail}
@@ -679,16 +683,16 @@ export default function CheckoutPage() {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1.5">Gift Message</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">{t("checkout.giftMessage")}</label>
                         <textarea
                           className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-aura-primary/20 focus:border-aura-primary outline-none resize-none"
                           rows={3}
-                          placeholder="Add a personal message..."
+                          placeholder={t("checkout.addPersonalMessage")}
                           value={giftInfo.giftMessage}
                           onChange={(e) => setGiftInfo((p) => ({ ...p, giftMessage: e.target.value }))}
                           maxLength={500}
                         />
-                        <p className="text-xs text-gray-400 mt-1">{giftInfo.giftMessage.length}/500 characters</p>
+                        <p className="text-xs text-gray-400 mt-1">{t("checkout.characters", { count: String(giftInfo.giftMessage.length) })}</p>
                       </div>
                     </div>
                   )}
@@ -696,12 +700,12 @@ export default function CheckoutPage() {
                   {/* Referral Code */}
                   <div className="border-t pt-4">
                     <Input
-                      label="Referral Code (Optional)"
-                      placeholder="Enter referral code"
+                      label={t("checkout.referralCode")}
+                      placeholder={t("checkout.enterReferralCode")}
                       value={dealerCode}
                       onChange={(e) => setDealerCode(e.target.value.toUpperCase())}
                       className="max-w-xs"
-                      helperText="If someone referred you, enter their code here"
+                      helperText={t("checkout.referralHelper")}
                     />
                   </div>
                 </Card>
@@ -710,14 +714,14 @@ export default function CheckoutPage() {
               {/* Step 2: Promo & Gift Cards */}
               {currentStep === 2 && (
                 <Card padding="lg">
-                  <h2 className="text-xl font-semibold mb-2">Discounts & Gift Cards</h2>
-                  <p className="text-sm text-gray-500 mb-6">Apply any promo codes, gift cards, or loyalty credits to your order.</p>
+                  <h2 className="text-xl font-semibold mb-2">{t("checkout.discountsAndGiftCards")}</h2>
+                  <p className="text-sm text-gray-500 mb-6">{t("checkout.discountsDescription")}</p>
 
                   {/* Promo Code */}
                   <div className="mb-8">
                     <h3 className="font-medium mb-3 flex items-center gap-2">
                       <Tag className="w-5 h-5 text-aura-primary" />
-                      Promo Code
+                      {t("checkout.promoCode")}
                     </h3>
                     {promoValidation?.valid ? (
                       <div className="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-lg">
@@ -726,7 +730,7 @@ export default function CheckoutPage() {
                           <div>
                             <p className="font-medium text-green-700">{promoValidation.promotionName}</p>
                             <p className="text-sm text-green-600">
-                              Saving {formatCurrency(promoDiscount)}
+                              {t("checkout.saving", { amount: formatCurrency(promoDiscount) })}
                             </p>
                           </div>
                         </div>
@@ -741,7 +745,7 @@ export default function CheckoutPage() {
                     ) : (
                       <div className="flex gap-3">
                         <Input
-                          placeholder="Enter promo code"
+                          placeholder={t("checkout.enterPromoCode")}
                           value={promoCode}
                           onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
                           error={promoValidation?.valid === false ? promoValidation.error : undefined}
@@ -753,7 +757,7 @@ export default function CheckoutPage() {
                           isLoading={isValidatingPromo}
                           disabled={!promoCode.trim()}
                         >
-                          Apply
+                          {t("checkout.apply")}
                         </Button>
                       </div>
                     )}
@@ -763,7 +767,7 @@ export default function CheckoutPage() {
                   <div className="mb-8">
                     <h3 className="font-medium mb-3 flex items-center gap-2">
                       <Gift className="w-5 h-5 text-aura-primary" />
-                      Gift Card
+                      {t("checkout.giftCard")}
                     </h3>
                     {giftCardValidation?.valid ? (
                       <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
@@ -771,9 +775,9 @@ export default function CheckoutPage() {
                           <div className="flex items-center gap-3">
                             <CheckCircle className="w-5 h-5 text-green-600" />
                             <div>
-                              <p className="font-medium text-green-700">Gift card applied</p>
+                              <p className="font-medium text-green-700">{t("checkout.giftCardApplied")}</p>
                               <p className="text-sm text-green-600">
-                                Balance: {formatCurrency(giftCardValidation.balance || 0)}
+                                {t("checkout.balance", { amount: formatCurrency(giftCardValidation.balance || 0) })}
                               </p>
                             </div>
                           </div>
@@ -787,7 +791,7 @@ export default function CheckoutPage() {
                         </div>
                         <div>
                           <label className="text-sm text-gray-600 mb-1 block">
-                            Amount to apply (max {formatCurrency(giftCardValidation.balance || 0)})
+                            {t("checkout.amountToApply", { amount: formatCurrency(giftCardValidation.balance || 0) })}
                           </label>
                           <Input
                             type="number"
@@ -809,7 +813,7 @@ export default function CheckoutPage() {
                     ) : (
                       <div className="flex gap-3">
                         <Input
-                          placeholder="Enter gift card code (AURA-XXXX-XXXX-XXXX)"
+                          placeholder={t("checkout.enterGiftCardCode")}
                           value={giftCardCode}
                           onChange={(e) => setGiftCardCode(e.target.value.toUpperCase())}
                           error={giftCardValidation?.valid === false ? giftCardValidation.error : undefined}
@@ -821,12 +825,12 @@ export default function CheckoutPage() {
                           isLoading={isValidatingGiftCard}
                           disabled={!giftCardCode.trim()}
                         >
-                          Check
+                          {t("checkout.check")}
                         </Button>
                       </div>
                     )}
                     <p className="text-xs text-gray-400 mt-2">
-                      <Link href="/gift-cards" className="text-aura-primary hover:underline">Buy a gift card</Link> for someone special
+                      <Link href="/gift-cards" className="text-aura-primary hover:underline">{t("checkout.buyGiftCard")}</Link> {t("checkout.forSomeoneSpecial")}
                     </p>
                   </div>
 
@@ -835,11 +839,11 @@ export default function CheckoutPage() {
                     <div>
                       <h3 className="font-medium mb-3 flex items-center gap-2">
                         <Wallet className="w-5 h-5 text-aura-primary" />
-                        Loyalty Credits
+                        {t("checkout.loyaltyCredits")}
                       </h3>
                       <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
                         <p className="text-sm text-amber-700 mb-3">
-                          You have {formatCurrency(availableCredits)} in loyalty credits available
+                          {t("checkout.creditsAvailable", { amount: formatCurrency(availableCredits) })}
                         </p>
                         <div className="flex items-center gap-3">
                           <Input
@@ -849,7 +853,7 @@ export default function CheckoutPage() {
                             step={0.01}
                             value={creditsToApply || ""}
                             onChange={(e) => handleCreditsChange(e.target.value)}
-                            placeholder="Amount to apply"
+                            placeholder={t("checkout.amountToApplyLabel")}
                             className="max-w-xs"
                           />
                           <Button
@@ -860,12 +864,12 @@ export default function CheckoutPage() {
                               setCreditsToApply(Math.min(availableCredits, max));
                             }}
                           >
-                            Use Max
+                            {t("checkout.useMax")}
                           </Button>
                         </div>
                         {creditsToApply > 0 && (
                           <p className="text-xs text-amber-600 mt-2">
-                            Applying {formatCurrency(creditsToApply)} in credits. Remaining after checkout: {formatCurrency(availableCredits - creditsToApply)}
+                            {t("checkout.applyingCredits", { amount: formatCurrency(creditsToApply), remaining: formatCurrency(availableCredits - creditsToApply) })}
                           </p>
                         )}
                       </div>
@@ -875,7 +879,7 @@ export default function CheckoutPage() {
                   {/* No discounts available message */}
                   {!promoValidation?.valid && !giftCardValidation?.valid && availableCredits <= 0 && (
                     <div className="text-center py-4 text-sm text-gray-400">
-                      No active discounts applied. Enter a code above or continue to the next step.
+                      {t("checkout.noDiscounts")}
                     </div>
                   )}
                 </Card>
@@ -886,58 +890,58 @@ export default function CheckoutPage() {
                 <Card padding="lg">
                   <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
                     <MapPin className="w-5 h-5 text-aura-primary" />
-                    Shipping Address
+                    {t("checkout.shippingAddress")}
                   </h2>
 
                   <div className="space-y-4">
                     <div className="grid sm:grid-cols-2 gap-4">
                       <Input
-                        label="First Name *"
-                        placeholder="First name"
+                        label={t("checkout.firstName")}
+                        placeholder={t("checkout.firstNamePlaceholder")}
                         value={shippingAddress.firstName}
                         onChange={(e) => updateAddress("firstName", e.target.value)}
                       />
                       <Input
-                        label="Last Name *"
-                        placeholder="Last name"
+                        label={t("checkout.lastName")}
+                        placeholder={t("checkout.lastNamePlaceholder")}
                         value={shippingAddress.lastName}
                         onChange={(e) => updateAddress("lastName", e.target.value)}
                       />
                     </div>
                     <Input
-                      label="Address Line 1 *"
-                      placeholder="Street address"
+                      label={t("checkout.addressLine1")}
+                      placeholder={t("checkout.streetAddress")}
                       value={shippingAddress.address1}
                       onChange={(e) => updateAddress("address1", e.target.value)}
                     />
                     <Input
-                      label="Address Line 2"
-                      placeholder="Apartment, suite, unit, etc."
+                      label={t("checkout.addressLine2")}
+                      placeholder={t("checkout.apartmentSuite")}
                       value={shippingAddress.address2}
                       onChange={(e) => updateAddress("address2", e.target.value)}
                     />
                     <div className="grid sm:grid-cols-3 gap-4">
                       <Input
-                        label="City *"
-                        placeholder="City"
+                        label={t("checkout.city")}
+                        placeholder={t("checkout.cityPlaceholder")}
                         value={shippingAddress.city}
                         onChange={(e) => updateAddress("city", e.target.value)}
                       />
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1.5">State *</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">{t("checkout.state")}</label>
                         <select
                           className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-aura-primary/20 focus:border-aura-primary outline-none bg-white"
                           value={shippingAddress.state}
                           onChange={(e) => updateAddress("state", e.target.value)}
                         >
-                          <option value="">Select</option>
+                          <option value="">{t("checkout.select")}</option>
                           {US_STATES.map((s) => (
                             <option key={s} value={s}>{s}</option>
                           ))}
                         </select>
                       </div>
                       <Input
-                        label="ZIP Code *"
+                        label={t("checkout.zipCode")}
                         placeholder="12345"
                         value={shippingAddress.zipCode}
                         onChange={(e) => updateAddress("zipCode", e.target.value)}
@@ -945,12 +949,12 @@ export default function CheckoutPage() {
                       />
                     </div>
                     <Input
-                      label="Phone (optional)"
+                      label={t("checkout.phone")}
                       type="tel"
-                      placeholder="(555) 123-4567"
+                      placeholder={t("checkout.phonePlaceholder")}
                       value={shippingAddress.phone}
                       onChange={(e) => updateAddress("phone", e.target.value)}
-                      helperText="For delivery updates"
+                      helperText={t("checkout.forDeliveryUpdates")}
                     />
                   </div>
                 </Card>
@@ -959,7 +963,7 @@ export default function CheckoutPage() {
               {/* Step 4: Payment Method */}
               {currentStep === 4 && (
                 <Card padding="lg">
-                  <h2 className="text-xl font-semibold mb-6">Payment Method</h2>
+                  <h2 className="text-xl font-semibold mb-6">{t("checkout.paymentMethod")}</h2>
 
                   <div className="space-y-4">
                     {/* Card */}
@@ -977,8 +981,8 @@ export default function CheckoutPage() {
                         <CreditCard className="w-5 h-5" />
                       </div>
                       <div className="flex-1">
-                        <p className="font-medium">Pay with Card</p>
-                        <p className="text-sm text-gray-500">Secure payment via Stripe</p>
+                        <p className="font-medium">{t("checkout.payWithCard")}</p>
+                        <p className="text-sm text-gray-500">{t("checkout.securePaymentViaStripe")}</p>
                       </div>
                       {paymentMethod === "card" && (
                         <CheckCircle className="w-5 h-5 text-aura-primary flex-shrink-0" />
@@ -1001,9 +1005,9 @@ export default function CheckoutPage() {
                           <Wallet className="w-5 h-5" />
                         </div>
                         <div className="flex-1">
-                          <p className="font-medium">Pay with Credits</p>
+                          <p className="font-medium">{t("checkout.payWithCredits")}</p>
                           <p className="text-sm text-gray-500">
-                            Your credits and gift card balance cover this order
+                            {t("checkout.creditsCoverOrder")}
                           </p>
                         </div>
                         {paymentMethod === "credits" && (
@@ -1028,9 +1032,9 @@ export default function CheckoutPage() {
                           <FileText className="w-5 h-5" />
                         </div>
                         <div className="flex-1">
-                          <p className="font-medium">Request Invoice</p>
+                          <p className="font-medium">{t("checkout.requestInvoice")}</p>
                           <p className="text-sm text-gray-500">
-                            {organization.name} - Payment terms: {organization.payment_terms.replace("_", " ")}
+                            {organization.name} - {t("checkout.paymentTerms")} {organization.payment_terms.replace("_", " ")}
                           </p>
                         </div>
                         {paymentMethod === "invoice" && (
@@ -1043,8 +1047,8 @@ export default function CheckoutPage() {
                     {paymentMethod === "invoice" && (
                       <div className="ml-14">
                         <Input
-                          label="PO Number *"
-                          placeholder="Enter your purchase order number"
+                          label={t("checkout.poNumber")}
+                          placeholder={t("checkout.enterPoNumber")}
                           value={poNumber}
                           onChange={(e) => setPoNumber(e.target.value)}
                         />
@@ -1054,42 +1058,42 @@ export default function CheckoutPage() {
 
                   {/* Final order summary for payment step */}
                   <div className="mt-8 pt-6 border-t">
-                    <h3 className="font-medium mb-4 text-sm text-gray-600">Order Summary</h3>
+                    <h3 className="font-medium mb-4 text-sm text-gray-600">{t("checkout.orderSummary")}</h3>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
-                        <span className="text-gray-500">Subtotal</span>
+                        <span className="text-gray-500">{t("checkout.subtotal")}</span>
                         <span>{formatCurrency(basePrice)}</span>
                       </div>
                       {promoDiscount > 0 && (
                         <div className="flex justify-between text-green-600">
-                          <span>Promo Discount</span>
+                          <span>{t("checkout.promoDiscount")}</span>
                           <span>-{formatCurrency(promoDiscount)}</span>
                         </div>
                       )}
                       {giftCardDiscount > 0 && (
                         <div className="flex justify-between text-green-600">
-                          <span>Gift Card</span>
+                          <span>{t("checkout.giftCard")}</span>
                           <span>-{formatCurrency(giftCardDiscount)}</span>
                         </div>
                       )}
                       {creditsDiscount > 0 && (
                         <div className="flex justify-between text-green-600">
-                          <span>Credits</span>
+                          <span>{t("checkout.credits")}</span>
                           <span>-{formatCurrency(creditsDiscount)}</span>
                         </div>
                       )}
                       <div className="flex justify-between">
-                        <span className="text-gray-500">Shipping</span>
+                        <span className="text-gray-500">{t("checkout.shipping")}</span>
                         <span className={shipping === 0 ? "text-green-600" : ""}>
-                          {shipping === 0 ? "FREE" : formatCurrency(shipping)}
+                          {shipping === 0 ? t("checkout.freeShipping") : formatCurrency(shipping)}
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-500">Tax</span>
+                        <span className="text-gray-500">{t("checkout.tax")}</span>
                         <span>{formatCurrency(tax)}</span>
                       </div>
                       <div className="flex justify-between pt-3 border-t font-semibold text-base">
-                        <span>Total Due</span>
+                        <span>{t("checkout.totalDue")}</span>
                         <span className="text-aura-primary">{formatCurrency(total)}</span>
                       </div>
                     </div>
@@ -1100,15 +1104,15 @@ export default function CheckoutPage() {
                     <div className="grid grid-cols-3 gap-4 text-center">
                       <div className="flex flex-col items-center gap-2">
                         <ShieldCheck className="w-6 h-6 text-green-600" />
-                        <span className="text-xs text-gray-500">SSL Encrypted</span>
+                        <span className="text-xs text-gray-500">{t("checkout.sslEncrypted")}</span>
                       </div>
                       <div className="flex flex-col items-center gap-2">
                         <Lock className="w-6 h-6 text-green-600" />
-                        <span className="text-xs text-gray-500">Secure Payment</span>
+                        <span className="text-xs text-gray-500">{t("checkout.securePayment")}</span>
                       </div>
                       <div className="flex flex-col items-center gap-2">
                         <CheckCircle className="w-6 h-6 text-green-600" />
-                        <span className="text-xs text-gray-500">Money-Back Guarantee</span>
+                        <span className="text-xs text-gray-500">{t("checkout.moneyBackGuarantee")}</span>
                       </div>
                     </div>
                   </div>
@@ -1123,7 +1127,7 @@ export default function CheckoutPage() {
                     onClick={() => setCurrentStep((s) => s - 1)}
                     leftIcon={<ArrowLeft className="w-4 h-4" />}
                   >
-                    Back
+                    {t("checkout.back")}
                   </Button>
                 )}
                 <div className="ml-auto">
@@ -1133,7 +1137,7 @@ export default function CheckoutPage() {
                       disabled={!canProceed()}
                       rightIcon={<ArrowRight className="w-4 h-4" />}
                     >
-                      Continue
+                      {t("checkout.continue")}
                     </Button>
                   ) : (
                     <Button
@@ -1144,10 +1148,10 @@ export default function CheckoutPage() {
                       leftIcon={paymentMethod === "invoice" ? <FileText className="w-5 h-5" /> : <Lock className="w-5 h-5" />}
                     >
                       {paymentMethod === "invoice"
-                        ? "Submit Order"
+                        ? t("checkout.submitOrder")
                         : total <= 0.01
-                        ? "Place Order"
-                        : `Pay ${formatCurrency(total)}`}
+                        ? t("checkout.placeOrder")
+                        : t("checkout.pay", { amount: formatCurrency(total) })}
                     </Button>
                   )}
                 </div>
@@ -1157,7 +1161,7 @@ export default function CheckoutPage() {
             {/* Order Summary Sidebar */}
             <div className="lg:col-span-1">
               <Card padding="lg" className="sticky top-24">
-                <h2 className="text-lg font-semibold mb-4">Order Summary</h2>
+                <h2 className="text-lg font-semibold mb-4">{t("checkout.orderSummary")}</h2>
 
                 {/* Box Info Compact */}
                 <div className="flex items-center gap-3 pb-4 border-b">
@@ -1167,8 +1171,8 @@ export default function CheckoutPage() {
                   <div>
                     <p className="font-medium capitalize text-sm">{boxConfig.size} Box</p>
                     <p className="text-xs text-gray-500">
-                      {config.slots} items
-                      {purchaseType === "subscription" ? " / month" : ""}
+                      {t("checkout.items", { count: String(config.slots) })}
+                      {purchaseType === "subscription" ? ` ${t("checkout.perMonth")}` : ""}
                     </p>
                   </div>
                 </div>
@@ -1206,45 +1210,45 @@ export default function CheckoutPage() {
 
                 <div className="space-y-3 py-4 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Subtotal</span>
+                    <span className="text-gray-600">{t("checkout.subtotal")}</span>
                     <span>{formatCurrency(basePrice)}</span>
                   </div>
 
                   {promoDiscount > 0 && (
                     <div className="flex justify-between text-green-600">
-                      <span>Promo ({promoValidation?.promotionName})</span>
+                      <span>{t("checkout.promo")} ({promoValidation?.promotionName})</span>
                       <span>-{formatCurrency(promoDiscount)}</span>
                     </div>
                   )}
 
                   {giftCardDiscount > 0 && (
                     <div className="flex justify-between text-green-600">
-                      <span>Gift Card</span>
+                      <span>{t("checkout.giftCard")}</span>
                       <span>-{formatCurrency(giftCardDiscount)}</span>
                     </div>
                   )}
 
                   {creditsDiscount > 0 && (
                     <div className="flex justify-between text-green-600">
-                      <span>Credits Applied</span>
+                      <span>{t("checkout.creditsApplied")}</span>
                       <span>-{formatCurrency(creditsDiscount)}</span>
                     </div>
                   )}
 
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Shipping</span>
+                    <span className="text-gray-600">{t("checkout.shipping")}</span>
                     <span className={shipping === 0 ? "text-green-600 font-medium" : ""}>
-                      {shipping === 0 ? "FREE" : formatCurrency(shipping)}
+                      {shipping === 0 ? t("checkout.freeShipping") : formatCurrency(shipping)}
                     </span>
                   </div>
 
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Estimated Tax</span>
+                    <span className="text-gray-600">{t("checkout.estimatedTax")}</span>
                     <span>{formatCurrency(tax)}</span>
                   </div>
 
                   <div className="flex justify-between pt-3 border-t font-semibold text-base">
-                    <span>Total</span>
+                    <span>{t("checkout.total")}</span>
                     <span className="text-aura-primary">
                       {formatCurrency(total)}
                       {purchaseType === "subscription" ? "/mo" : ""}
@@ -1257,9 +1261,8 @@ export default function CheckoutPage() {
                   <div className="p-3 bg-green-50 rounded-lg text-sm text-green-700 flex items-center gap-2">
                     <Sparkles className="w-4 h-4 flex-shrink-0" />
                     <span>
-                      You are saving{" "}
-                      {formatCurrency(totalSavings)}
-                      {purchaseType === "subscription" ? " per order" : " on this order"}
+                      {t("checkout.savingAmount", { amount: formatCurrency(totalSavings) })}{" "}
+                      {purchaseType === "subscription" ? t("checkout.perOrder") : t("checkout.onThisOrder")}
                     </span>
                   </div>
                 )}
@@ -1267,15 +1270,15 @@ export default function CheckoutPage() {
                 {/* Secure checkout badge */}
                 <div className="mt-4 flex items-center justify-center gap-2 text-xs text-gray-400">
                   <Lock className="w-3 h-3" />
-                  <span>Secure checkout powered by Stripe</span>
+                  <span>{t("checkout.secureCheckoutStripe")}</span>
                 </div>
 
                 <div className="mt-4 text-xs text-gray-400 text-center">
-                  By placing your order, you agree to our{" "}
-                  <Link href="/terms" className="underline hover:text-gray-600">Terms</Link>{" "}
-                  and{" "}
-                  <Link href="/privacy" className="underline hover:text-gray-600">Privacy Policy</Link>
-                  {purchaseType === "subscription" && ". Cancel anytime from your account settings."}
+                  {t("checkout.termsAgree")}{" "}
+                  <Link href="/terms" className="underline hover:text-gray-600">{t("checkout.terms")}</Link>{" "}
+                  {t("checkout.and")}{" "}
+                  <Link href="/privacy" className="underline hover:text-gray-600">{t("checkout.privacyPolicy")}</Link>
+                  {purchaseType === "subscription" && t("checkout.cancelAnytime")}
                 </div>
               </Card>
             </div>
