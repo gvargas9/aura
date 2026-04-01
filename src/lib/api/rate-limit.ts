@@ -28,8 +28,8 @@ function ensureCleanup() {
     }
   }, 60_000);
   // Allow Node.js to exit even if interval is active
-  if (typeof cleanupInterval === "object" && "unref" in cleanupInterval) {
-    cleanupInterval.unref();
+  if (typeof cleanupInterval === "object" && cleanupInterval !== null && "unref" in cleanupInterval) {
+    (cleanupInterval as { unref: () => void }).unref();
   }
 }
 

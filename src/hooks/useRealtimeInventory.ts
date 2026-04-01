@@ -23,7 +23,7 @@ export function useRealtimeInventory(): UseRealtimeInventoryReturn {
   const [lowStockAlerts, setLowStockAlerts] = useState<InventoryWithHighlight[]>([]);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const channelRef = useRef<RealtimeChannel | null>(null);
-  const highlightTimeouts = useRef<Map<string, NodeJS.Timeout>>(new Map());
+  const highlightTimeouts = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const supabase = createClient();
 
   const checkLowStock = useCallback((items: InventoryWithHighlight[]) => {
