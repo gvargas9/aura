@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks";
+import { useLocale } from "@/hooks/useLocale";
 import { Card, Button } from "@/components/ui";
-import { formatCurrency } from "@/lib/utils";
 import {
   DollarSign,
   Package,
@@ -41,6 +41,7 @@ interface RecentOrder {
 
 export default function AdminDashboardPage() {
   const { profile, isLoading: authLoading } = useAuth();
+  const { t, formatPrice } = useLocale();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -129,7 +130,7 @@ export default function AdminDashboardPage() {
   if (!stats) {
     return (
       <div className="text-center py-20 text-gray-500">
-        <p>Unable to load dashboard data. Please try refreshing.</p>
+        <p>{t("admin.unableToLoad")}</p>
       </div>
     );
   }
@@ -138,9 +139,9 @@ export default function AdminDashboardPage() {
     <>
       {/* Page Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+        <h1 className="text-3xl font-bold text-gray-900">{t("admin.dashboard")}</h1>
         <p className="text-gray-600">
-          Overview of your Aura platform performance
+          {t("admin.dashboardSubtitle")}
         </p>
       </div>
 
@@ -151,13 +152,13 @@ export default function AdminDashboardPage() {
             <div className="flex items-center gap-3 p-4 bg-amber-50 border border-amber-200 rounded-lg">
               <AlertTriangle className="w-5 h-5 text-amber-500" />
               <span className="text-amber-800">
-                {stats.pendingOrders} orders pending processing
+                {t("admin.pendingProcessing", { count: String(stats.pendingOrders) })}
               </span>
               <Link
                 href="/admin/orders?status=pending"
                 className="ml-auto text-amber-600 hover:text-amber-700 text-sm font-medium"
               >
-                View Orders
+                {t("admin.viewOrders")}
               </Link>
             </div>
           )}
@@ -165,13 +166,13 @@ export default function AdminDashboardPage() {
             <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-lg">
               <AlertTriangle className="w-5 h-5 text-red-500" />
               <span className="text-red-800">
-                {stats.lowStockProducts} products low on stock
+                {t("admin.lowStock", { count: String(stats.lowStockProducts) })}
               </span>
               <Link
                 href="/admin/inventory?filter=low-stock"
                 className="ml-auto text-red-600 hover:text-red-700 text-sm font-medium"
               >
-                View Inventory
+                {t("admin.viewInventory")}
               </Link>
             </div>
           )}
@@ -183,9 +184,9 @@ export default function AdminDashboardPage() {
         <Card padding="md">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-sm text-gray-500">Total Revenue</p>
+              <p className="text-sm text-gray-500">{t("admin.totalRevenue")}</p>
               <p className="text-2xl font-bold mt-1">
-                {formatCurrency(stats.totalRevenue)}
+                {formatPrice(stats.totalRevenue)}
               </p>
             </div>
             <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
@@ -197,14 +198,14 @@ export default function AdminDashboardPage() {
             <span className="text-green-600 font-medium">
               +{stats.revenueChange}%
             </span>
-            <span className="text-gray-500">vs last month</span>
+            <span className="text-gray-500">{t("admin.vsLastMonth")}</span>
           </div>
         </Card>
 
         <Card padding="md">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-sm text-gray-500">Total Orders</p>
+              <p className="text-sm text-gray-500">{t("admin.totalOrders")}</p>
               <p className="text-2xl font-bold mt-1">{stats.totalOrders}</p>
             </div>
             <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -216,14 +217,14 @@ export default function AdminDashboardPage() {
             <span className="text-green-600 font-medium">
               +{stats.ordersChange}%
             </span>
-            <span className="text-gray-500">vs last month</span>
+            <span className="text-gray-500">{t("admin.vsLastMonth")}</span>
           </div>
         </Card>
 
         <Card padding="md">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-sm text-gray-500">Customers</p>
+              <p className="text-sm text-gray-500">{t("admin.customers")}</p>
               <p className="text-2xl font-bold mt-1">{stats.totalCustomers}</p>
             </div>
             <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -235,14 +236,14 @@ export default function AdminDashboardPage() {
             <span className="text-green-600 font-medium">
               +{stats.customersChange}%
             </span>
-            <span className="text-gray-500">vs last month</span>
+            <span className="text-gray-500">{t("admin.vsLastMonth")}</span>
           </div>
         </Card>
 
         <Card padding="md">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-sm text-gray-500">Active Subscriptions</p>
+              <p className="text-sm text-gray-500">{t("admin.activeSubscriptions")}</p>
               <p className="text-2xl font-bold mt-1">
                 {stats.activeSubscriptions}
               </p>
@@ -256,7 +257,7 @@ export default function AdminDashboardPage() {
             <span className="text-green-600 font-medium">
               +{stats.subscriptionsChange}%
             </span>
-            <span className="text-gray-500">vs last month</span>
+            <span className="text-gray-500">{t("admin.vsLastMonth")}</span>
           </div>
         </Card>
       </div>
@@ -264,10 +265,10 @@ export default function AdminDashboardPage() {
       {/* Recent Orders */}
       <Card padding="lg">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold">Recent Orders</h2>
+          <h2 className="text-xl font-semibold">{t("admin.recentOrders")}</h2>
           <Link href="/admin/orders">
             <Button variant="ghost" size="sm">
-              View All
+              {t("common.viewAll")}
             </Button>
           </Link>
         </div>
@@ -278,13 +279,13 @@ export default function AdminDashboardPage() {
               <thead>
                 <tr className="border-b">
                   <th className="text-left py-3 text-sm font-medium text-gray-500">
-                    Order
+                    {t("admin.order")}
                   </th>
                   <th className="text-left py-3 text-sm font-medium text-gray-500">
-                    Status
+                    {t("admin.status")}
                   </th>
                   <th className="text-right py-3 text-sm font-medium text-gray-500">
-                    Total
+                    {t("admin.total")}
                   </th>
                 </tr>
               </thead>
@@ -315,7 +316,7 @@ export default function AdminDashboardPage() {
                       </span>
                     </td>
                     <td className="py-3 text-right font-medium">
-                      {formatCurrency(order.total)}
+                      {formatPrice(order.total)}
                     </td>
                   </tr>
                 ))}
@@ -323,7 +324,7 @@ export default function AdminDashboardPage() {
             </table>
           </div>
         ) : (
-          <div className="text-center py-8 text-gray-500">No orders yet</div>
+          <div className="text-center py-8 text-gray-500">{t("admin.noOrdersYet")}</div>
         )}
       </Card>
     </>
