@@ -589,7 +589,7 @@ function TimelineItem({
 // ─────────────────────────────────────────────
 // SLIDES CONFIG
 // ─────────────────────────────────────────────
-const TOTAL_SLIDES = 18;
+const TOTAL_SLIDES = 19;
 
 const slideLabels = [
   "Title",
@@ -599,6 +599,7 @@ const slideLabels = [
   "Consumer UX",
   "AI Features",
   "B2B Portal",
+  "CRM Integration",
   "Academy",
   "Multi-Storefront",
   "Architecture",
@@ -665,17 +666,18 @@ export default function PresentationPage() {
     <Slide05ConsumerUX key={4} active={active} />,
     <Slide06AI key={5} active={active} />,
     <Slide07B2B key={6} active={active} />,
-    <Slide08Academy key={7} active={active} />,
-    <Slide09Storefronts key={8} active={active} />,
-    <Slide10Architecture key={9} active={active} />,
-    <Slide11Metrics key={10} active={active} />,
-    <Slide12SupplyChain key={11} active={active} />,
-    <Slide13Security key={12} active={active} />,
-    <Slide14i18n key={13} active={active} />,
-    <Slide15Roadmap key={14} active={active} />,
-    <Slide16Moat key={15} active={active} />,
-    <Slide17Revenue key={16} active={active} />,
-    <Slide18CTA key={17} active={active} />,
+    <Slide08CRM key={7} active={active} />,
+    <Slide09Academy key={8} active={active} />,
+    <Slide10Storefronts key={9} active={active} />,
+    <Slide11Architecture key={10} active={active} />,
+    <Slide12Metrics key={11} active={active} />,
+    <Slide13SupplyChain key={12} active={active} />,
+    <Slide14Security key={13} active={active} />,
+    <Slide15i18n key={14} active={active} />,
+    <Slide16Roadmap key={15} active={active} />,
+    <Slide17Moat key={16} active={active} />,
+    <Slide18Revenue key={17} active={active} />,
+    <Slide19CTA key={18} active={active} />,
   ];
 
   // ─── OVERVIEW GRID ───
@@ -1239,9 +1241,87 @@ function Slide07B2B({ active }: { active: boolean }) {
 }
 
 // ═══════════════════════════════════════════════
-// SLIDE 8 — ACADEMY
 // ═══════════════════════════════════════════════
-function Slide08Academy({ active }: { active: boolean }) {
+// SLIDE 8 — CRM INTEGRATION (Aura ↔ MenuMaster)
+// ═══════════════════════════════════════════════
+function Slide08CRM({ active }: { active: boolean }) {
+  const flow = [
+    { step: "01", label: "Admin Allocates", desc: "Assign sample packs from Aura inventory to a sales agent", color: "text-emerald-400" },
+    { step: "02", label: "Agent Delivers", desc: "Sales person gives samples to supermarket lead, logged in CRM", color: "text-blue-400" },
+    { step: "03", label: "CRM Tracks", desc: "MenuMaster records activity, updates lead status automatically", color: "text-amber-400" },
+    { step: "04", label: "Lead Converts", desc: "Webhook fires back → Aura creates B2B organization + contract", color: "text-emerald-400" },
+  ];
+
+  const integrations = [
+    { icon: <Users size={16} />, label: "Leads & Contacts sync" },
+    { icon: <Target size={16} />, label: "Sample custody tracking" },
+    { icon: <BarChart3 size={16} />, label: "Activity timeline" },
+    { icon: <Workflow size={16} />, label: "Bi-directional webhooks" },
+    { icon: <Building2 size={16} />, label: "Auto org creation" },
+    { icon: <CircleDot size={16} />, label: "Dealer ↔ CRM user sync" },
+  ];
+
+  return (
+    <div className="h-screen flex flex-col items-center justify-center px-6 md:px-20 relative obsidian-surface">
+      <Particles count={15} />
+      <Reveal active={active} delay={0}>
+        <SectionBadge variant="amber">CRM Integration</SectionBadge>
+      </Reveal>
+      <Reveal active={active} delay={100}>
+        <h2 className="text-4xl md:text-7xl font-black mt-5 mb-3 text-center tracking-tight">
+          Aura <span className="gradient-text-gold">↔</span> MenuMaster
+        </h2>
+      </Reveal>
+      <Reveal active={active} delay={200}>
+        <p className="text-gray-500 text-lg mb-10 text-center max-w-2xl font-light">
+          Seamless B2B sales pipeline. Track samples from warehouse to supermarket shelf.
+        </p>
+      </Reveal>
+
+      {/* Flow steps */}
+      <div className="flex flex-col md:flex-row gap-3 md:gap-4 max-w-4xl w-full mb-8">
+        {flow.map((f, i) => (
+          <Reveal key={i} active={active} delay={350 + i * 120} className="flex-1">
+            <GlassCard className="h-full relative overflow-hidden">
+              <span className={`text-5xl font-black opacity-[0.06] absolute -top-1 -right-1 ${f.color}`}>
+                {f.step}
+              </span>
+              <span className={`text-xs font-mono font-bold ${f.color}`}>
+                Step {f.step}
+              </span>
+              <h3 className="text-sm font-bold mt-1.5 mb-1">{f.label}</h3>
+              <p className="text-xs text-gray-500 leading-relaxed">{f.desc}</p>
+            </GlassCard>
+          </Reveal>
+        ))}
+      </div>
+
+      {/* Integration features */}
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-w-3xl w-full">
+        {integrations.map((item, i) => (
+          <Reveal key={i} active={active} delay={850 + i * 60}>
+            <div className="flex items-center gap-2.5 rounded-xl glass-card px-4 py-3 hover:border-amber-500/20 transition-all cursor-pointer">
+              <div className="text-amber-400">{item.icon}</div>
+              <span className="font-medium text-xs">{item.label}</span>
+            </div>
+          </Reveal>
+        ))}
+      </div>
+
+      <Reveal active={active} delay={1300}>
+        <p className="mt-6 text-xs text-gray-600 text-center">
+          Live integration via webhook API &mdash;{" "}
+          <span className="text-amber-400 font-semibold">crm.inspiration-ai.com</span>
+        </p>
+      </Reveal>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════
+// SLIDE 9 — ACADEMY
+// ═══════════════════════════════════════════════
+function Slide09Academy({ active }: { active: boolean }) {
   return (
     <div className="h-screen flex flex-col items-center justify-center px-6 md:px-20 relative obsidian-surface">
       <Particles count={10} />
@@ -1299,9 +1379,9 @@ function Slide08Academy({ active }: { active: boolean }) {
 }
 
 // ═══════════════════════════════════════════════
-// SLIDE 9 — MULTI-STOREFRONT
+// SLIDE 10 — MULTI-STOREFRONT
 // ═══════════════════════════════════════════════
-function Slide09Storefronts({ active }: { active: boolean }) {
+function Slide10Storefronts({ active }: { active: boolean }) {
   const stores = [
     { name: "Main Store", color: "#10B981", desc: "Full catalog, subscriptions" },
     { name: "Outdoor & Camping", color: "#F59E0B", desc: "Adventure-optimized selection" },
@@ -1351,9 +1431,9 @@ function Slide09Storefronts({ active }: { active: boolean }) {
 }
 
 // ═══════════════════════════════════════════════
-// SLIDE 10 — ARCHITECTURE
+// SLIDE 11 — ARCHITECTURE
 // ═══════════════════════════════════════════════
-function Slide10Architecture({ active }: { active: boolean }) {
+function Slide11Architecture({ active }: { active: boolean }) {
   const layers = [
     { label: "Frontend", tech: "Next.js 16 + React 19 + Tailwind 4", color: "#10B981", icon: <Code2 size={16} /> },
     { label: "API Layer", tech: "58 REST Endpoints + Server Actions", color: "#3B82F6", icon: <Server size={16} /> },
@@ -1421,9 +1501,9 @@ function Slide10Architecture({ active }: { active: boolean }) {
 }
 
 // ═══════════════════════════════════════════════
-// SLIDE 11 — METRICS
+// SLIDE 12 — METRICS
 // ═══════════════════════════════════════════════
-function Slide11Metrics({ active }: { active: boolean }) {
+function Slide12Metrics({ active }: { active: boolean }) {
   const heroMetrics = [
     { value: 59, suffix: "K", label: "Lines of Code", icon: <Code2 size={22} />, color: "#10B981" },
     { value: 54, suffix: "", label: "Pages", icon: <Layers size={22} />, color: "#3B82F6" },
@@ -1511,9 +1591,9 @@ function Slide11Metrics({ active }: { active: boolean }) {
 }
 
 // ═══════════════════════════════════════════════
-// SLIDE 12 — SUPPLY CHAIN
+// SLIDE 13 — SUPPLY CHAIN
 // ═══════════════════════════════════════════════
-function Slide12SupplyChain({ active }: { active: boolean }) {
+function Slide13SupplyChain({ active }: { active: boolean }) {
   const chain = [
     { label: "Suzazon Mexico", desc: "Manufacturing & QC", icon: <Building2 size={22} />, flag: "MX" },
     { label: "El Paso, TX", desc: "Cross-border hub", icon: <Truck size={22} />, flag: "US" },
@@ -1578,9 +1658,9 @@ function Slide12SupplyChain({ active }: { active: boolean }) {
 }
 
 // ═══════════════════════════════════════════════
-// SLIDE 13 — SECURITY
+// SLIDE 14 — SECURITY
 // ═══════════════════════════════════════════════
-function Slide13Security({ active }: { active: boolean }) {
+function Slide14Security({ active }: { active: boolean }) {
   const checks = [
     { text: "Rate Limiting on all API endpoints", category: "API" },
     { text: "CSRF Token Protection", category: "AUTH" },
@@ -1625,9 +1705,9 @@ function Slide13Security({ active }: { active: boolean }) {
 }
 
 // ═══════════════════════════════════════════════
-// SLIDE 14 — i18n
+// SLIDE 15 — i18n
 // ═══════════════════════════════════════════════
-function Slide14i18n({ active }: { active: boolean }) {
+function Slide15i18n({ active }: { active: boolean }) {
   const languages = [
     { flag: "US", lang: "English", code: "EN" },
     { flag: "MX", lang: "Espanol", code: "ES" },
@@ -1697,9 +1777,9 @@ function Slide14i18n({ active }: { active: boolean }) {
 }
 
 // ═══════════════════════════════════════════════
-// SLIDE 15 — ROADMAP
+// SLIDE 16 — ROADMAP
 // ═══════════════════════════════════════════════
-function Slide15Roadmap({ active }: { active: boolean }) {
+function Slide16Roadmap({ active }: { active: boolean }) {
   return (
     <div className="h-screen flex flex-col items-center justify-center px-6 md:px-20 relative obsidian-surface">
       <Particles count={10} />
@@ -1750,9 +1830,9 @@ function Slide15Roadmap({ active }: { active: boolean }) {
 }
 
 // ═══════════════════════════════════════════════
-// SLIDE 16 — COMPETITIVE MOAT
+// SLIDE 17 — COMPETITIVE MOAT
 // ═══════════════════════════════════════════════
-function Slide16Moat({ active }: { active: boolean }) {
+function Slide17Moat({ active }: { active: boolean }) {
   const moats = [
     {
       icon: <Box size={24} />,
@@ -1806,9 +1886,9 @@ function Slide16Moat({ active }: { active: boolean }) {
 }
 
 // ═══════════════════════════════════════════════
-// SLIDE 17 — REVENUE
+// SLIDE 18 — REVENUE
 // ═══════════════════════════════════════════════
-function Slide17Revenue({ active }: { active: boolean }) {
+function Slide18Revenue({ active }: { active: boolean }) {
   const streams = [
     { label: "B2C Subscription", range: "$59 - $149/mo", icon: <ShoppingCart size={16} /> },
     { label: "B2C One-Time", range: "$69 - $179", icon: <Package size={16} /> },
@@ -1872,9 +1952,9 @@ function Slide17Revenue({ active }: { active: boolean }) {
 }
 
 // ═══════════════════════════════════════════════
-// SLIDE 18 — CTA
+// SLIDE 19 — CTA
 // ═══════════════════════════════════════════════
-function Slide18CTA({ active }: { active: boolean }) {
+function Slide19CTA({ active }: { active: boolean }) {
   const nextSteps = [
     { icon: <DollarSign size={18} />, text: "Configure Stripe for production payments" },
     { icon: <Rocket size={18} />, text: "Deploy to Vercel with edge optimization" },
