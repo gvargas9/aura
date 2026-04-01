@@ -40,10 +40,10 @@ N8N_API_URL=                       # e.g., https://automation.inspiration-ai.com
 N8N_WEBHOOK_SECRET=                # Shared secret for n8n webhook auth
 CRON_SECRET=                       # Secret for cron endpoint auth
 
-# MenuMaster CRM
-MENUMASTER_API_URL=
-MENUMASTER_API_TOKEN=
-MENUMASTER_BUSINESS_ID=
+# Business Manager CRM
+BUSINESS_MANAGER_API_URL=
+BUSINESS_MANAGER_API_TOKEN=
+BUSINESS_MANAGER_BUSINESS_ID=
 
 # App
 NEXT_PUBLIC_APP_URL=http://localhost:3000
@@ -234,11 +234,11 @@ POST /api/vending/restock       — confirm restock
 Auth: X-Vending-API-Key header per machine
 ```
 
-### MenuMaster CRM Integration (`src/lib/menumaster/`)
+### Business Manager CRM Integration (`src/lib/business-manager/`)
 ```typescript
-import { syncLeadToMenuMaster, logSampleActivity } from "@/lib/menumaster";
+import { syncLeadToBusiness Manager, logSampleActivity } from "@/lib/business-manager";
 // Fire-and-forget — follows n8n client pattern
-// Env: MENUMASTER_API_URL, MENUMASTER_API_TOKEN, MENUMASTER_BUSINESS_ID
+// Env: BUSINESS_MANAGER_API_URL, BUSINESS_MANAGER_API_TOKEN, BUSINESS_MANAGER_BUSINESS_ID
 ```
 
 ### Sample Tracking (`src/app/api/samples/`)
@@ -280,7 +280,7 @@ Auth: X-API-Key header (SHA-256 hashed, scoped)
 9. **Shipping mock mode**: When `EASYPOST_API_KEY` is not set, shipping APIs return realistic fake data with `mock: true` flag
 10. **Wishlist auth**: useWishlist only works when authenticated — check isAuthenticated before rendering heart toggles
 11. **Vending API auth**: Uses `X-Vending-API-Key` header, not Supabase auth — machine-to-machine tokens
-12. **MenuMaster integration**: Fire-and-forget like n8n — never throws, app works without MenuMaster
+12. **Business Manager integration**: Fire-and-forget like n8n — never throws, app works without Business Manager
 13. **API keys (v1)**: SHA-256 hashed, shown once on creation — use `POST /api/admin/api-keys` to generate
 
 ## n8n Workflows

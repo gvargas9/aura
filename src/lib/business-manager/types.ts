@@ -1,9 +1,9 @@
 // ---------------------------------------------------------------------------
-// MenuMaster CRM Integration Types
-// Aligned with MenuMaster WEBHOOK_API.md v3.0.0
+// BusinessManager CRM Integration Types
+// Aligned with BusinessManager WEBHOOK_API.md v3.0.0
 // ---------------------------------------------------------------------------
 
-export interface MenuMasterConfig {
+export interface BusinessManagerConfig {
   apiUrl: string;
   apiToken: string; // format: sk_live_{64_hex_characters}
   businessId: string;
@@ -14,10 +14,10 @@ export interface MenuMasterConfig {
  * Lead payload — matches POST /api/webhooks/crm/:businessId/leads
  * Required: email
  */
-export interface MenuMasterLead {
+export interface BusinessManagerLead {
   firstName?: string;
   lastName?: string;
-  email: string; // Required by MenuMaster
+  email: string; // Required by BusinessManager
   phone?: string;
   company?: string;
   status?: "new" | "contacted" | "qualified" | "unqualified" | "converted";
@@ -33,10 +33,10 @@ export interface MenuMasterLead {
  * Contact payload — matches POST /api/webhooks/crm/:businessId/contacts
  * Required: email
  */
-export interface MenuMasterContact {
+export interface BusinessManagerContact {
   firstName?: string;
   lastName?: string;
-  email: string; // Required by MenuMaster
+  email: string; // Required by BusinessManager
   phone?: string;
   company?: string;
   title?: string; // Job title
@@ -50,7 +50,7 @@ export interface MenuMasterContact {
 /**
  * Customer payload — matches POST /api/webhooks/crm/:businessId/customers
  */
-export interface MenuMasterCustomer {
+export interface BusinessManagerCustomer {
   firstName?: string;
   lastName?: string;
   email: string;
@@ -66,25 +66,25 @@ export interface MenuMasterCustomer {
  * Activity payload — matches POST /api/webhooks/crm/:businessId/activities
  * Required: entityType, entityId, activityType, subject
  */
-export interface MenuMasterActivity {
+export interface BusinessManagerActivity {
   entityType: "lead" | "contact" | "opportunity" | "customer";
-  entityId: number; // MenuMaster entity ID
+  entityId: number; // BusinessManager entity ID
   activityType: "call" | "email" | "meeting" | "task" | "note";
   subject: string;
-  createdBy: number; // MenuMaster user ID (required)
+  createdBy: number; // BusinessManager user ID (required)
   description?: string;
   activityDate?: string; // ISO 8601
   dueDate?: string; // ISO 8601
   status?: "pending" | "completed" | "cancelled";
   priority?: "low" | "medium" | "high";
-  assignedTo?: number; // MenuMaster user ID
+  assignedTo?: number; // BusinessManager user ID
   externalId?: string;
 }
 
 /**
  * Opportunity payload — matches POST /api/webhooks/crm/:businessId/opportunities
  */
-export interface MenuMasterOpportunity {
+export interface BusinessManagerOpportunity {
   name: string;
   value?: number;
   currency?: string;
@@ -99,9 +99,9 @@ export interface MenuMasterOpportunity {
 }
 
 /**
- * Inbound webhook event from MenuMaster → Aura
+ * Inbound webhook event from BusinessManager → Aura
  */
-export interface MenuMasterWebhookEvent {
+export interface BusinessManagerWebhookEvent {
   event:
     | "lead.converted"
     | "lead.updated"

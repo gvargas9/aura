@@ -1,7 +1,7 @@
 /**
- * MenuMaster CRM Webhook Client
+ * BusinessManager CRM Webhook Client
  *
- * Fire-and-forget outbound calls to MenuMaster's webhook API.
+ * Fire-and-forget outbound calls to BusinessManager's webhook API.
  * Aligned with WEBHOOK_API.md v3.0.0.
  *
  * Auth: X-API-Token header with sk_live_{64_hex} format
@@ -11,35 +11,35 @@
  */
 
 import type {
-  MenuMasterLead,
-  MenuMasterContact,
-  MenuMasterCustomer,
-  MenuMasterActivity,
-  MenuMasterOpportunity,
+  BusinessManagerLead,
+  BusinessManagerContact,
+  BusinessManagerCustomer,
+  BusinessManagerActivity,
+  BusinessManagerOpportunity,
 } from "./types";
 
 // ---------------------------------------------------------------------------
 // Configuration — skip silently if not configured
 // ---------------------------------------------------------------------------
 
-const MENUMASTER_API_URL = process.env.MENUMASTER_API_URL ?? "";
-const MENUMASTER_API_TOKEN = process.env.MENUMASTER_API_TOKEN ?? "";
-const MENUMASTER_BUSINESS_ID = process.env.MENUMASTER_BUSINESS_ID ?? "";
+const BUSINESS_MANAGER_API_URL = process.env.BUSINESS_MANAGER_API_URL ?? "";
+const BUSINESS_MANAGER_API_TOKEN = process.env.BUSINESS_MANAGER_API_TOKEN ?? "";
+const BUSINESS_MANAGER_BUSINESS_ID = process.env.BUSINESS_MANAGER_BUSINESS_ID ?? "";
 const REQUEST_TIMEOUT_MS = 10_000;
 
 function isConfigured(): boolean {
-  return !!(MENUMASTER_API_URL && MENUMASTER_API_TOKEN && MENUMASTER_BUSINESS_ID);
+  return !!(BUSINESS_MANAGER_API_URL && BUSINESS_MANAGER_API_TOKEN && BUSINESS_MANAGER_BUSINESS_ID);
 }
 
 function buildUrl(path: string): string {
-  const base = MENUMASTER_API_URL.replace(/\/+$/, "");
-  return `${base}/api/webhooks/crm/${MENUMASTER_BUSINESS_ID}${path}`;
+  const base = BUSINESS_MANAGER_API_URL.replace(/\/+$/, "");
+  return `${base}/api/webhooks/crm/${BUSINESS_MANAGER_BUSINESS_ID}${path}`;
 }
 
 function defaultHeaders(): Record<string, string> {
   return {
     "Content-Type": "application/json",
-    "X-API-Token": MENUMASTER_API_TOKEN,
+    "X-API-Token": BUSINESS_MANAGER_API_TOKEN,
   };
 }
 
@@ -47,7 +47,7 @@ function defaultHeaders(): Record<string, string> {
 // Core request helper — fire-and-forget, never throws
 // ---------------------------------------------------------------------------
 
-async function menuMasterRequest(
+async function businessManagerRequest(
   method: "GET" | "POST" | "PATCH",
   path: string,
   body?: unknown
@@ -70,16 +70,16 @@ async function menuMasterRequest(
 
     if (!response.ok) {
       console.error(
-        `[menumaster] ${method} ${path} → ${response.status}: ${JSON.stringify(data)}`
+        `[business-manager] ${method} ${path} → ${response.status}: ${JSON.stringify(data)}`
       );
       return { success: false, data };
     }
 
-    console.log(`[menumaster] ${method} ${path} → OK`);
+    console.log(`[business-manager] ${method} ${path} → OK`);
     return { success: true, data };
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
-    console.error(`[menumaster] ${method} ${path} failed: ${message}`);
+    console.error(`[business-manager] ${method} ${path} failed: ${message}`);
     return { success: false };
   } finally {
     clearTimeout(timeout);
@@ -91,32 +91,32 @@ async function menuMasterRequest(
 // ---------------------------------------------------------------------------
 
 /**
- * Create a lead in MenuMaster CRM.
+ * Create a lead in BusinessManager CRM.
  * Required: email
  */
-export async function syncLeadToMenuMaster(lead: MenuMasterLead) {
-  return menuMasterRequest("POST", "/leads", {
+export async function syncLeadToBusinessManager(lead: BusinessManagerLead) {
+  return businessManagerRequest("POST", "/leads", {
     ...lead,
     source: lead.source ?? "aura_platform",
   });
 }
 
 /**
- * Update an existing lead by MenuMaster lead ID.
+ * Update an existing lead by BusinessManager lead ID.
  * PATCH /api/webhooks/crm/:businessId/leads/:leadId
  */
-export async function updateLeadInMenuMaster(
+export async function updateLeadInBusinessManager(
   leadId: number,
-  updates: Partial<MenuMasterLead>
+  updates: Partial<BusinessManagerLead>
 ) {
-  return menuMasterRequest("PATCH", `/leads/${leadId}`, updates);
+  return businessManagerRequest("PATCH", `/leads/${leadId}`, updates);
 }
 
 /**
  * Get all leads (optionally filtered).
  * GET /api/webhooks/crm/:businessId/leads
  */
-export async function getLeadsFromMenuMaster(params?: {
+export async function getLeadsFromBusinessManager(params?: {
   status?: string;
   source?: string;
   assignedTo?: number;
@@ -130,7 +130,7 @@ export async function getLeadsFromMenuMaster(params?: {
           .map(([k, v]) => [k, String(v)])
       ).toString()
     : "";
-  return menuMasterRequest("GET", `/leads${query}`);
+  return businessManagerRequest("GET", `/leads${query}`);
 }
 
 // ---------------------------------------------------------------------------
@@ -138,22 +138,22 @@ export async function getLeadsFromMenuMaster(params?: {
 // ---------------------------------------------------------------------------
 
 /**
- * Create a contact in MenuMaster CRM.
+ * Create a contact in BusinessManager CRM.
  * Required: email
  */
-export async function syncContactToMenuMaster(contact: MenuMasterContact) {
-  return menuMasterRequest("POST", "/contacts", contact);
+export async function syncContactToBusinessManager(contact: BusinessManagerContact) {
+  return businessManagerRequest("POST", "/contacts", contact);
 }
 
 /**
  * Update an existing contact.
  * PATCH /api/webhooks/crm/:businessId/contacts/:contactId
  */
-export async function updateContactInMenuMaster(
+export async function updateContactInBusinessManager(
   contactId: number,
-  updates: Partial<MenuMasterContact>
+  updates: Partial<BusinessManagerContact>
 ) {
-  return menuMasterRequest("PATCH", `/contacts/${contactId}`, updates);
+  return businessManagerRequest("PATCH", `/contacts/${contactId}`, updates);
 }
 
 // ---------------------------------------------------------------------------
@@ -161,22 +161,22 @@ export async function updateContactInMenuMaster(
 // ---------------------------------------------------------------------------
 
 /**
- * Create a customer in MenuMaster CRM.
+ * Create a customer in BusinessManager CRM.
  * Required: email
  */
-export async function syncCustomerToMenuMaster(customer: MenuMasterCustomer) {
-  return menuMasterRequest("POST", "/customers", customer);
+export async function syncCustomerToBusinessManager(customer: BusinessManagerCustomer) {
+  return businessManagerRequest("POST", "/customers", customer);
 }
 
 /**
  * Update an existing customer.
  * PATCH /api/webhooks/crm/:businessId/customers/:customerId
  */
-export async function updateCustomerInMenuMaster(
+export async function updateCustomerInBusinessManager(
   customerId: number,
-  updates: Partial<MenuMasterCustomer>
+  updates: Partial<BusinessManagerCustomer>
 ) {
-  return menuMasterRequest("PATCH", `/customers/${customerId}`, updates);
+  return businessManagerRequest("PATCH", `/customers/${customerId}`, updates);
 }
 
 // ---------------------------------------------------------------------------
@@ -187,8 +187,8 @@ export async function updateCustomerInMenuMaster(
  * Create an activity on a CRM entity.
  * Required: entityType, entityId, activityType, subject
  */
-export async function logActivityToMenuMaster(activity: MenuMasterActivity) {
-  return menuMasterRequest("POST", "/activities", activity);
+export async function logActivityToBusinessManager(activity: BusinessManagerActivity) {
+  return businessManagerRequest("POST", "/activities", activity);
 }
 
 /**
@@ -205,7 +205,7 @@ export async function logSampleActivity(params: {
   assignedTo?: number;
   externalId?: string;
 }) {
-  return logActivityToMenuMaster({
+  return logActivityToBusinessManager({
     entityType: "lead",
     entityId: params.leadId,
     activityType: params.activityType ?? "note",
@@ -224,21 +224,21 @@ export async function logSampleActivity(params: {
 // ---------------------------------------------------------------------------
 
 /**
- * Create an opportunity in MenuMaster CRM.
+ * Create an opportunity in BusinessManager CRM.
  */
-export async function syncOpportunityToMenuMaster(opp: MenuMasterOpportunity) {
-  return menuMasterRequest("POST", "/opportunities", opp);
+export async function syncOpportunityToBusinessManager(opp: BusinessManagerOpportunity) {
+  return businessManagerRequest("POST", "/opportunities", opp);
 }
 
 /**
  * Update an existing opportunity.
  * PATCH /api/webhooks/crm/:businessId/opportunities/:oppId
  */
-export async function updateOpportunityInMenuMaster(
+export async function updateOpportunityInBusinessManager(
   oppId: number,
-  updates: Partial<MenuMasterOpportunity>
+  updates: Partial<BusinessManagerOpportunity>
 ) {
-  return menuMasterRequest("PATCH", `/opportunities/${oppId}`, updates);
+  return businessManagerRequest("PATCH", `/opportunities/${oppId}`, updates);
 }
 
 // ---------------------------------------------------------------------------
@@ -246,13 +246,13 @@ export async function updateOpportunityInMenuMaster(
 // ---------------------------------------------------------------------------
 
 /**
- * Check if MenuMaster webhook service is reachable.
+ * Check if BusinessManager webhook service is reachable.
  * GET /api/webhooks/health (no auth required, no businessId)
  */
-export async function checkMenuMasterHealth(): Promise<boolean> {
-  if (!MENUMASTER_API_URL) return false;
+export async function checkBusinessManagerHealth(): Promise<boolean> {
+  if (!BUSINESS_MANAGER_API_URL) return false;
 
-  const url = `${MENUMASTER_API_URL.replace(/\/+$/, "")}/api/webhooks/health`;
+  const url = `${BUSINESS_MANAGER_API_URL.replace(/\/+$/, "")}/api/webhooks/health`;
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 5000);
 

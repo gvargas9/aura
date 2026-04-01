@@ -4,7 +4,7 @@ import { requireAdmin, isAuthError } from "@/lib/api/auth";
 import { applyRateLimit, rateLimiters } from "@/lib/api/rate-limit";
 import { safeError } from "@/lib/api/safe-error";
 import { validateUUID, sanitizeString } from "@/lib/api/validation";
-import { syncCustomerToMenuMaster } from "@/lib/menumaster";
+import { syncCustomerToBusinessManager } from "@/lib/business-manager";
 
 // ---------------------------------------------------------------------------
 // GET /api/sync/dealers — List dealers with sync status (admin only)
@@ -36,9 +36,9 @@ export async function GET(request: NextRequest) {
       const metadata = (dealer.metadata as Record<string, unknown>) ?? {};
       return {
         ...dealer,
-        menumaster_synced: !!metadata.menumaster_user_id,
-        menumaster_user_id: metadata.menumaster_user_id ?? null,
-        menumaster_synced_at: metadata.menumaster_synced_at ?? null,
+        business_manager_synced: !!metadata.business_manager_user_id,
+        business_manager_user_id: metadata.business_manager_user_id ?? null,
+        business_manager_synced_at: metadata.business_manager_synced_at ?? null,
       };
     });
 
@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
 }
 
 // ---------------------------------------------------------------------------
-// POST /api/sync/dealers — Sync/unsync a dealer to MenuMaster (admin only)
+// POST /api/sync/dealers — Sync/unsync a dealer to BusinessManager (admin only)
 // ---------------------------------------------------------------------------
 
 export async function POST(request: NextRequest) {
@@ -100,8 +100,8 @@ export async function POST(request: NextRequest) {
     const currentMetadata = dealerData.metadata ?? {};
 
     if (action === "sync") {
-      // Sync dealer to MenuMaster as a customer
-      const syncResult = await syncCustomerToMenuMaster({
+      // Sync dealer to BusinessManager as a customer
+      const syncResult = await syncCustomerToBusinessManager({
         firstName: dealerData.profiles?.full_name?.split(" ")[0] ?? "Unknown",
         lastName: dealerData.profiles?.full_name?.split(" ").slice(1).join(" ") ?? "",
         email: dealerData.profiles?.email ?? "",
@@ -118,10 +118,10 @@ export async function POST(request: NextRequest) {
       // Update dealer metadata with sync info
       const updatedMetadata = {
         ...currentMetadata,
-        menumaster_user_id: `mm_${dealerData.id}`,
-        menumaster_synced_at: new Date().toISOString(),
-        menumaster_synced_by: auth.user.id,
-        menumaster_sync_success: syncResult,
+        business_manager_user_id: `mm_${dealerData.id}`,
+        business_manager_synced_at: new Date().toISOString(),
+        business_manager_synced_by: auth.user.id,
+        business_manager_sync_success: syncResult,
       };
 
       const { error: updateError } = await supabase
@@ -140,12 +140,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         action: "synced",
-        menumaster_user_id: `mm_${dealerData.id}`,
+        business_manager_user_id: `mm_${dealerData.id}`,
         sync_api_success: syncResult,
       });
     } else {
-      // Unsync: remove MenuMaster metadata
-      const { menumaster_user_id: _, menumaster_synced_at: __, menumaster_synced_by: ___, menumaster_sync_success: ____, ...cleanMetadata } = currentMetadata as Record<string, unknown>;
+      // Unsync: remove BusinessManager metadata
+      const { business_manager_user_id: _, business_manager_synced_at: __, business_manager_synced_by: ___, business_manager_sync_success: ____, ...cleanMetadata } = currentMetadata as Record<string, unknown>;
 
       const { error: updateError } = await supabase
         .from("dealers")

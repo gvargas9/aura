@@ -1,5 +1,5 @@
 -- ==========================================================================
--- Migration 011: Sample Allocations for MenuMaster CRM Integration
+-- Migration 011: Sample Allocations for Business Manager CRM Integration
 -- ==========================================================================
 
 -- Sample allocations: track product samples given to dealers
@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS sample_events (
   to_holder TEXT,
   notes TEXT,
   performed_by UUID REFERENCES profiles(id),
-  menumaster_activity_id TEXT,
+  business-manager_activity_id TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 

@@ -30,9 +30,9 @@
 ### Optional
 | Variable | Description |
 |----------|-------------|
-| MENUMASTER_API_URL | MenuMaster CRM URL |
-| MENUMASTER_API_TOKEN | MenuMaster API token |
-| MENUMASTER_BUSINESS_ID | MenuMaster business ID |
+| BUSINESS_MANAGER_API_URL | Business Manager CRM URL |
+| BUSINESS_MANAGER_API_TOKEN | Business Manager API token |
+| BUSINESS_MANAGER_BUSINESS_ID | Business Manager business ID |
 | EASYPOST_API_KEY | EasyPost shipping API key |
 
 ## Deployment Steps

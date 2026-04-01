@@ -4,7 +4,7 @@ import { requireAuth, isAuthError } from "@/lib/api/auth";
 import { applyRateLimit, rateLimiters } from "@/lib/api/rate-limit";
 import { safeError } from "@/lib/api/safe-error";
 import { validateUUID, sanitizeString } from "@/lib/api/validation";
-import { logSampleActivity } from "@/lib/menumaster";
+import { logSampleActivity } from "@/lib/business-manager";
 
 // ---------------------------------------------------------------------------
 // POST /api/samples/return — Return samples from a dealer
@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
         performed_by: auth.user.id,
       } as never);
 
-    // Fire-and-forget: sync activity to MenuMaster (if lead has a MenuMaster ID)
+    // Fire-and-forget: sync activity to BusinessManager (if lead has a BusinessManager ID)
     const leadExtId = (alloc as Record<string, unknown>).lead_external_id as string | undefined;
     if (leadExtId) {
       const mmLeadId = parseInt(leadExtId, 10);

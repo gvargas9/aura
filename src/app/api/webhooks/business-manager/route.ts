@@ -17,15 +17,15 @@ function getServiceClient() {
 // Auth
 // ---------------------------------------------------------------------------
 
-function validateMenuMasterSecret(request: NextRequest): boolean {
-  const secret = process.env.MENUMASTER_WEBHOOK_SECRET;
+function validateBusinessManagerSecret(request: NextRequest): boolean {
+  const secret = process.env.BUSINESS_MANAGER_WEBHOOK_SECRET;
   if (!secret) {
     console.warn(
-      "[menumaster-webhook] MENUMASTER_WEBHOOK_SECRET not set — skipping auth"
+      "[business-manager-webhook] BUSINESS_MANAGER_WEBHOOK_SECRET not set — skipping auth"
     );
     return true;
   }
-  const headerSecret = request.headers.get("x-menumaster-secret");
+  const headerSecret = request.headers.get("x-business-manager-secret");
   return headerSecret === secret;
 }
 
@@ -53,7 +53,7 @@ async function handleLeadConverted(data: Record<string, unknown>) {
     current_balance: 0,
     payment_terms: "net_30" as const,
     is_active: true,
-    metadata: { menumaster_lead_id: externalId, converted_at: new Date().toISOString() },
+    metadata: { business_manager_lead_id: externalId, converted_at: new Date().toISOString() },
   };
 
   // Check if org already exists by name
@@ -132,7 +132,7 @@ export async function POST(request: NextRequest) {
   if (rl) return rl;
 
   // Validate webhook authentication
-  if (!validateMenuMasterSecret(request)) {
+  if (!validateBusinessManagerSecret(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -150,7 +150,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Missing event type" }, { status: 400 });
   }
 
-  console.log(`[menumaster-webhook] Received event: ${eventType}`);
+  console.log(`[business-manager-webhook] Received event: ${eventType}`);
 
   let result: { success: boolean; error?: string; note?: string };
 
@@ -172,11 +172,11 @@ export async function POST(request: NextRequest) {
         result = await handleActivityCreated(data);
         break;
       default:
-        console.log(`[menumaster-webhook] Unhandled event type: ${eventType}`);
+        console.log(`[business-manager-webhook] Unhandled event type: ${eventType}`);
         result = { success: true, note: "Unhandled event type" };
     }
   } catch (error) {
-    console.error(`[menumaster-webhook] Error handling ${eventType}:`, error);
+    console.error(`[business-manager-webhook] Error handling ${eventType}:`, error);
     return NextResponse.json(
       safeError(error, "Failed to process webhook event"),
       { status: 500 }
@@ -186,7 +186,7 @@ export async function POST(request: NextRequest) {
   // Log all events to omni_interaction_log
   await logAutomationEvent({
     channel: "webhook",
-    event: `menumaster.${eventType}`,
+    event: `business-manager.${eventType}`,
     data: { eventType, ...data, result },
   });
 

@@ -290,26 +290,38 @@ function AnimatedCounter({
   active: boolean;
 }) {
   const [count, setCount] = useState(0);
-  const [hasRun, setHasRun] = useState(false);
+  const mounted = useRef(false);
+  const animating = useRef(false);
 
   useEffect(() => {
-    if (!active || hasRun) return;
-    setHasRun(true);
+    mounted.current = true;
+    return () => { mounted.current = false; };
+  }, []);
+
+  useEffect(() => {
+    if (!active || !mounted.current || animating.current) return;
+    animating.current = true;
     setCount(0);
-    const startTime = Date.now();
-    const timer = setInterval(() => {
-      const elapsed = Date.now() - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setCount(Math.floor(eased * end));
-      if (progress >= 1) clearInterval(timer);
-    }, 16);
-    return () => clearInterval(timer);
-  }, [active, hasRun, end, duration]);
+
+    // Small delay so the counter starts after the reveal animation
+    const delay = setTimeout(() => {
+      const startTime = Date.now();
+      const timer = setInterval(() => {
+        if (!mounted.current) { clearInterval(timer); return; }
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        setCount(Math.floor(eased * end));
+        if (progress >= 1) clearInterval(timer);
+      }, 16);
+    }, 300);
+
+    return () => clearTimeout(delay);
+  }, [active, end, duration]);
 
   // Reset when leaving the slide so it re-animates on return
   useEffect(() => {
-    if (!active) setHasRun(false);
+    if (!active) animating.current = false;
   }, [active]);
 
   return (
@@ -1242,13 +1254,13 @@ function Slide07B2B({ active }: { active: boolean }) {
 
 // ═══════════════════════════════════════════════
 // ═══════════════════════════════════════════════
-// SLIDE 8 — CRM INTEGRATION (Aura ↔ MenuMaster)
+// SLIDE 8 — CRM INTEGRATION (Aura ↔ Business Manager)
 // ═══════════════════════════════════════════════
 function Slide08CRM({ active }: { active: boolean }) {
   const flow = [
     { step: "01", label: "Admin Allocates", desc: "Assign sample packs from Aura inventory to a sales agent", color: "text-emerald-400" },
     { step: "02", label: "Agent Delivers", desc: "Sales person gives samples to supermarket lead, logged in CRM", color: "text-blue-400" },
-    { step: "03", label: "CRM Tracks", desc: "MenuMaster records activity, updates lead status automatically", color: "text-amber-400" },
+    { step: "03", label: "CRM Tracks", desc: "Business Manager records activity, updates lead status automatically", color: "text-amber-400" },
     { step: "04", label: "Lead Converts", desc: "Webhook fires back → Aura creates B2B organization + contract", color: "text-emerald-400" },
   ];
 
@@ -1269,7 +1281,7 @@ function Slide08CRM({ active }: { active: boolean }) {
       </Reveal>
       <Reveal active={active} delay={100}>
         <h2 className="text-4xl md:text-7xl font-black mt-5 mb-3 text-center tracking-tight">
-          Aura <span className="gradient-text-gold">↔</span> MenuMaster
+          Aura <span className="gradient-text-gold">↔</span> Business Manager
         </h2>
       </Reveal>
       <Reveal active={active} delay={200}>
@@ -1439,7 +1451,7 @@ function Slide11Architecture({ active }: { active: boolean }) {
     { label: "API Layer", tech: "58 REST Endpoints + Server Actions", color: "#3B82F6", icon: <Server size={16} /> },
     { label: "Edge Functions", tech: "7 Supabase Edge Functions (Deno)", color: "#8B5CF6", icon: <Zap size={16} /> },
     { label: "Intelligence", tech: "Pricing Engine + Gemini AI + pgvector", color: "#F59E0B", icon: <Brain size={16} /> },
-    { label: "CRM Integration", tech: "MenuMaster API · Sample Tracking · Dealer Sync", color: "#EC4899", icon: <Users size={16} /> },
+    { label: "CRM Integration", tech: "Business Manager API · Sample Tracking · Dealer Sync", color: "#EC4899", icon: <Users size={16} /> },
     { label: "Data Layer", tech: "Supabase Postgres (47+ tables, RLS)", color: "#06B6D4", icon: <Database size={16} /> },
     { label: "Automation", tech: "n8n Workflows + Stripe + EasyPost", color: "#6B7280", icon: <Workflow size={16} /> },
   ];
@@ -1997,12 +2009,14 @@ function Slide19CTA({ active }: { active: boolean }) {
 
         <Reveal active={active} delay={1000}>
           <div className="flex items-center gap-3 text-gray-500">
-            <Mail size={16} />
+            <Globe size={16} />
             <a
-              href="mailto:gio@gvargas.com"
+              href="https://aura.inspiration-ai.com"
+              target="_blank"
+              rel="noopener noreferrer"
               className="text-emerald-400 hover:text-emerald-300 transition-colors font-medium"
             >
-              gio@gvargas.com
+              aura.inspiration-ai.com
             </a>
           </div>
         </Reveal>
