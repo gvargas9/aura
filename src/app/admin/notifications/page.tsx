@@ -17,6 +17,7 @@ import {
   BarChart3,
 } from "lucide-react";
 import { useAuth } from "@/hooks";
+import { useLocale } from "@/hooks/useLocale";
 import { createClient } from "@/lib/supabase/client";
 import { cn, formatDate } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
@@ -91,6 +92,7 @@ const CHANNEL_OPTIONS: ChannelFilter[] = [
 
 export default function AdminNotificationsPage() {
   const { profile } = useAuth();
+  const { t } = useLocale();
   const supabase = createClient();
 
   const [notifications, setNotifications] = useState<NotificationRecord[]>([]);
@@ -260,9 +262,9 @@ export default function AdminNotificationsPage() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Notifications</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{t("admin.notifications")}</h1>
         <p className="text-gray-500 text-sm mt-1">
-          Manage and send notifications to users.
+          {t("admin.notificationsSubtitle")}
         </p>
       </div>
 
@@ -272,7 +274,7 @@ export default function AdminNotificationsPage() {
           <div className="flex items-center gap-2 mb-1">
             <BarChart3 className="w-4 h-4 text-gray-400" />
             <span className="text-xs text-gray-500 uppercase tracking-wide">
-              Today
+              {t("admin.today")}
             </span>
           </div>
           <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
@@ -299,13 +301,13 @@ export default function AdminNotificationsPage() {
           <Card>
             <CardHeader>
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <CardTitle className="text-lg">Recent Notifications</CardTitle>
+                <CardTitle className="text-lg">{t("admin.recentNotifications")}</CardTitle>
                 <div className="flex items-center gap-2">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <input
                       type="text"
-                      placeholder="Search by content..."
+                      placeholder={t("admin.searchByContent")}
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="pl-9 pr-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-aura-accent focus:border-transparent w-48"
@@ -323,7 +325,7 @@ export default function AdminNotificationsPage() {
                       {CHANNEL_OPTIONS.map((opt) => (
                         <option key={opt} value={opt}>
                           {opt === "all"
-                            ? "All Channels"
+                            ? t("admin.allChannels")
                             : getChannelLabel(opt)}
                         </option>
                       ))}
@@ -340,7 +342,7 @@ export default function AdminNotificationsPage() {
               ) : notifications.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 text-gray-400">
                   <Bell className="w-10 h-10 mb-3" />
-                  <p className="text-sm">No notifications found</p>
+                  <p className="text-sm">{t("admin.noNotificationsFound")}</p>
                 </div>
               ) : (
                 <>
@@ -349,16 +351,16 @@ export default function AdminNotificationsPage() {
                       <thead>
                         <tr className="border-b border-gray-100">
                           <th className="text-left py-2 pr-3 text-xs font-medium text-gray-500 uppercase">
-                            Channel
+                            {t("admin.channel")}
                           </th>
                           <th className="text-left py-2 pr-3 text-xs font-medium text-gray-500 uppercase">
-                            Content
+                            {t("admin.content")}
                           </th>
                           <th className="text-left py-2 pr-3 text-xs font-medium text-gray-500 uppercase hidden sm:table-cell">
-                            User
+                            {t("admin.user")}
                           </th>
                           <th className="text-left py-2 text-xs font-medium text-gray-500 uppercase">
-                            Date
+                            {t("admin.date")}
                           </th>
                         </tr>
                       </thead>
@@ -404,10 +406,10 @@ export default function AdminNotificationsPage() {
                         className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 disabled:opacity-40 disabled:cursor-not-allowed"
                       >
                         <ChevronLeft className="w-4 h-4" />
-                        Previous
+                        {t("admin.previous")}
                       </button>
                       <span className="text-sm text-gray-500">
-                        Page {page} of {totalPages}
+                        {t("admin.pageOf", { page: String(page), total: String(totalPages) })}
                       </span>
                       <button
                         onClick={() =>
@@ -416,7 +418,7 @@ export default function AdminNotificationsPage() {
                         disabled={page >= totalPages}
                         className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 disabled:opacity-40 disabled:cursor-not-allowed"
                       >
-                        Next
+                        {t("admin.next")}
                         <ChevronRight className="w-4 h-4" />
                       </button>
                     </div>
@@ -433,7 +435,7 @@ export default function AdminNotificationsPage() {
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
                 <Send className="w-4 h-4" />
-                Send Notification
+                {t("admin.sendNotification")}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -443,7 +445,7 @@ export default function AdminNotificationsPage() {
                     htmlFor="send-email"
                     className="block text-sm font-medium text-gray-700 mb-1"
                   >
-                    User Email
+                    {t("admin.userEmail")}
                   </label>
                   <Input
                     id="send-email"
@@ -460,7 +462,7 @@ export default function AdminNotificationsPage() {
                     htmlFor="send-channel"
                     className="block text-sm font-medium text-gray-700 mb-1"
                   >
-                    Channel
+                    {t("admin.channel")}
                   </label>
                   <select
                     id="send-channel"
@@ -479,9 +481,9 @@ export default function AdminNotificationsPage() {
                     htmlFor="send-subject"
                     className="block text-sm font-medium text-gray-700 mb-1"
                   >
-                    Subject{" "}
+                    {t("admin.subject")}{" "}
                     <span className="text-gray-400 font-normal">
-                      (optional)
+                      ({t("admin.optional")})
                     </span>
                   </label>
                   <Input
@@ -498,7 +500,7 @@ export default function AdminNotificationsPage() {
                     htmlFor="send-message"
                     className="block text-sm font-medium text-gray-700 mb-1"
                   >
-                    Message
+                    {t("admin.message")}
                   </label>
                   <textarea
                     id="send-message"
@@ -516,7 +518,7 @@ export default function AdminNotificationsPage() {
                 )}
                 {sendSuccess && (
                   <p className="text-sm text-green-600">
-                    Notification sent successfully!
+                    {t("admin.notificationSent")}
                   </p>
                 )}
 
@@ -530,7 +532,7 @@ export default function AdminNotificationsPage() {
                   ) : (
                     <Send className="w-4 h-4 mr-2" />
                   )}
-                  Send Notification
+                  {t("admin.sendNotification")}
                 </Button>
               </form>
             </CardContent>

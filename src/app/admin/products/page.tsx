@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks";
+import { useLocale } from "@/hooks/useLocale";
 import { Card, Button, Input } from "@/components/ui";
 import { formatCurrency } from "@/lib/utils";
 import type { Product } from "@/types";
@@ -60,6 +61,7 @@ const PAGE_SIZE = 20;
 
 export default function AdminProductsPage() {
   const { profile } = useAuth();
+  const { t } = useLocale();
   const supabase = createClient();
 
   const [products, setProducts] = useState<Product[]>([]);
@@ -258,11 +260,11 @@ export default function AdminProductsPage() {
     <>
       <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Products</h1>
-          <p className="text-gray-600">Manage your product catalog</p>
+          <h1 className="text-3xl font-bold text-gray-900">{t("admin.products")}</h1>
+          <p className="text-gray-600">{t("admin.productsSubtitle")}</p>
         </div>
         <Button onClick={openCreateModal} leftIcon={<Plus className="w-4 h-4" />}>
-          Add Product
+          {t("admin.addProduct")}
         </Button>
       </div>
 
@@ -271,7 +273,7 @@ export default function AdminProductsPage() {
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
             <Input
-              placeholder="Search by name or SKU..."
+              placeholder={t("admin.searchNameSku")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               leftIcon={<Search className="w-4 h-4" />}
@@ -284,7 +286,7 @@ export default function AdminProductsPage() {
               className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-aura-primary focus:border-transparent outline-none"
               aria-label="Filter by category"
             >
-              <option value="">All Categories</option>
+              <option value="">{t("admin.allCategories")}</option>
               {categories.map((cat) => (
                 <option key={cat} value={cat}>
                   {cat}
@@ -297,9 +299,9 @@ export default function AdminProductsPage() {
               className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-aura-primary focus:border-transparent outline-none"
               aria-label="Filter by status"
             >
-              <option value="all">All Status</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
+              <option value="all">{t("admin.allStatus")}</option>
+              <option value="active">{t("admin.active")}</option>
+              <option value="inactive">{t("admin.inactive")}</option>
             </select>
           </div>
         </div>
@@ -314,8 +316,8 @@ export default function AdminProductsPage() {
         ) : products.length === 0 ? (
           <div className="text-center py-20 text-gray-500">
             <ImageIcon className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-            <p className="font-medium">No products found</p>
-            <p className="text-sm mt-1">Try adjusting your filters or add a new product.</p>
+            <p className="font-medium">{t("admin.noProductsFound")}</p>
+            <p className="text-sm mt-1">{t("admin.adjustFilters")}</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -323,28 +325,28 @@ export default function AdminProductsPage() {
               <thead>
                 <tr className="bg-gray-50 border-b">
                   <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    Product
+                    {t("admin.product")}
                   </th>
                   <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    SKU
+                    {t("admin.sku")}
                   </th>
                   <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    Category
+                    {t("admin.category")}
                   </th>
                   <th className="text-right py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    Price
+                    {t("admin.price")}
                   </th>
                   <th className="text-right py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    Stock
+                    {t("admin.stock")}
                   </th>
                   <th className="text-center py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    Bunker Safe
+                    {t("admin.bunkerSafe")}
                   </th>
                   <th className="text-center py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    Status
+                    {t("admin.status")}
                   </th>
                   <th className="text-right py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    Actions
+                    {t("admin.actions")}
                   </th>
                 </tr>
               </thead>
@@ -413,7 +415,7 @@ export default function AdminProductsPage() {
                             : "bg-gray-100 text-gray-500"
                         }`}
                       >
-                        {product.is_active ? "Active" : "Inactive"}
+                        {product.is_active ? t("admin.active") : t("admin.inactive")}
                       </span>
                     </td>
                     <td className="py-3 px-4 text-right">
@@ -438,7 +440,7 @@ export default function AdminProductsPage() {
                             onClick={() => handleReactivate(product)}
                             className="text-xs text-aura-primary hover:underline px-2"
                           >
-                            Activate
+                            {t("admin.activate")}
                           </button>
                         )}
                       </div>
@@ -515,7 +517,7 @@ export default function AdminProductsPage() {
           <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-y-auto z-10">
             <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between rounded-t-xl">
               <h2 className="text-xl font-semibold">
-                {editingProduct ? "Edit Product" : "Add Product"}
+                {editingProduct ? t("admin.editProduct") : t("admin.addProduct")}
               </h2>
               <button
                 onClick={() => setShowModal(false)}
@@ -683,10 +685,10 @@ export default function AdminProductsPage() {
 
             <div className="sticky bottom-0 bg-white border-t px-6 py-4 flex justify-end gap-3 rounded-b-xl">
               <Button variant="outline" onClick={() => setShowModal(false)}>
-                Cancel
+                {t("common.cancel")}
               </Button>
               <Button onClick={handleSave} isLoading={isSaving}>
-                {editingProduct ? "Save Changes" : "Create Product"}
+                {editingProduct ? t("admin.saveChanges") : t("admin.createProduct")}
               </Button>
             </div>
           </div>

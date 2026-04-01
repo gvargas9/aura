@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { useLocale } from "@/hooks/useLocale";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -62,6 +63,7 @@ const ALL_CATEGORIES = [
 ];
 
 export default function AdminStorefrontsPage() {
+  const { t } = useLocale();
   const [storefronts, setStorefronts] = useState<Storefront[]>([]);
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
@@ -219,9 +221,9 @@ export default function AdminStorefrontsPage() {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Storefronts</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{t("admin.storefronts")}</h1>
           <p className="text-gray-500 text-sm mt-1">
-            Manage white-label storefronts and their themes
+            {t("admin.storefrontsSubtitle")}
           </p>
         </div>
         <Button
@@ -229,7 +231,7 @@ export default function AdminStorefrontsPage() {
           leftIcon={showForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
           variant={showForm ? "outline" : "primary"}
         >
-          {showForm ? "Cancel" : "Add Storefront"}
+          {showForm ? t("common.cancel") : t("admin.addStorefront")}
         </Button>
       </div>
 
@@ -237,7 +239,7 @@ export default function AdminStorefrontsPage() {
       {showForm && (
         <Card variant="bordered" padding="lg" className="mb-8">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            New Storefront
+            {t("admin.newStorefront")}
           </h2>
           {error && (
             <div className="flex items-center gap-2 p-3 rounded-lg bg-red-50 text-red-700 text-sm mb-4">
@@ -248,7 +250,7 @@ export default function AdminStorefrontsPage() {
           <form onSubmit={handleCreate} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
-                label="Store Name"
+                label={t("admin.storeName")}
                 value={formData.name}
                 onChange={(e) => {
                   const name = e.target.value;
@@ -262,7 +264,7 @@ export default function AdminStorefrontsPage() {
                 required
               />
               <Input
-                label="Slug"
+                label={t("admin.slug")}
                 value={formData.slug}
                 onChange={(e) =>
                   setFormData((prev) => ({
@@ -275,7 +277,7 @@ export default function AdminStorefrontsPage() {
                 required
               />
               <Input
-                label="Custom Domain (optional)"
+                label={t("admin.customDomain")}
                 value={formData.domain}
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, domain: e.target.value }))
@@ -284,7 +286,7 @@ export default function AdminStorefrontsPage() {
               />
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                  Organization
+                  {t("admin.organization")}
                 </label>
                 <select
                   value={formData.organization_id}
@@ -305,7 +307,7 @@ export default function AdminStorefrontsPage() {
                 </select>
               </div>
               <Input
-                label="Tagline"
+                label={t("admin.tagline")}
                 value={formData.tagline}
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, tagline: e.target.value }))
@@ -314,7 +316,7 @@ export default function AdminStorefrontsPage() {
               />
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                  Target Audience
+                  {t("admin.targetAudience")}
                 </label>
                 <select
                   value={formData.targetAudience}
@@ -337,7 +339,7 @@ export default function AdminStorefrontsPage() {
             {/* Theme Colors */}
             <div>
               <h3 className="text-sm font-medium text-gray-700 mb-3">
-                Theme Colors
+                {t("admin.themeColors")}
               </h3>
               <div className="grid grid-cols-3 gap-4">
                 <div>
@@ -428,7 +430,7 @@ export default function AdminStorefrontsPage() {
             {/* Featured Categories */}
             <div>
               <h3 className="text-sm font-medium text-gray-700 mb-3">
-                Featured Categories
+                {t("admin.featuredCategories")}
               </h3>
               <div className="flex flex-wrap gap-2">
                 {ALL_CATEGORIES.map((cat) => (
@@ -465,7 +467,7 @@ export default function AdminStorefrontsPage() {
                   }
                   className="w-4 h-4 rounded border-gray-300 text-aura-primary focus:ring-aura-primary"
                 />
-                <span className="text-sm text-gray-700">Show B2B Link</span>
+                <span className="text-sm text-gray-700">{t("admin.showB2BLink")}</span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
@@ -479,16 +481,16 @@ export default function AdminStorefrontsPage() {
                   }
                   className="w-4 h-4 rounded border-gray-300 text-aura-primary focus:ring-aura-primary"
                 />
-                <span className="text-sm text-gray-700">Show Academy</span>
+                <span className="text-sm text-gray-700">{t("admin.showAcademy")}</span>
               </label>
             </div>
 
             <div className="flex gap-3">
               <Button type="submit" isLoading={saving}>
-                Create Storefront
+                {t("admin.createStorefront")}
               </Button>
               <Button type="button" variant="ghost" onClick={resetForm}>
-                Cancel
+                {t("common.cancel")}
               </Button>
             </div>
           </form>
@@ -502,22 +504,22 @@ export default function AdminStorefrontsPage() {
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50/50">
                 <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-6 py-3">
-                  Store
+                  {t("admin.store")}
                 </th>
                 <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-6 py-3 hidden md:table-cell">
-                  Slug
+                  {t("admin.slug")}
                 </th>
                 <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-6 py-3 hidden lg:table-cell">
-                  Domain
+                  {t("admin.domain")}
                 </th>
                 <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-6 py-3 hidden md:table-cell">
-                  Organization
+                  {t("admin.organization")}
                 </th>
                 <th className="text-center text-xs font-semibold text-gray-500 uppercase tracking-wide px-6 py-3">
-                  Active
+                  {t("admin.active")}
                 </th>
                 <th className="text-right text-xs font-semibold text-gray-500 uppercase tracking-wide px-6 py-3">
-                  Actions
+                  {t("admin.actions")}
                 </th>
               </tr>
             </thead>
@@ -529,7 +531,7 @@ export default function AdminStorefrontsPage() {
                     className="px-6 py-16 text-center text-gray-400"
                   >
                     <Store className="w-8 h-8 mx-auto mb-2 text-gray-300" />
-                    No storefronts yet. Create one above.
+                    {t("admin.noStorefrontsYet")}
                   </td>
                 </tr>
               ) : (
@@ -590,7 +592,7 @@ export default function AdminStorefrontsPage() {
                               : "bg-gray-100 text-gray-500 hover:bg-gray-200"
                           }`}
                         >
-                          {sf.is_active ? "Active" : "Inactive"}
+                          {sf.is_active ? t("admin.active") : t("admin.inactive")}
                         </button>
                       </td>
                       <td className="px-6 py-4">

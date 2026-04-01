@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useLocale } from "@/hooks/useLocale";
 import { Card, Button, Input } from "@/components/ui";
 import { formatCurrency } from "@/lib/utils";
 import {
@@ -129,6 +130,7 @@ function relativeTime(dateStr: string | null): string {
 
 export default function VendingDashboardPage() {
   const supabase = createClient();
+  const { t } = useLocale();
 
   const [machines, setMachines] = useState<VendingMachine[]>([]);
   const [organizations, setOrganizations] = useState<Organization[]>([]);
@@ -320,17 +322,17 @@ export default function VendingDashboardPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">
-            Vending Machine Network
+            {t("admin.vending")}
           </h1>
           <p className="text-gray-500 mt-1">
-            Monitor and manage your vending machine fleet
+            {t("admin.vendingSubtitle")}
           </p>
         </div>
         <Button
           onClick={() => setShowAddModal(true)}
           leftIcon={<Plus className="w-4 h-4" />}
         >
-          Add Machine
+          {t("admin.addMachine")}
         </Button>
       </div>
 
@@ -343,7 +345,7 @@ export default function VendingDashboardPage() {
             </div>
             <div>
               <p className="text-xs text-gray-400 uppercase tracking-wider">
-                Total
+                {t("admin.totalMachines")}
               </p>
               <p className="text-xl font-bold text-white">{totalMachines}</p>
             </div>
@@ -357,7 +359,7 @@ export default function VendingDashboardPage() {
             </div>
             <div>
               <p className="text-xs text-gray-400 uppercase tracking-wider">
-                Online
+                {t("admin.online")}
               </p>
               <p className="text-xl font-bold text-emerald-400">
                 {onlineMachines}
@@ -373,7 +375,7 @@ export default function VendingDashboardPage() {
             </div>
             <div>
               <p className="text-xs text-gray-400 uppercase tracking-wider">
-                Down
+                {t("admin.down")}
               </p>
               <p className="text-xl font-bold text-red-400">
                 {offlineMaintenance}
@@ -389,7 +391,7 @@ export default function VendingDashboardPage() {
             </div>
             <div>
               <p className="text-xs text-gray-400 uppercase tracking-wider">
-                Low Stock
+                {t("admin.lowStockLabel")}
               </p>
               <p className="text-xl font-bold text-amber-400">
                 {lowStockMachines}
@@ -405,7 +407,7 @@ export default function VendingDashboardPage() {
             </div>
             <div>
               <p className="text-xs text-gray-400 uppercase tracking-wider">
-                Revenue
+                {t("admin.revenue")}
               </p>
               <p className="text-xl font-bold text-blue-400">
                 {formatCurrency(totalRevenue)}
@@ -421,7 +423,7 @@ export default function VendingDashboardPage() {
             </div>
             <div>
               <p className="text-xs text-gray-400 uppercase tracking-wider">
-                Transactions
+                {t("admin.transactions")}
               </p>
               <p className="text-xl font-bold text-purple-400">
                 {totalTransactions.toLocaleString()}
@@ -435,7 +437,7 @@ export default function VendingDashboardPage() {
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="flex-1">
           <Input
-            placeholder="Search by name, serial, or location..."
+            placeholder={t("admin.searchMachines")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             leftIcon={<Search className="w-4 h-4" />}
@@ -451,11 +453,11 @@ export default function VendingDashboardPage() {
               className="appearance-none bg-white border border-gray-200 rounded-xl px-4 py-3 pr-10 text-sm text-gray-700 focus:ring-2 focus:ring-aura-primary/20 focus:border-aura-primary outline-none"
               aria-label="Filter by status"
             >
-              <option value="all">All Statuses</option>
-              <option value="online">Online</option>
-              <option value="offline">Offline</option>
-              <option value="maintenance">Maintenance</option>
-              <option value="low_stock">Low Stock</option>
+              <option value="all">{t("admin.allStatuses")}</option>
+              <option value="online">{t("admin.online")}</option>
+              <option value="offline">{t("admin.offline")}</option>
+              <option value="maintenance">{t("admin.maintenance")}</option>
+              <option value="low_stock">{t("admin.lowStockLabel")}</option>
             </select>
             <Filter className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
           </div>
@@ -466,7 +468,7 @@ export default function VendingDashboardPage() {
               className="appearance-none bg-white border border-gray-200 rounded-xl px-4 py-3 pr-10 text-sm text-gray-700 focus:ring-2 focus:ring-aura-primary/20 focus:border-aura-primary outline-none"
               aria-label="Filter by organization"
             >
-              <option value="all">All Organizations</option>
+              <option value="all">{t("admin.allOrganizations")}</option>
               {organizations.map((org) => (
                 <option key={org.id} value={org.id}>
                   {org.name}
@@ -487,16 +489,16 @@ export default function VendingDashboardPage() {
         <Card className="text-center py-16">
           <MonitorSmartphone className="w-12 h-12 text-gray-300 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-gray-600 mb-2">
-            No machines found
+            {t("admin.noMachinesFound")}
           </h3>
           <p className="text-gray-400 mb-4">
             {search || statusFilter !== "all" || orgFilter !== "all"
-              ? "Try adjusting your filters"
-              : "Add your first vending machine to get started"}
+              ? t("admin.adjustMachineFilters")
+              : t("admin.addFirstMachine")}
           </p>
           {!search && statusFilter === "all" && orgFilter === "all" && (
             <Button onClick={() => setShowAddModal(true)} size="sm">
-              Add Machine
+              {t("admin.addMachine")}
             </Button>
           )}
         </Card>
@@ -564,13 +566,13 @@ export default function VendingDashboardPage() {
                   {/* Stats */}
                   <div className="hidden md:flex items-center gap-6 text-sm">
                     <div className="text-right">
-                      <p className="text-gray-400 text-xs">Sales</p>
+                      <p className="text-gray-400 text-xs">{t("admin.sales")}</p>
                       <p className="font-semibold text-gray-900">
                         {formatCurrency(machine.total_sales || 0)}
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-gray-400 text-xs">Last Checkin</p>
+                      <p className="text-gray-400 text-xs">{t("admin.lastCheckin")}</p>
                       <p className="font-medium text-gray-600">
                         {relativeTime(machine.last_checkin)}
                       </p>
@@ -646,7 +648,7 @@ export default function VendingDashboardPage() {
                         <div>
                           <div className="flex items-center justify-between mb-3">
                             <h4 className="text-sm font-semibold text-gray-700">
-                              Inventory Slots
+                              {t("admin.inventorySlots")}
                             </h4>
                             <div className="flex items-center gap-3 text-xs text-gray-400">
                               <span className="flex items-center gap-1">
@@ -669,7 +671,7 @@ export default function VendingDashboardPage() {
                           </div>
                           {expandedInventory.length === 0 ? (
                             <p className="text-sm text-gray-400">
-                              No inventory slots configured
+                              {t("admin.noInventorySlots")}
                             </p>
                           ) : (
                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
@@ -721,11 +723,11 @@ export default function VendingDashboardPage() {
                         {/* Recent Transactions */}
                         <div>
                           <h4 className="text-sm font-semibold text-gray-700 mb-3">
-                            Recent Transactions
+                            {t("admin.recentTransactions")}
                           </h4>
                           {expandedTransactions.length === 0 ? (
                             <p className="text-sm text-gray-400">
-                              No transactions yet
+                              {t("admin.noTransactions")}
                             </p>
                           ) : (
                             <div className="overflow-x-auto">
@@ -782,14 +784,14 @@ export default function VendingDashboardPage() {
                             onClick={() => handleMarkMaintenance(machine.id)}
                             leftIcon={<Wrench className="w-3.5 h-3.5" />}
                           >
-                            Mark Maintenance
+                            {t("admin.markMaintenance")}
                           </Button>
                           <Link href={`/admin/vending/${machine.id}`}>
                             <Button
                               size="sm"
                               leftIcon={<ArrowRight className="w-3.5 h-3.5" />}
                             >
-                              Full Details
+                              {t("admin.fullDetails")}
                             </Button>
                           </Link>
                         </div>
@@ -809,7 +811,7 @@ export default function VendingDashboardPage() {
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
               <h2 className="text-lg font-bold text-gray-900">
-                Add Vending Machine
+                {t("admin.addVendingMachine")}
               </h2>
               <button
                 onClick={() => {
@@ -830,7 +832,7 @@ export default function VendingDashboardPage() {
                 </div>
               )}
               <Input
-                label="Machine Name"
+                label={t("admin.machineName")}
                 placeholder="Downtown Office Lobby"
                 value={addForm.name}
                 onChange={(e) =>
@@ -838,7 +840,7 @@ export default function VendingDashboardPage() {
                 }
               />
               <Input
-                label="Serial Number"
+                label={t("admin.serialNumber")}
                 placeholder="VM-2026-001"
                 value={addForm.machine_serial}
                 onChange={(e) =>
@@ -847,7 +849,7 @@ export default function VendingDashboardPage() {
               />
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                  Organization
+                  {t("admin.organization")}
                 </label>
                 <select
                   value={addForm.organization_id}
@@ -856,7 +858,7 @@ export default function VendingDashboardPage() {
                   }
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl text-gray-700 bg-white focus:ring-2 focus:ring-aura-primary/20 focus:border-aura-primary outline-none"
                 >
-                  <option value="">No Organization</option>
+                  <option value="">{t("admin.noOrganization")}</option>
                   {organizations.map((org) => (
                     <option key={org.id} value={org.id}>
                       {org.name}
@@ -865,7 +867,7 @@ export default function VendingDashboardPage() {
                 </select>
               </div>
               <Input
-                label="Location"
+                label={t("admin.location")}
                 placeholder="123 Main St, Building A"
                 value={addForm.location}
                 onChange={(e) =>
@@ -875,7 +877,7 @@ export default function VendingDashboardPage() {
               />
               <div className="grid grid-cols-2 gap-4">
                 <Input
-                  label="Latitude"
+                  label={t("admin.latitude")}
                   placeholder="30.2672"
                   type="number"
                   step="any"
@@ -885,7 +887,7 @@ export default function VendingDashboardPage() {
                   }
                 />
                 <Input
-                  label="Longitude"
+                  label={t("admin.longitude")}
                   placeholder="-97.7431"
                   type="number"
                   step="any"
@@ -905,10 +907,10 @@ export default function VendingDashboardPage() {
                   setError("");
                 }}
               >
-                Cancel
+                {t("common.cancel")}
               </Button>
               <Button onClick={handleAddMachine} isLoading={isSaving}>
-                Add Machine
+                {t("admin.addMachine")}
               </Button>
             </div>
           </div>
