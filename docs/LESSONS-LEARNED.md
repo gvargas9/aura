@@ -105,3 +105,35 @@ Building a custom i18n system (~200 lines) instead of using next-intl or react-i
 
 ### Churn Scoring — Start Rule-Based, Enhance with ML
 A rule-based churn model (weighted factors) is immediately useful without training data. Using Gemini to generate personalized retention recommendations adds AI value without requiring a trained ML model. As order volume grows, the scoring weights can be calibrated from actual churn data.
+
+## Phase 4 Lessons
+
+### Vercel Build — Lazy Client Initialization
+Module-scope `createClient()` calls (e.g., `const supabase = createClient()` at file top-level) crash during Vercel's "Collecting page data" phase because `cookies()` is not available outside a request context. Always use lazy initialization — create the client inside the function/handler that needs it, never at module scope.
+
+### Vercel Build — ignoreCommand Gotcha
+Setting `ignoreCommand` in `vercel.json` with a condition that evaluates to `exit 0` skips ALL builds when the condition is true, not just the ones you intended. If you need conditional builds, ensure the logic correctly returns `exit 1` (do build) for the common case.
+
+### TypeScript Monorepo — Exclude Subdirectories
+Root `tsconfig.json` with `include: ["**/*.ts"]` catches everything, including monorepo subdirectories like `/mobile` (Expo/React Native). This causes build failures from incompatible type systems. Always add monorepo subdirectories to the `exclude` array.
+
+### E2E Testing — Playwright Strict Mode
+Playwright strict mode causes `getByText("Common Word")` to fail when the text appears in multiple elements (e.g., sidebar AND content area). Fix by scoping with `.locator()` chains or using more specific selectors like `getByRole()` with `name` option.
+
+### E2E Testing — Auth Timeout Cascading
+A 15-second timeout in `loginAsAdmin` cascades to all tests in a `describe` block when the admin page loads slowly (data-heavy dashboards). Use `test.setTimeout(60000)` for pages that load significant data, and increase the auth helper timeout to 30s.
+
+### E2E Testing — AnimatedCounter Hydration
+`AnimatedCounter` components using `useState` for a `hasRun` flag reset during hydration, causing animation replay. Use `useRef` instead of `useState` for values that should persist across hydration without triggering re-renders.
+
+### CRM Integration — Required Fields Change
+Business Manager's (formerly MenuMaster) `createdBy` field became required after an API update with no prior notice. Always test against the live API before deploying, and treat the webhook API docs (WEBHOOK_API.md) as the source of truth — read them before coding.
+
+### CRM Integration — Fire-and-Forget is Critical
+CRM integration must never block commerce operations. The fire-and-forget pattern (try/catch with logging, no await in critical paths) ensures that CRM downtime or API changes don't break checkout, order creation, or subscription management.
+
+### React/Next.js — Module-Scope Date Hydration
+`new Date()` in module-scope constants (outside components) produces different values on server vs client, causing hydration mismatches. Defer date creation to `useEffect` or `useMemo` to ensure consistency.
+
+### React/Next.js — Admin Layout Auth (Reinforced)
+The Next.js 16 Turbopack issue with `useAuth()` in admin layout (documented in Phase 1) persists and was accidentally reintroduced during refactoring. Added explicit comments in the admin layout file to prevent future regressions. This pattern of re-learning lessons suggests the need for automated linting rules or pre-commit checks for known anti-patterns.

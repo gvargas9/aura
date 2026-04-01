@@ -2,6 +2,72 @@
 
 All notable changes to the Aura platform are documented in this file.
 
+## [2026-04-01] — Platform Expansion (Phase 4)
+
+### Added — Production E2E Test Suite
+- 112 production tests across 6 personas (visitor, customer, admin, dealer, B2B, API)
+- Comprehensive coverage: auth flows, checkout, admin CRUD, B2B portal, API endpoints
+- `tests/e2e/production/` directory with persona-based test organization
+
+### Added — Expo React Native Mobile App
+- Expo React Native app scaffold in `/mobile` with 5 tabs (Home, Products, Box, Orders, Profile)
+- Auth integration with Supabase (login, register, session persistence)
+- AI chat screen (Ask Aura) with Gemini integration
+- Product browsing with category filters and search
+- Excluded from root TypeScript compilation via tsconfig `exclude`
+
+### Added — Business Manager CRM Integration
+- Bidirectional sync between Aura and Business Manager (CRM at crm.inspiration-ai.com)
+- Lead, contact, and activity management via CRM API
+- Sample tracking system with allocation (admin + dealer portal)
+- Dealer sync API (Aura ↔ Business Manager)
+- Fire-and-forget pattern: CRM failures never block commerce operations
+- Renamed MenuMaster to Business Manager across entire codebase
+
+### Added — Vending Machine REST API
+- 4 vending endpoints: inventory check, purchase, restock, status
+- Outbound webhooks for machine events (low stock, jam, sale)
+- Machine authentication via API keys
+
+### Added — White-Label Platform
+- API key management for partners
+- v1 partner API with rate limiting and scoped permissions
+- Embeddable widget for third-party sites
+- Custom domain support (CNAME configuration)
+
+### Added — SEO & Analytics
+- Dynamic sitemap generation (`/sitemap.xml`)
+- Robots.txt with crawler directives
+- JSON-LD structured data for products and organization
+- Per-page metadata with Open Graph and Twitter Cards
+- Security headers (CSP, HSTS, X-Frame-Options)
+- Admin analytics dashboard (revenue, conversion funnels)
+- Vercel Analytics integration
+
+### Added — Cinematic Presentation
+- 19-slide presentation page with obsidian theme and orbit animations
+- CRM Integration slide (slide 8/19) showcasing Business Manager sync
+- Responsive design with keyboard navigation
+
+### Added — Database Migrations
+- 5 new migrations (007-011): CRM tables, vending API, white-label, SEO metadata, sample tracking
+
+### Added — Vercel Deployment
+- `vercel.json` configuration with build settings
+- Deferred Supabase client creation to request time (was module-scope)
+- TypeScript build fixes for production compilation
+
+### Fixed
+- Vercel build: deferred module-scope `createClient()` calls to request time (crashed during "Collecting page data")
+- `ignoreCommand` in vercel.json with `exit 0` was skipping ALL Vercel builds
+- Root `tsconfig.json` `include: ["**/*.ts"]` was catching `/mobile` — added to `exclude`
+- Hydration mismatch in AuraChatWidget (`new Date()` in module scope diverged SSR/client)
+- 47 failing E2E tests: strict mode violations, auth timeouts (15s → 30s), selector mismatches
+- TypeScript build errors: `NodeJS.Timeout` type, rate-limit `unref()` compatibility
+- Supabase CLI v2.75+ config compatibility update
+
+---
+
 ## [2026-03-28] — Security, AI Analytics & i18n (Phase 3)
 
 ### Added — Security Hardening

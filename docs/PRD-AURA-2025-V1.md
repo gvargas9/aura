@@ -3,8 +3,34 @@
 **Project Name:** Aura
 **Type:** Premium Shelf-Stable Food Subscription Platform
 **Architecture:** AI-Assisted Custom Build (Supabase + Next.js + Stripe + AI)
-**Version:** 1.0
-**Date:** December 9, 2025
+**Version:** 1.1
+**Date:** December 9, 2025 (Updated: April 1, 2026)
+
+---
+
+## Current Status (as of 2026-04-01)
+
+All four development phases are **complete** and deployed to production at `aura.inspiration-ai.com`.
+
+| Phase | Status | Completed |
+|-------|--------|-----------|
+| **Phase 1: Core Platform** | ✅ Complete | 2026-03-26 |
+| **Phase 2: Intelligence Layer** | ✅ Complete | 2026-03-27 |
+| **Phase 3: Scale Operations** | ✅ Complete | 2026-03-28 |
+| **Phase 4: Platform Expansion** | ✅ Complete | 2026-04-01 |
+
+**Platform Metrics:**
+- 58,936 lines of code across 202 source files
+- 58 API routes, 54 pages, 43 lib modules, 23 UI components
+- 42+ database tables with 11 migrations
+- 112 production E2E tests + 166 feature E2E tests (28 test files)
+- 4 languages (EN/ES/FR/PT), 4 currencies (USD/MXN/EUR/BRL)
+- Expo React Native mobile app (`/mobile`)
+- CRM integration with Business Manager (`crm.inspiration-ai.com`)
+
+**Phase 4 Additions:** Production E2E tests, Expo mobile app, Business Manager CRM integration, vending machine API, white-label platform, SEO, admin analytics, cinematic presentation, Vercel deployment.
+
+See `CHANGELOG.md` for detailed feature history and `ROADMAP.md` for Phase 5 plans.
 
 ---
 
@@ -125,8 +151,12 @@ Aura is a vertically integrated e-commerce platform redefining shelf-stable food
 | **Backend / DB** | Supabase (PostgreSQL, Auth, Edge Functions) | Supabase Cloud |
 | **Orchestration** | n8n | Self-hosted on AWS or Cloud |
 | **Payments** | Stripe (Billing, Connect, Radar) | Stripe Cloud |
-| **AI (Coding)** | Claude 3.5 Sonnet | - |
-| **AI (Bot Logic)** | OpenAI | OpenAI Cloud |
+| **AI (Coding)** | Claude Code (Opus 4) | Anthropic |
+| **AI (Chat + Embeddings)** | Google Gemini 2.5 Flash + gemini-embedding-001 | Google AI |
+| **AI (Images)** | Google Imagen 4.0 | Google AI |
+| **CRM** | Business Manager | crm.inspiration-ai.com |
+| **Mobile** | Expo React Native | App Store / Play Store |
+| **Deployment** | Vercel | Vercel Cloud |
 
 ---
 
