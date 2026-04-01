@@ -22,7 +22,8 @@ import {
   Star,
   Minus,
 } from "lucide-react";
-import { cn, formatCurrency } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { useLocale } from "@/hooks/useLocale";
 import type { Product } from "@/types";
 import { BOX_CONFIGS } from "@/types";
 
@@ -31,12 +32,12 @@ import { BOX_CONFIGS } from "@/types";
    ============================================================ */
 
 const DIETARY_FILTERS = [
-  { label: "All", value: "" },
-  { label: "Vegan", value: "vegan" },
-  { label: "Keto", value: "keto" },
-  { label: "Gluten-Free", value: "gluten-free" },
-  { label: "High Protein", value: "high-protein" },
-  { label: "Paleo", value: "paleo" },
+  { labelKey: "box.dietaryAll", value: "" },
+  { labelKey: "box.dietaryVegan", value: "vegan" },
+  { labelKey: "box.dietaryKeto", value: "keto" },
+  { labelKey: "box.dietaryGlutenFree", value: "gluten-free" },
+  { labelKey: "box.dietaryHighProtein", value: "high-protein" },
+  { labelKey: "box.dietaryPaleo", value: "paleo" },
 ];
 
 const DIETARY_COLORS: Record<string, string> = {
@@ -58,11 +59,13 @@ function ProgressRing({
   total,
   size = 80,
   strokeWidth = 6,
+  slotsLabel = "slots",
 }: {
   current: number;
   total: number;
   size?: number;
   strokeWidth?: number;
+  slotsLabel?: string;
 }) {
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -108,7 +111,7 @@ function ProgressRing({
         <span className="text-lg font-bold text-gray-900">
           {current}/{total}
         </span>
-        <span className="text-[10px] text-gray-400">slots</span>
+        <span className="text-[10px] text-gray-400">{slotsLabel}</span>
       </div>
     </div>
   );
@@ -123,16 +126,20 @@ function TierSelector({
   onSelectSize,
   isSubscription,
   onToggleSubscription,
+  t,
+  formatPrice,
 }: {
   selectedSize: string;
   onSelectSize: (size: string) => void;
   isSubscription: boolean;
   onToggleSubscription: () => void;
+  t: (key: string, variables?: Record<string, string>) => string;
+  formatPrice: (usdAmount: number) => string;
 }) {
   const tiers = [
-    { key: "starter", name: "Starter", slots: 8, price: 59.99, perMeal: "$7.50" },
-    { key: "voyager", name: "Voyager", slots: 12, price: 84.99, perMeal: "$7.08" },
-    { key: "bunker", name: "Bunker", slots: 24, price: 149.99, perMeal: "$6.25" },
+    { key: "starter", nameKey: "tier.starter", slots: 8, price: 59.99, perMealUsd: 7.50 },
+    { key: "voyager", nameKey: "tier.voyager", slots: 12, price: 84.99, perMealUsd: 7.08 },
+    { key: "bunker", nameKey: "tier.bunker", slots: 24, price: 149.99, perMealUsd: 6.25 },
   ];
 
   return (
@@ -145,7 +152,7 @@ function TierSelector({
             !isSubscription ? "text-gray-900" : "text-gray-400"
           )}
         >
-          One-Time
+          {t("box.oneTime")}
         </span>
         <button
           onClick={onToggleSubscription}
@@ -170,11 +177,11 @@ function TierSelector({
             isSubscription ? "text-gray-900" : "text-gray-400"
           )}
         >
-          Monthly
+          {t("box.monthly")}
         </span>
         {isSubscription && (
           <span className="text-[10px] font-semibold text-aura-primary bg-aura-light px-2 py-0.5 rounded-full">
-            Save 15%
+            {t("box.save15")}
           </span>
         )}
       </div>
@@ -197,7 +204,7 @@ function TierSelector({
                   ? "border-aura-primary bg-aura-light/50 shadow-md shadow-aura-primary/10"
                   : "border-gray-200 bg-white hover:border-gray-300"
               )}
-              aria-label={`Select ${tier.name} box with ${tier.slots} slots`}
+              aria-label={`Select ${t(tier.nameKey)} box with ${tier.slots} slots`}
             >
               {isSelected && (
                 <div className="absolute -top-2 -right-2 w-5 h-5 bg-aura-primary rounded-full flex items-center justify-center">
@@ -210,14 +217,14 @@ function TierSelector({
                   isSelected ? "text-aura-dark" : "text-gray-900"
                 )}
               >
-                {tier.name}
+                {t(tier.nameKey)}
               </p>
               <p className="text-2xl font-bold text-gray-900">
-                {tier.perMeal}
+                {formatPrice(tier.perMealUsd)}
               </p>
-              <p className="text-[10px] text-gray-400">/meal</p>
+              <p className="text-[10px] text-gray-400">{t("box.perMeal")}</p>
               <p className="text-xs text-gray-500 mt-1">
-                {tier.slots} meals &middot; ${displayPrice.toFixed(2)}/mo
+                {t("box.mealsPrice", { slots: String(tier.slots), price: formatPrice(displayPrice) })}
               </p>
             </button>
           );
@@ -303,11 +310,15 @@ function BuilderProductCard({
   onAdd,
   isInBox,
   canAdd,
+  formatPrice,
+  t,
 }: {
   product: Product;
   onAdd: (product: Product) => void;
   isInBox: boolean;
   canAdd: boolean;
+  formatPrice: (usdAmount: number) => string;
+  t: (key: string, variables?: Record<string, string>) => string;
 }) {
   const dietaryLabels = product.dietary_labels || [];
 
@@ -340,7 +351,7 @@ function BuilderProductCard({
           {product.is_bunker_safe && (
             <span className="bg-aura-dark/80 backdrop-blur-sm text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
               <Shield className="w-2 h-2" />
-              Bunker
+              {t("tier.bunker")}
             </span>
           )}
         </div>
@@ -391,7 +402,7 @@ function BuilderProductCard({
 
         <div className="flex items-center justify-between">
           <span className="text-xs font-bold text-aura-dark">
-            {formatCurrency(product.price)}
+            {formatPrice(product.price)}
           </span>
           {product.shelf_life_months && (
             <span className="flex items-center gap-0.5 text-[9px] text-gray-400">
@@ -412,6 +423,7 @@ function BuilderProductCard({
 function BuildBoxContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { t, formatPrice } = useLocale();
   const initialSize = searchParams.get("size") || "voyager";
 
   const [boxSize, setBoxSize] = useState(initialSize);
@@ -593,12 +605,14 @@ function BuildBoxContent() {
                   onSelectSize={handleSizeChange}
                   isSubscription={isSubscription}
                   onToggleSubscription={() => setIsSubscription(!isSubscription)}
+                  t={t}
+                  formatPrice={formatPrice}
                 />
               </section>
 
               {/* Progress + search row */}
               <div className="flex items-center gap-4 mb-6">
-                <ProgressRing current={selectedProducts.length} total={maxSlots} />
+                <ProgressRing current={selectedProducts.length} total={maxSlots} slotsLabel={t("box.slots")} />
                 <div className="flex-1">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -606,7 +620,7 @@ function BuildBoxContent() {
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Search meals..."
+                      placeholder={t("box.searchMeals")}
                       className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm bg-white focus:ring-2 focus:ring-aura-primary/20 focus:border-aura-primary outline-none transition-all"
                       aria-label="Search products"
                     />
@@ -638,7 +652,7 @@ function BuildBoxContent() {
                         : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"
                     )}
                   >
-                    {f.label}
+                    {t(f.labelKey)}
                   </button>
                 ))}
               </div>
@@ -649,7 +663,7 @@ function BuildBoxContent() {
               ) : filteredProducts.length === 0 ? (
                 <div className="text-center py-16">
                   <Package className="w-14 h-14 text-gray-200 mx-auto mb-3" />
-                  <p className="text-gray-500 font-medium">No products match your search</p>
+                  <p className="text-gray-500 font-medium">{t("box.noResults")}</p>
                   <button
                     onClick={() => {
                       setSearchQuery("");
@@ -657,7 +671,7 @@ function BuildBoxContent() {
                     }}
                     className="text-sm text-aura-primary font-medium mt-2"
                   >
-                    Clear filters
+                    {t("box.clearFilters")}
                   </button>
                 </div>
               ) : (
@@ -669,6 +683,8 @@ function BuildBoxContent() {
                       onAdd={handleAddProduct}
                       isInBox={isProductInBox(product.id)}
                       canAdd={selectedProducts.length < maxSlots}
+                      formatPrice={formatPrice}
+                      t={t}
                     />
                   ))}
                 </div>
@@ -680,9 +696,9 @@ function BuildBoxContent() {
               <div className="p-6 flex flex-col h-full">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-5">
-                  <h3 className="text-lg font-bold text-gray-900">Your Box</h3>
+                  <h3 className="text-lg font-bold text-gray-900">{t("box.yourBox")}</h3>
                   <span className="text-xs text-gray-400">
-                    {selectedProducts.length} of {maxSlots} filled
+                    {t("box.filledCount", { current: String(selectedProducts.length), total: String(maxSlots) })}
                   </span>
                 </div>
 
@@ -720,8 +736,8 @@ function BuildBoxContent() {
                       />
                     )}
                     {isAuraFilling
-                      ? "Finding your perfect meals..."
-                      : "Aura Fill Remaining"}
+                      ? t("box.findingMeals")
+                      : t("box.auraFillRemaining")}
                   </button>
                 )}
 
@@ -760,7 +776,7 @@ function BuildBoxContent() {
                             onChange={(e) =>
                               setPromoCode(e.target.value.toUpperCase())
                             }
-                            placeholder="Promo code"
+                            placeholder={t("box.promoCode")}
                             className="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-sm focus:border-aura-primary focus:ring-1 focus:ring-aura-primary/20 outline-none"
                           />
                           <button
@@ -768,7 +784,7 @@ function BuildBoxContent() {
                             disabled={!promoCode.trim()}
                             className="px-3 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-200 disabled:opacity-50 transition-colors"
                           >
-                            Apply
+                            {t("box.apply")}
                           </button>
                         </div>
                       )}
@@ -777,33 +793,33 @@ function BuildBoxContent() {
                     {/* Totals */}
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between text-gray-500">
-                        <span>Subtotal ({selectedProducts.length} items)</span>
-                        <span>{formatCurrency(displayPrice)}</span>
+                        <span>{t("box.subtotal", { count: String(selectedProducts.length) })}</span>
+                        <span>{formatPrice(displayPrice)}</span>
                       </div>
                       {discount > 0 && (
                         <div className="flex justify-between text-aura-primary">
-                          <span>Discount ({discount}%)</span>
+                          <span>{t("box.discount", { percent: String(discount) })}</span>
                           <span>
-                            -{formatCurrency(displayPrice * (discount / 100))}
+                            -{formatPrice(displayPrice * (discount / 100))}
                           </span>
                         </div>
                       )}
                       <div className="flex justify-between text-gray-500">
                         <span className="flex items-center gap-1">
                           <Truck className="w-3.5 h-3.5" />
-                          Shipping
+                          {t("box.shipping")}
                         </span>
                         <span className="font-medium text-aura-primary">
-                          FREE
+                          {t("box.free")}
                         </span>
                       </div>
                       <div className="flex justify-between text-base font-bold text-gray-900 pt-2 border-t border-gray-100">
-                        <span>Total</span>
-                        <span>{formatCurrency(finalPrice)}</span>
+                        <span>{t("box.total")}</span>
+                        <span>{formatPrice(finalPrice)}</span>
                       </div>
                       {isSubscription && (
                         <p className="text-[10px] text-gray-400 text-center">
-                          Billed monthly. Cancel anytime.
+                          {t("box.billedMonthly")}
                         </p>
                       )}
                     </div>
@@ -820,8 +836,8 @@ function BuildBoxContent() {
                       )}
                     >
                       {isComplete
-                        ? "Proceed to Checkout"
-                        : `Add ${maxSlots - selectedProducts.length} more meals`}
+                        ? t("box.proceedCheckout")
+                        : t("box.addMoreMeals", { count: String(maxSlots - selectedProducts.length) })}
                     </button>
                   </div>
                 )}
@@ -839,17 +855,18 @@ function BuildBoxContent() {
               total={maxSlots}
               size={48}
               strokeWidth={4}
+              slotsLabel={t("box.slots")}
             />
 
             <div className="flex-1">
               <p className="text-sm font-bold text-gray-900">
-                {formatCurrency(finalPrice)}
+                {formatPrice(finalPrice)}
                 <span className="text-xs font-normal text-gray-400">
-                  {isSubscription ? "/mo" : " one-time"}
+                  {isSubscription ? t("common.perMonth") : ` ${t("box.oneTime").toLowerCase()}`}
                 </span>
               </p>
               <p className="text-[10px] text-gray-400">
-                {selectedProducts.length}/{maxSlots} slots filled
+                {t("box.slotsFilled", { current: String(selectedProducts.length), total: String(maxSlots) })}
               </p>
             </div>
 
@@ -867,7 +884,7 @@ function BuildBoxContent() {
                 ) : (
                   <Sparkles className="w-3.5 h-3.5" />
                 )}
-                {isAuraFilling ? "Filling..." : "Aura Fill"}
+                {isAuraFilling ? t("box.filling") : t("box.auraFillRemaining")}
               </button>
             ) : null}
 
@@ -881,7 +898,7 @@ function BuildBoxContent() {
                   : "bg-gray-100 text-gray-400"
               )}
             >
-              {isComplete ? "Checkout" : `+${maxSlots - selectedProducts.length} more`}
+              {isComplete ? t("box.checkout") : t("box.moreItems", { count: String(maxSlots - selectedProducts.length) })}
             </button>
           </div>
         </div>
@@ -905,7 +922,7 @@ export default function BuildBoxPage() {
         <div className="min-h-screen flex items-center justify-center bg-gray-50/50">
           <div className="text-center">
             <Loader2 className="w-8 h-8 animate-spin text-aura-primary mx-auto mb-3" />
-            <p className="text-sm text-gray-500">Loading your box builder...</p>
+            <p className="text-sm text-gray-500">Loading...</p>
           </div>
         </div>
       }
