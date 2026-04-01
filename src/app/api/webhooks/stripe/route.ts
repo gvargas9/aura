@@ -10,10 +10,12 @@ import {
 } from "@/lib/n8n/client";
 
 // Use service role for webhooks (bypasses RLS)
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+function getServiceClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 export async function POST(request: NextRequest) {
   const body = await request.text();
@@ -91,6 +93,7 @@ export async function POST(request: NextRequest) {
 }
 
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
+  const supabaseAdmin = getServiceClient();
   const { userId, boxSize, productIds, dealerId } = session.metadata || {};
 
   if (!userId || !boxSize || !productIds) {
@@ -187,6 +190,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 }
 
 async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
+  const supabaseAdmin = getServiceClient();
   const { userId, boxSize } = subscription.metadata || {};
 
   if (!userId) {
@@ -204,6 +208,7 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
 }
 
 async function handleSubscriptionCancelled(subscription: Stripe.Subscription) {
+  const supabaseAdmin = getServiceClient();
   const { userId } = subscription.metadata || {};
 
   await supabaseAdmin
@@ -231,6 +236,7 @@ async function handleSubscriptionCancelled(subscription: Stripe.Subscription) {
 }
 
 async function handleInvoicePaid(invoice: Stripe.Invoice) {
+  const supabaseAdmin = getServiceClient();
   // For recurring payments, create new order
   if (invoice.billing_reason === "subscription_cycle") {
     const subscriptionId = typeof invoice.parent?.subscription_details?.subscription === "string"

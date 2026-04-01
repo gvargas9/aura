@@ -4,10 +4,12 @@ import { triggerLowStockAlert } from "@/lib/n8n/client";
 import { logAutomationEvent } from "@/lib/n8n/events";
 import type { LowStockProduct } from "@/lib/n8n/client";
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+function getServiceClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Auth
@@ -40,6 +42,8 @@ export async function GET(request: NextRequest) {
   // (e.g. quantity < safety_stock) so we fetch all inventory rows and filter
   // in application code. For large catalogs this should be replaced with a
   // Postgres function or view.
+  const supabaseAdmin = getServiceClient();
+
   const { data: allInventory, error: invError } = await supabaseAdmin
     .from("inventory")
     .select("*");

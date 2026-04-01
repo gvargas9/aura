@@ -4,10 +4,12 @@ import { batchCalculateChurnScores, alertCriticalChurnUsers } from "@/lib/ai/chu
 import { logAutomationEvent } from "@/lib/n8n/events";
 import type { Database } from "@/types/database";
 
-const supabaseAdmin = createClient<Database>(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+function getServiceClient() {
+  return createClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Auth
@@ -48,7 +50,7 @@ export async function GET(request: NextRequest) {
     // Alert critical users via n8n
     let alertedCount = 0;
     if (result.criticalRisk > 0) {
-      alertedCount = await alertCriticalChurnUsers(supabaseAdmin);
+      alertedCount = await alertCriticalChurnUsers(getServiceClient());
       console.log(`[cron:churn-scoring] Alerted ${alertedCount} critical-risk users via n8n`);
     }
 

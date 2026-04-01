@@ -6,10 +6,12 @@ import { safeError } from "@/lib/api/safe-error";
 import { logAutomationEvent } from "@/lib/n8n/events";
 
 // Service-role client for direct DB writes
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+function getServiceClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Auth
@@ -32,6 +34,7 @@ function validateMenuMasterSecret(request: NextRequest): boolean {
 // ---------------------------------------------------------------------------
 
 async function handleLeadConverted(data: Record<string, unknown>) {
+  const supabaseAdmin = getServiceClient();
   const leadName = sanitizeString((data.lead_name as string) ?? "");
   const leadEmail = sanitizeString((data.lead_email as string) ?? "");
   const companyName = sanitizeString((data.company_name as string) ?? leadName);
@@ -89,6 +92,7 @@ async function handleOpportunityClosedWon(data: Record<string, unknown>) {
 }
 
 async function handleAccountUpdated(data: Record<string, unknown>) {
+  const supabaseAdmin = getServiceClient();
   const externalId = data.external_id as string | undefined;
   const accountName = sanitizeString((data.name as string) ?? "");
 

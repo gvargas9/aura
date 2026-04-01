@@ -4,10 +4,12 @@ import { logAutomationEvent } from "@/lib/n8n/events";
 import { triggerShippingNotification } from "@/lib/n8n/client";
 
 // Service-role client for direct DB writes
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+function getServiceClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Types for common carrier webhook payloads
@@ -82,6 +84,8 @@ export async function POST(request: NextRequest) {
   console.log(
     `[shipping-webhook] Received tracking update: ${trackingNumber} -> ${status}`
   );
+
+  const supabaseAdmin = getServiceClient();
 
   // Look up the order by ID, order number, or tracking number
   let orderQuery = supabaseAdmin

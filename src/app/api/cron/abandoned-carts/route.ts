@@ -3,10 +3,12 @@ import { createClient } from "@supabase/supabase-js";
 import { triggerN8nWebhook } from "@/lib/n8n/client";
 import { logAutomationEvent } from "@/lib/n8n/events";
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+function getServiceClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Auth
@@ -49,6 +51,8 @@ export async function GET(request: NextRequest) {
   const thirtyDaysAgo = new Date(
     Date.now() - 30 * 24 * 60 * 60 * 1000
   ).toISOString();
+
+  const supabaseAdmin = getServiceClient();
 
   const { data: profiles, error: profileError } = await supabaseAdmin
     .from("profiles")

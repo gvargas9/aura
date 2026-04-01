@@ -5,10 +5,12 @@ import { sanitizeString } from "@/lib/api/validation";
 import { safeError } from "@/lib/api/safe-error";
 import { requireVendingAuth, isVendingAuthError } from "@/lib/api/vending-auth";
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+function getServiceClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 export async function POST(request: NextRequest) {
   // Rate limit: 60/min
@@ -18,6 +20,8 @@ export async function POST(request: NextRequest) {
   // Auth
   const auth = await requireVendingAuth(request);
   if (isVendingAuthError(auth)) return auth.response;
+
+  const supabaseAdmin = getServiceClient();
 
   let body: {
     slot_number: number;

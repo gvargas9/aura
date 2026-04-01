@@ -6,10 +6,12 @@ import type { LowStockProduct } from "@/lib/n8n/client";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
 
-const supabaseAdmin = createClient<Database>(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+function getServiceClient() {
+  return createClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Auth
@@ -51,6 +53,7 @@ export async function GET(request: NextRequest) {
     if (report.urgentReorders.length > 0) {
       // Fetch SKUs
       const productIds = report.urgentReorders.map((f) => f.productId);
+      const supabaseAdmin = getServiceClient();
       const { data: products } = await supabaseAdmin
         .from("aura_products")
         .select("id, sku")

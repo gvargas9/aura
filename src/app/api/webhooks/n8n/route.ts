@@ -3,10 +3,12 @@ import { createClient } from "@supabase/supabase-js";
 import { logAutomationEvent } from "@/lib/n8n/events";
 
 // Service-role client for direct DB writes
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+function getServiceClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -30,6 +32,7 @@ function validateWebhookSecret(request: NextRequest): boolean {
 // ---------------------------------------------------------------------------
 
 async function handleOrderStatusUpdated(data: Record<string, unknown>) {
+  const supabaseAdmin = getServiceClient();
   const orderId = data.orderId as string | undefined;
   const status = data.status as string | undefined;
 
@@ -61,6 +64,7 @@ async function handleOrderStatusUpdated(data: Record<string, unknown>) {
 }
 
 async function handleShipmentConfirmed(data: Record<string, unknown>) {
+  const supabaseAdmin = getServiceClient();
   const orderId = data.orderId as string | undefined;
   const trackingNumber = data.trackingNumber as string | undefined;
   const trackingUrl = data.trackingUrl as string | undefined;
@@ -108,6 +112,7 @@ async function handleShipmentConfirmed(data: Record<string, unknown>) {
 }
 
 async function handleInventoryRestocked(data: Record<string, unknown>) {
+  const supabaseAdmin = getServiceClient();
   const productId = data.productId as string | undefined;
   const quantity = data.quantity as number | undefined;
   const warehouseLocation = (data.warehouseLocation as string) ?? "main";

@@ -3,10 +3,12 @@ import { createClient } from "@supabase/supabase-js";
 import { triggerSubscriptionReminder } from "@/lib/n8n/client";
 import { logAutomationEvent } from "@/lib/n8n/events";
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+function getServiceClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Auth
@@ -40,6 +42,8 @@ export async function GET(request: NextRequest) {
   const sevenDaysFromNow = new Date(
     now.getTime() + 7 * 24 * 60 * 60 * 1000
   );
+
+  const supabaseAdmin = getServiceClient();
 
   const { data: subscriptions, error } = await supabaseAdmin
     .from("aura_subscriptions")

@@ -5,10 +5,12 @@ import { validateUUID } from "@/lib/api/validation";
 import { safeError } from "@/lib/api/safe-error";
 import { requireVendingAuth, isVendingAuthError } from "@/lib/api/vending-auth";
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+function getServiceClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 export async function GET(
   request: NextRequest,
@@ -31,6 +33,8 @@ export async function GET(
       { status: 400 }
     );
   }
+
+  const supabaseAdmin = getServiceClient();
 
   // Ensure the API key matches the requested machine
   if (auth.machine_id !== machineId) {
