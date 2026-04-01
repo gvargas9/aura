@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { useAuth } from "@/hooks";
+import { useAuth, useLocale } from "@/hooks";
 import {
   Card,
   Button,
@@ -52,6 +52,7 @@ interface Toast {
 export default function SubscriptionsPage() {
   const router = useRouter();
   const { profile, isLoading: authLoading, isAuthenticated } = useAuth();
+  const { t } = useLocale();
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [productMap, setProductMap] = useState<Record<string, Product>>({});
   const [ordersBySubscription, setOrdersBySubscription] = useState<
@@ -165,11 +166,11 @@ export default function SubscriptionsPage() {
 
       showToast(
         "success",
-        `Subscription ${newStatus === "paused" ? "paused" : "resumed"} successfully.`
+        newStatus === "paused" ? t("subscriptions.pauseSuccess") : t("subscriptions.resumeSuccess")
       );
     } catch (error) {
       console.error("Failed to update subscription:", error);
-      showToast("error", "Failed to update subscription. Please try again.");
+      showToast("error", t("subscriptions.updateError"));
     }
 
     setActionLoading(null);
@@ -218,13 +219,13 @@ export default function SubscriptionsPage() {
               className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 mb-4"
             >
               <ArrowLeft className="w-4 h-4" />
-              Back to Dashboard
+              {t("subscriptions.backToDashboard")}
             </Link>
             <h1 className="text-3xl font-bold text-gray-900">
-              My Subscriptions
+              {t("subscriptions.title")}
             </h1>
             <p className="text-gray-600 mt-1">
-              Manage your subscription boxes and delivery preferences.
+              {t("subscriptions.subtitle")}
             </p>
           </div>
 
@@ -287,7 +288,7 @@ export default function SubscriptionsPage() {
                                 )
                               }
                             >
-                              {sub.status === "active" ? "Pause" : "Resume"}
+                              {sub.status === "active" ? t("subscriptions.pause") : t("subscriptions.resume")}
                             </Button>
                             <Link href="/build-box">
                               <Button
@@ -295,7 +296,7 @@ export default function SubscriptionsPage() {
                                 size="sm"
                                 leftIcon={<Edit className="w-4 h-4" />}
                               >
-                                Modify Box
+                                {t("subscriptions.modifyBox")}
                               </Button>
                             </Link>
                           </>
@@ -308,7 +309,7 @@ export default function SubscriptionsPage() {
                       <div className="mx-6 px-4 py-3 bg-green-50 border border-green-100 rounded-lg flex items-center gap-2 text-sm">
                         <Calendar className="w-4 h-4 text-green-600" />
                         <span className="text-green-800">
-                          Next delivery:{" "}
+                          {t("subscriptions.nextDelivery")}{" "}
                           <span className="font-medium">
                             {formatDate(sub.next_delivery_date)}
                           </span>
@@ -320,8 +321,7 @@ export default function SubscriptionsPage() {
                       <div className="mx-6 px-4 py-3 bg-amber-50 border border-amber-100 rounded-lg flex items-center gap-2 text-sm">
                         <Pause className="w-4 h-4 text-amber-600" />
                         <span className="text-amber-800">
-                          Your subscription is paused. Resume to schedule your
-                          next delivery.
+                          {t("subscriptions.pausedMessage")}
                         </span>
                       </div>
                     )}
@@ -329,8 +329,7 @@ export default function SubscriptionsPage() {
                     {/* Box Contents */}
                     <div className="px-6 py-5 border-t border-gray-100">
                       <h4 className="text-sm font-semibold text-gray-900 mb-3">
-                        Box Contents ({products.length} /{" "}
-                        {boxConfig?.slots || 0} slots filled)
+                        {t("subscriptions.boxContents")} ({t("subscriptions.slotsFilled", { filled: String(products.length), total: String(boxConfig?.slots || 0) })})
                       </h4>
                       {products.length > 0 ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -363,7 +362,7 @@ export default function SubscriptionsPage() {
                         </div>
                       ) : (
                         <p className="text-sm text-gray-500">
-                          No products configured for this box.
+                          {t("subscriptions.noProducts")}
                         </p>
                       )}
                     </div>
@@ -383,7 +382,7 @@ export default function SubscriptionsPage() {
                           <div className="flex items-center gap-2">
                             <RefreshCcw className="w-4 h-4 text-gray-400" />
                             <span className="text-sm font-semibold text-gray-900">
-                              Delivery History ({subOrders.length})
+                              {t("subscriptions.deliveryHistory")} ({subOrders.length})
                             </span>
                           </div>
                           {isHistoryExpanded ? (
@@ -437,14 +436,13 @@ export default function SubscriptionsPage() {
               <div className="text-center py-12">
                 <Box className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  No subscriptions yet
+                  {t("subscriptions.empty")}
                 </h3>
                 <p className="text-gray-500 mb-6">
-                  Start building your personalized box to get premium meals
-                  delivered to your door.
+                  {t("subscriptions.emptyMessage")}
                 </p>
                 <Link href="/build-box">
-                  <Button variant="primary">Build Your First Box</Button>
+                  <Button variant="primary">{t("subscriptions.buildFirstBox")}</Button>
                 </Link>
               </div>
             </Card>
