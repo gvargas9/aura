@@ -5,6 +5,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Button, Input, Card, CardContent, CardTitle, CardDescription, Header, Footer } from "@/components/ui";
 import { Mail, ArrowLeft, CheckCircle, KeyRound } from "lucide-react";
+import { useLocale } from "@/hooks/useLocale";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -13,6 +14,7 @@ export default function ForgotPasswordPage() {
   const [success, setSuccess] = useState(false);
 
   const supabase = createClient();
+  const { t } = useLocale();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,7 +30,7 @@ export default function ForgotPasswordPage() {
 
       setSuccess(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to send reset email");
+      setError(err instanceof Error ? err.message : t("auth.failedReset"));
     } finally {
       setIsLoading(false);
     }
@@ -44,15 +46,14 @@ export default function ForgotPasswordPage() {
               <div className="w-16 h-16 bg-aura-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <CheckCircle className="w-8 h-8 text-aura-primary" />
               </div>
-              <CardTitle className="text-2xl mb-2">Check Your Email</CardTitle>
+              <CardTitle className="text-2xl mb-2">{t("auth.checkEmail")}</CardTitle>
               <CardDescription className="mb-6 text-gray-500">
-                If an account exists for <strong className="text-gray-700">{email}</strong>, you&apos;ll receive
-                a password reset link shortly.
+                {t("auth.resetSent")} <strong className="text-gray-700">{email}</strong>{t("auth.resetSentSuffix")}
               </CardDescription>
               <Link href="/auth/login">
                 <Button variant="secondary">
                   <ArrowLeft className="w-4 h-4 mr-2" />
-                  Back to Sign In
+                  {t("auth.backToSignIn")}
                 </Button>
               </Link>
             </CardContent>
@@ -74,9 +75,9 @@ export default function ForgotPasswordPage() {
             <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-aura-primary to-aura-secondary shadow-lg shadow-aura-primary/25 mb-4">
               <KeyRound className="w-7 h-7 text-white" />
             </div>
-            <h1 className="text-3xl font-bold text-gray-900">Reset Your Password</h1>
+            <h1 className="text-3xl font-bold text-gray-900">{t("auth.resetPassword")}</h1>
             <p className="mt-2 text-gray-500">
-              Enter your email and we&apos;ll send you a reset link
+              {t("auth.resetSubtitle")}
             </p>
           </div>
 
@@ -90,7 +91,7 @@ export default function ForgotPasswordPage() {
 
               <form onSubmit={handleSubmit} className="space-y-5">
                 <Input
-                  label="Email"
+                  label={t("auth.email")}
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -100,7 +101,7 @@ export default function ForgotPasswordPage() {
                 />
 
                 <Button type="submit" className="w-full py-3" isLoading={isLoading}>
-                  Send Reset Link
+                  {t("auth.sendResetLink")}
                 </Button>
               </form>
 
@@ -110,7 +111,7 @@ export default function ForgotPasswordPage() {
                   className="text-sm text-aura-primary hover:text-aura-secondary font-medium inline-flex items-center transition-colors"
                 >
                   <ArrowLeft className="w-4 h-4 mr-1" />
-                  Back to Sign In
+                  {t("auth.backToSignIn")}
                 </Link>
               </p>
             </CardContent>

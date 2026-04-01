@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button, Input, Card, CardContent, CardTitle, CardDescription, Header, Footer } from "@/components/ui";
 import { Mail, Lock, Eye, EyeOff, User, Chrome, CheckCircle, UserPlus } from "lucide-react";
+import { useLocale } from "@/hooks/useLocale";
 
 export default function SignupPage() {
   const [email, setEmail] = useState("");
@@ -19,12 +20,13 @@ export default function SignupPage() {
 
   const router = useRouter();
   const supabase = createClient();
+  const { t } = useLocale();
 
   const passwordRequirements = [
-    { label: "At least 8 characters", met: password.length >= 8 },
-    { label: "Contains a number", met: /\d/.test(password) },
-    { label: "Contains uppercase letter", met: /[A-Z]/.test(password) },
-    { label: "Passwords match", met: password === confirmPassword && password.length > 0 },
+    { label: t("auth.minChars"), met: password.length >= 8 },
+    { label: t("auth.hasNumber"), met: /\d/.test(password) },
+    { label: t("auth.hasUppercase"), met: /[A-Z]/.test(password) },
+    { label: t("auth.passwordsMatch"), met: password === confirmPassword && password.length > 0 },
   ];
 
   const allRequirementsMet = passwordRequirements.every((req) => req.met);
@@ -33,7 +35,7 @@ export default function SignupPage() {
     e.preventDefault();
 
     if (!allRequirementsMet) {
-      setError("Please meet all password requirements");
+      setError(t("auth.passwordRequirements"));
       return;
     }
 
@@ -56,7 +58,7 @@ export default function SignupPage() {
 
       setSuccess(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to sign up");
+      setError(err instanceof Error ? err.message : t("auth.failedSignUp"));
     } finally {
       setIsLoading(false);
     }
@@ -76,7 +78,7 @@ export default function SignupPage() {
 
       if (error) throw error;
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to sign up with Google");
+      setError(err instanceof Error ? err.message : t("auth.failedGoogle"));
       setIsLoading(false);
     }
   };
@@ -91,13 +93,13 @@ export default function SignupPage() {
               <div className="w-16 h-16 bg-aura-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <CheckCircle className="w-8 h-8 text-aura-primary" />
               </div>
-              <CardTitle className="text-2xl mb-2">Check Your Email</CardTitle>
+              <CardTitle className="text-2xl mb-2">{t("auth.checkEmail")}</CardTitle>
               <CardDescription className="mb-6 text-gray-500">
-                We&apos;ve sent a confirmation link to <strong className="text-gray-700">{email}</strong>.
-                Click the link to activate your account.
+                {t("auth.confirmMessage")} <strong className="text-gray-700">{email}</strong>.
+                {" "}{t("auth.confirmAction")}
               </CardDescription>
               <Button variant="secondary" onClick={() => router.push("/auth/login")}>
-                Back to Sign In
+                {t("auth.backToSignIn")}
               </Button>
             </CardContent>
           </Card>
@@ -118,9 +120,9 @@ export default function SignupPage() {
             <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-aura-primary to-aura-secondary shadow-lg shadow-aura-primary/25 mb-4">
               <UserPlus className="w-7 h-7 text-white" />
             </div>
-            <h1 className="text-3xl font-bold text-gray-900">Create Your Account</h1>
+            <h1 className="text-3xl font-bold text-gray-900">{t("auth.createAccount")}</h1>
             <p className="mt-2 text-gray-500">
-              Start building your perfect Aura box today
+              {t("auth.createAccountSubtitle")}
             </p>
           </div>
 
@@ -140,7 +142,7 @@ export default function SignupPage() {
                 disabled={isLoading}
                 leftIcon={<Chrome className="w-5 h-5" />}
               >
-                Continue with Google
+                {t("auth.continueGoogle")}
               </Button>
 
               <div className="relative mb-6">
@@ -149,14 +151,14 @@ export default function SignupPage() {
                 </div>
                 <div className="relative flex justify-center text-sm">
                   <span className="px-4 bg-white text-gray-400">
-                    Or sign up with email
+                    {t("auth.orSignUpEmail")}
                   </span>
                 </div>
               </div>
 
               <form onSubmit={handleEmailSignup} className="space-y-5">
                 <Input
-                  label="Full Name"
+                  label={t("auth.fullName")}
                   type="text"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
@@ -166,7 +168,7 @@ export default function SignupPage() {
                 />
 
                 <Input
-                  label="Email"
+                  label={t("auth.email")}
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -176,7 +178,7 @@ export default function SignupPage() {
                 />
 
                 <Input
-                  label="Password"
+                  label={t("auth.password")}
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -200,7 +202,7 @@ export default function SignupPage() {
                 />
 
                 <Input
-                  label="Confirm Password"
+                  label={t("auth.confirmPassword")}
                   type={showPassword ? "text" : "password"}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
@@ -235,13 +237,13 @@ export default function SignupPage() {
                     required
                   />
                   <span className="ml-2 text-gray-600">
-                    I agree to the{" "}
+                    {t("auth.agreeTerms")}{" "}
                     <Link href="/terms" className="text-aura-primary hover:underline font-medium">
-                      Terms of Service
+                      {t("auth.termsOfService")}
                     </Link>{" "}
-                    and{" "}
+                    {t("auth.and")}{" "}
                     <Link href="/privacy" className="text-aura-primary hover:underline font-medium">
-                      Privacy Policy
+                      {t("auth.privacyPolicy")}
                     </Link>
                   </span>
                 </label>
@@ -252,17 +254,17 @@ export default function SignupPage() {
                   isLoading={isLoading}
                   disabled={!allRequirementsMet}
                 >
-                  Create Account
+                  {t("auth.createAccount")}
                 </Button>
               </form>
 
               <p className="mt-6 text-center text-sm text-gray-500">
-                Already have an account?{" "}
+                {t("auth.alreadyHaveAccount")}{" "}
                 <Link
                   href="/auth/login"
                   className="text-aura-primary hover:text-aura-secondary font-semibold transition-colors"
                 >
-                  Sign in
+                  {t("auth.signIn")}
                 </Link>
               </p>
             </CardContent>
