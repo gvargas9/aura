@@ -14,7 +14,6 @@ import {
   ArrowRight,
   CheckCircle,
   Sparkles,
-  Users,
   Award,
   Clock,
   Zap,
@@ -24,114 +23,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-/* ============================================================
-   Data
-   ============================================================ */
-
-const boxOptions = [
-  {
-    name: "Starter",
-    slots: 8,
-    price: 59.99,
-    perMeal: "$7.50",
-    description: "Perfect for individuals",
-    popular: false,
-    badge: null,
-    color: "from-emerald-50 to-white",
-  },
-  {
-    name: "Voyager",
-    slots: 12,
-    price: 84.99,
-    perMeal: "$7.08",
-    description: "Great for couples",
-    popular: true,
-    badge: "Most Popular",
-    color: "from-aura-dark to-aura-darker",
-  },
-  {
-    name: "Bunker",
-    slots: 24,
-    price: 149.99,
-    perMeal: "$6.25",
-    description: "Family pack & long-term storage",
-    popular: false,
-    badge: "Best Value",
-    color: "from-amber-50 to-white",
-  },
-];
-
-const howItWorks = [
-  {
-    step: "01",
-    title: "Choose Your Box",
-    description:
-      "Pick from Starter, Voyager, or Bunker. Each box is sized for your lifestyle.",
-    icon: Package,
-  },
-  {
-    step: "02",
-    title: "Fill With Favorites",
-    description:
-      "Browse 50+ premium meals and fill every slot, or let Aura AI pick for you.",
-    icon: Sparkles,
-  },
-  {
-    step: "03",
-    title: "Delivered Monthly",
-    description:
-      "Free shipping, right to your door. Pause, swap, or cancel anytime.",
-    icon: Truck,
-  },
-];
-
-const testimonials = [
-  {
-    name: "Sarah Mitchell",
-    role: "Yacht Chef",
-    location: "Miami, FL",
-    content:
-      "Aura has transformed how I provision for charters. Premium quality that doesn't need refrigeration -- it's a game changer for marine catering.",
-    rating: 5,
-    avatar: "SM",
-  },
-  {
-    name: "David Rodriguez",
-    role: "Gym Owner",
-    location: "Austin, TX",
-    content:
-      "My members love having healthy, shelf-stable options at the front desk. The B2B portal makes ordering a breeze, and the commission program is excellent.",
-    rating: 5,
-    avatar: "DR",
-  },
-  {
-    name: "Jennifer Kim",
-    role: "Emergency Prep Enthusiast",
-    location: "Denver, CO",
-    content:
-      "Finally, emergency food that my kids actually want to eat! We keep a Bunker box in our pantry and take Starter boxes camping. The 2-year shelf life is incredible.",
-    rating: 5,
-    avatar: "JK",
-  },
-  {
-    name: "Marcus Thompson",
-    role: "FBO Manager",
-    location: "Scottsdale, AZ",
-    content:
-      "Our private aviation clients expect the best. Aura's premium meals are perfect for provisioning -- shelf-stable, gourmet quality, zero compromise.",
-    rating: 5,
-    avatar: "MT",
-  },
-];
-
-const pressLogos = [
-  "Forbes",
-  "TechCrunch",
-  "Men's Health",
-  "Bon Appetit",
-  "Outside",
-];
+import { useLocale } from "@/hooks/useLocale";
 
 /* ============================================================
    Animated Counter Hook
@@ -226,7 +118,7 @@ function AnimatedSection({
   );
 }
 
-function ProductShowcase() {
+function ProductShowcase({ t }: { t: (key: string, vars?: Record<string, string>) => string }) {
   const [products, setProducts] = useState([
     { name: "Herb Roasted Chicken", image_url: "", color: "from-orange-400 to-red-500" },
     { name: "Beef Stew Classic", image_url: "", color: "from-amber-400 to-orange-500" },
@@ -273,11 +165,11 @@ function ProductShowcase() {
                 <Package className="w-4 h-4 text-aura-accent" />
               </div>
               <span className="text-white/90 text-sm font-medium">
-                Voyager Box
+                {t("home.hero.voyagerBox")}
               </span>
             </div>
             <span className="text-xs text-white/50 bg-white/10 px-3 py-1 rounded-full">
-              12 meals
+              {t("home.hero.mealsCount")}
             </span>
           </div>
 
@@ -321,11 +213,11 @@ function ProductShowcase() {
           {/* Price */}
           <div className="flex items-end justify-between">
             <div>
-              <p className="text-white/50 text-xs">Starting at</p>
+              <p className="text-white/50 text-xs">{t("home.hero.startingAt")}</p>
               <p className="text-white text-2xl font-bold">
                 $6.25
                 <span className="text-sm font-normal text-white/60">
-                  /meal
+                  {t("home.tiers.perMeal")}
                 </span>
               </p>
             </div>
@@ -349,8 +241,8 @@ function ProductShowcase() {
             <Truck className="w-4 h-4 text-aura-primary" />
           </div>
           <div>
-            <p className="text-xs font-bold text-gray-900">Free Shipping</p>
-            <p className="text-[10px] text-gray-500">On all boxes</p>
+            <p className="text-xs font-bold text-gray-900">{t("home.hero.freeShipping")}</p>
+            <p className="text-[10px] text-gray-500">{t("home.hero.onAllBoxes")}</p>
           </div>
         </div>
       </div>
@@ -361,8 +253,8 @@ function ProductShowcase() {
             <Clock className="w-4 h-4 text-aura-accent" />
           </div>
           <div>
-            <p className="text-xs font-bold text-gray-900">2-Year Shelf Life</p>
-            <p className="text-[10px] text-gray-500">No refrigeration</p>
+            <p className="text-xs font-bold text-gray-900">{t("home.hero.shelfLife")}</p>
+            <p className="text-[10px] text-gray-500">{t("home.hero.noRefrigeration")}</p>
           </div>
         </div>
       </div>
@@ -377,9 +269,11 @@ function ProductShowcase() {
 function PricingToggle({
   isSubscription,
   onToggle,
+  t,
 }: {
   isSubscription: boolean;
   onToggle: () => void;
+  t: (key: string, vars?: Record<string, string>) => string;
 }) {
   return (
     <div className="flex items-center justify-center gap-3 mb-12">
@@ -389,7 +283,7 @@ function PricingToggle({
           !isSubscription ? "text-gray-900" : "text-gray-400"
         )}
       >
-        One-Time
+        {t("home.tiers.oneTime")}
       </span>
       <button
         onClick={onToggle}
@@ -414,11 +308,11 @@ function PricingToggle({
           isSubscription ? "text-gray-900" : "text-gray-400"
         )}
       >
-        Subscribe & Save
+        {t("home.tiers.subscribeAndSave")}
       </span>
       {isSubscription && (
         <span className="text-xs font-semibold text-aura-primary bg-aura-light px-2 py-0.5 rounded-full">
-          Save 15%
+          {t("home.tiers.save15")}
         </span>
       )}
     </div>
@@ -426,15 +320,81 @@ function PricingToggle({
 }
 
 /* ============================================================
+   Static Data (translation keys only — no rendered strings)
+   ============================================================ */
+
+const boxOptions = [
+  {
+    nameKey: "tier.starter",
+    slots: 8,
+    price: 59.99,
+    descriptionKey: "tier.starter.description",
+    popular: false,
+    badgeKey: null as string | null,
+    slug: "starter",
+  },
+  {
+    nameKey: "tier.voyager",
+    slots: 12,
+    price: 84.99,
+    descriptionKey: "tier.voyager.description",
+    popular: true,
+    badgeKey: "home.tiers.mostPopular",
+    slug: "voyager",
+  },
+  {
+    nameKey: "tier.bunker",
+    slots: 24,
+    price: 149.99,
+    descriptionKey: "tier.bunker.description",
+    popular: false,
+    badgeKey: "home.tiers.bestValue",
+    slug: "bunker",
+  },
+];
+
+const howItWorksSteps = [
+  { step: "01", titleKey: "home.howItWorks.step1.title", descriptionKey: "home.howItWorks.step1.description", icon: Package },
+  { step: "02", titleKey: "home.howItWorks.step2.title", descriptionKey: "home.howItWorks.step2.description", icon: Sparkles },
+  { step: "03", titleKey: "home.howItWorks.step3.title", descriptionKey: "home.howItWorks.step3.description", icon: Truck },
+];
+
+const testimonials = [
+  { name: "Sarah Mitchell", roleKey: "home.testimonials.role1", location: "Miami, FL", contentKey: "home.testimonials.review1", rating: 5, avatar: "SM" },
+  { name: "David Rodriguez", roleKey: "home.testimonials.role2", location: "Austin, TX", contentKey: "home.testimonials.review2", rating: 5, avatar: "DR" },
+  { name: "Jennifer Kim", roleKey: "home.testimonials.role3", location: "Denver, CO", contentKey: "home.testimonials.review3", rating: 5, avatar: "JK" },
+  { name: "Marcus Thompson", roleKey: "home.testimonials.role4", location: "Scottsdale, AZ", contentKey: "home.testimonials.review4", rating: 5, avatar: "MT" },
+];
+
+const pressLogos = ["Forbes", "TechCrunch", "Men's Health", "Bon Appetit", "Outside"];
+
+const whyAuraFeatures = [
+  { icon: Leaf, titleKey: "home.whyAura.natural.title", descriptionKey: "home.whyAura.natural.description", accent: "from-emerald-500 to-green-600" },
+  { icon: Clock, titleKey: "home.whyAura.shelfLife.title", descriptionKey: "home.whyAura.shelfLife.description", accent: "from-amber-500 to-orange-500" },
+  { icon: Package, titleKey: "home.whyAura.buildBox.title", descriptionKey: "home.whyAura.buildBox.description", accent: "from-blue-500 to-indigo-500" },
+  { icon: Truck, titleKey: "home.whyAura.shipping.title", descriptionKey: "home.whyAura.shipping.description", accent: "from-violet-500 to-purple-600" },
+  { icon: Shield, titleKey: "home.whyAura.guarantee.title", descriptionKey: "home.whyAura.guarantee.description", accent: "from-rose-500 to-pink-600" },
+  { icon: Sparkles, titleKey: "home.whyAura.ai.title", descriptionKey: "home.whyAura.ai.description", accent: "from-aura-primary to-aura-secondary" },
+];
+
+/* ============================================================
    Main Page
    ============================================================ */
 
 export default function HomePage() {
   const [isSubscription, setIsSubscription] = useState(true);
+  const { t } = useLocale();
 
   const stat1 = useCountUp(10000);
   const stat2 = useCountUp(49);
   const stat3 = useCountUp(50);
+
+  const b2bFeatures = [
+    t("home.b2b.feature1"),
+    t("home.b2b.feature2"),
+    t("home.b2b.feature3"),
+    t("home.b2b.feature4"),
+  ];
 
   return (
     <div className="min-h-screen bg-white">
@@ -453,22 +413,19 @@ export default function HomePage() {
             <div className="text-center lg:text-left">
               <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/10 backdrop-blur-sm text-white/90 rounded-full text-sm font-medium mb-8 border border-white/10">
                 <Sparkles className="w-3.5 h-3.5 text-aura-accent" />
-                Premium Shelf-Stable Meals
+                {t("hero.badge")}
               </div>
 
               <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-white mb-6 leading-[1.1] tracking-tight">
-                Gourmet Food
-                <br />
-                That Goes
+                {t("hero.title")}
                 <br />
                 <span className="bg-clip-text text-transparent bg-gradient-to-r from-aura-primary via-emerald-400 to-aura-accent">
-                  Anywhere.
+                  {t("hero.titleHighlight")}
                 </span>
               </h1>
 
               <p className="text-lg lg:text-xl text-white/60 mb-8 max-w-xl mx-auto lg:mx-0 leading-relaxed">
-                Build your perfect box of 50+ all-natural meals. 2-year shelf
-                life. No refrigeration needed. Delivered free to your door.
+                {t("hero.subtitle")}
               </p>
 
               {/* Price callout */}
@@ -477,17 +434,17 @@ export default function HomePage() {
                   <p className="text-3xl font-bold text-white">
                     $6.25
                     <span className="text-base font-normal text-white/50">
-                      /meal
+                      {t("home.tiers.perMeal")}
                     </span>
                   </p>
                 </div>
                 <div className="w-px h-10 bg-white/10" />
                 <div>
-                  <p className="text-sm text-white/40">Starting at</p>
+                  <p className="text-sm text-white/40">{t("hero.startingAt")}</p>
                   <p className="text-lg font-semibold text-white">
                     $59.99
                     <span className="text-sm font-normal text-white/50">
-                      /mo
+                      {t("hero.perMonth")}
                     </span>
                   </p>
                 </div>
@@ -498,23 +455,23 @@ export default function HomePage() {
                   href="/build-box"
                   className="group inline-flex items-center justify-center gap-2 bg-aura-accent hover:bg-aura-accent-hover text-white text-lg font-semibold px-8 py-4 rounded-full shadow-lg shadow-aura-accent/30 hover:shadow-xl hover:shadow-aura-accent/40 hover:-translate-y-0.5 transition-all duration-300"
                 >
-                  Build Your Box
+                  {t("hero.buildBox")}
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
                 <Link
                   href="/products"
                   className="inline-flex items-center justify-center gap-2 bg-white/10 backdrop-blur-sm text-white text-lg font-medium px-8 py-4 rounded-full border border-white/20 hover:bg-white/20 transition-all duration-300"
                 >
-                  Browse Products
+                  {t("hero.browseProducts")}
                 </Link>
               </div>
 
               {/* Trust indicators */}
               <div className="flex flex-wrap items-center justify-center lg:justify-start gap-x-6 gap-y-2 text-sm text-white/50">
                 {[
-                  "Free Shipping",
-                  "Cancel Anytime",
-                  "2-Year Shelf Life",
+                  t("home.hero.freeShipping"),
+                  t("home.hero.cancelAnytime"),
+                  t("home.hero.shelfLife"),
                 ].map((item) => (
                   <div key={item} className="flex items-center gap-1.5">
                     <CheckCircle className="w-3.5 h-3.5 text-aura-primary" />
@@ -526,7 +483,7 @@ export default function HomePage() {
 
             {/* Right - Product showcase */}
             <div className="hidden md:block">
-              <ProductShowcase />
+              <ProductShowcase t={t} />
             </div>
           </div>
         </div>
@@ -536,7 +493,7 @@ export default function HomePage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <div className="flex items-center justify-center gap-8 lg:gap-16 flex-wrap">
               <span className="text-xs uppercase tracking-widest text-white/30 font-medium">
-                Featured in
+                {t("home.hero.featuredIn")}
               </span>
               {pressLogos.map((logo) => (
                 <span
@@ -559,7 +516,7 @@ export default function HomePage() {
               <p className="text-3xl lg:text-4xl font-bold text-gray-900">
                 {stat1.count.toLocaleString()}+
               </p>
-              <p className="text-sm text-gray-500 mt-1">Boxes Shipped</p>
+              <p className="text-sm text-gray-500 mt-1">{t("home.stats.boxesShipped")}</p>
             </div>
             <div className="text-center" ref={stat2.ref}>
               <div className="flex items-center justify-center gap-1">
@@ -568,19 +525,19 @@ export default function HomePage() {
                 </p>
                 <Star className="w-6 h-6 text-aura-accent fill-current mt-1" />
               </div>
-              <p className="text-sm text-gray-500 mt-1">Average Rating</p>
+              <p className="text-sm text-gray-500 mt-1">{t("home.stats.averageRating")}</p>
             </div>
             <div className="text-center" ref={stat3.ref}>
               <p className="text-3xl lg:text-4xl font-bold text-gray-900">
                 {stat3.count}+
               </p>
-              <p className="text-sm text-gray-500 mt-1">Premium Meals</p>
+              <p className="text-sm text-gray-500 mt-1">{t("home.stats.premiumMeals")}</p>
             </div>
             <div className="text-center">
               <p className="text-3xl lg:text-4xl font-bold text-aura-primary">
-                Free
+                {t("home.stats.freeShipping")}
               </p>
-              <p className="text-sm text-gray-500 mt-1">Shipping Always</p>
+              <p className="text-sm text-gray-500 mt-1">{t("home.stats.shippingAlways")}</p>
             </div>
           </div>
         </div>
@@ -592,13 +549,13 @@ export default function HomePage() {
           <AnimatedSection className="text-center mb-16">
             <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-aura-light text-aura-dark rounded-full text-sm font-medium mb-4">
               <Zap className="w-3.5 h-3.5" />
-              Simple Process
+              {t("home.howItWorks.badge")}
             </span>
             <h2 className="text-3xl lg:text-5xl font-bold text-gray-900 mb-4">
-              How It Works
+              {t("home.howItWorks.title")}
             </h2>
             <p className="text-lg text-gray-500 max-w-2xl mx-auto">
-              Three steps to gourmet meals that last. Build, ship, enjoy.
+              {t("home.howItWorks.subtitle")}
             </p>
           </AnimatedSection>
 
@@ -606,7 +563,7 @@ export default function HomePage() {
             {/* Connecting line (desktop) */}
             <div className="hidden md:block absolute top-16 left-[20%] right-[20%] h-px bg-gradient-to-r from-aura-primary/20 via-aura-primary/40 to-aura-primary/20" />
 
-            {howItWorks.map((step, i) => (
+            {howItWorksSteps.map((step, i) => (
               <AnimatedSection key={step.step} delay={i * 150}>
                 <div className="relative text-center group">
                   {/* Step number circle */}
@@ -620,10 +577,10 @@ export default function HomePage() {
                     </span>
                   </div>
                   <h3 className="text-xl font-bold text-gray-900 mb-3">
-                    {step.title}
+                    {t(step.titleKey)}
                   </h3>
                   <p className="text-gray-500 leading-relaxed max-w-xs mx-auto">
-                    {step.description}
+                    {t(step.descriptionKey)}
                   </p>
                 </div>
               </AnimatedSection>
@@ -639,20 +596,20 @@ export default function HomePage() {
           <AnimatedSection className="text-center mb-8">
             <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-aura-accent/10 text-aura-accent rounded-full text-sm font-medium mb-4">
               <Package className="w-3.5 h-3.5" />
-              Choose Your Plan
+              {t("home.tiers.badge")}
             </span>
             <h2 className="text-3xl lg:text-5xl font-bold text-gray-900 mb-4">
-              Pick Your Perfect Box
+              {t("home.tiers.title")}
             </h2>
             <p className="text-lg text-gray-500 max-w-2xl mx-auto">
-              From solo adventurers to families preparing for anything, we
-              have the perfect size for your needs.
+              {t("home.tiers.subtitle")}
             </p>
           </AnimatedSection>
 
           <PricingToggle
             isSubscription={isSubscription}
             onToggle={() => setIsSubscription(!isSubscription)}
+            t={t}
           />
 
           <div className="grid md:grid-cols-3 gap-6 lg:gap-8 max-w-5xl mx-auto">
@@ -663,7 +620,7 @@ export default function HomePage() {
               const perMealNum = displayPrice / box.slots;
 
               return (
-                <AnimatedSection key={box.name} delay={index * 100}>
+                <AnimatedSection key={box.slug} delay={index * 100}>
                   <div
                     className={cn(
                       "relative rounded-3xl transition-all duration-500 hover:-translate-y-2",
@@ -673,7 +630,7 @@ export default function HomePage() {
                     )}
                   >
                     {/* Badge */}
-                    {box.badge && (
+                    {box.badgeKey && (
                       <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
                         <span
                           className={cn(
@@ -684,7 +641,7 @@ export default function HomePage() {
                           )}
                         >
                           {box.popular && <Sparkles className="w-3 h-3" />}
-                          {box.badge}
+                          {t(box.badgeKey)}
                         </span>
                       </div>
                     )}
@@ -697,7 +654,7 @@ export default function HomePage() {
                           box.popular ? "text-white/80" : "text-gray-500"
                         )}
                       >
-                        {box.name}
+                        {t(box.nameKey)}
                       </h3>
                       <p
                         className={cn(
@@ -705,7 +662,7 @@ export default function HomePage() {
                           box.popular ? "text-white/50" : "text-gray-400"
                         )}
                       >
-                        {box.description}
+                        {t(box.descriptionKey)}
                       </p>
 
                       {/* Per-meal price (prominent) */}
@@ -724,7 +681,7 @@ export default function HomePage() {
                             box.popular ? "text-white/50" : "text-gray-400"
                           )}
                         >
-                          /meal
+                          {t("home.tiers.perMeal")}
                         </span>
                       </div>
 
@@ -735,8 +692,8 @@ export default function HomePage() {
                           box.popular ? "text-white/40" : "text-gray-400"
                         )}
                       >
-                        ${displayPrice.toFixed(2)}/mo &middot; {box.slots}{" "}
-                        meals
+                        ${displayPrice.toFixed(2)}{t("hero.perMonth")} &middot; {box.slots}{" "}
+                        {t("home.tiers.meals")}
                       </p>
 
                       {/* Slots visual */}
@@ -765,28 +722,23 @@ export default function HomePage() {
                             box.popular ? "text-white/40" : "text-gray-400"
                           )}
                         >
-                          {box.slots} slots to fill
+                          {t("home.tiers.slotsToFill", { count: String(box.slots) })}
                         </p>
                       </div>
 
                       {/* Features */}
                       <ul className="space-y-3 text-left mb-8">
                         {[
-                          "Free shipping included",
-                          "2-year shelf life",
-                          "Cancel or pause anytime",
+                          t("home.tiers.freeShipping"),
+                          t("home.tiers.shelfLife"),
+                          t("home.tiers.cancelAnytime"),
                           box.slots >= 24
-                            ? "Bunker-safe products included"
-                            : "AI-powered recommendations",
+                            ? t("home.tiers.bunkerSafe")
+                            : t("home.tiers.aiRecommendations"),
                         ].map((feature) => (
                           <li key={feature} className="flex items-center gap-2.5">
                             <CheckCircle
-                              className={cn(
-                                "w-4 h-4 flex-shrink-0",
-                                box.popular
-                                  ? "text-aura-primary"
-                                  : "text-aura-primary"
-                              )}
+                              className="w-4 h-4 flex-shrink-0 text-aura-primary"
                             />
                             <span
                               className={cn(
@@ -802,7 +754,7 @@ export default function HomePage() {
 
                       {/* CTA */}
                       <Link
-                        href={`/build-box?size=${box.name.toLowerCase()}`}
+                        href={`/build-box?size=${box.slug}`}
                         className={cn(
                           "group block w-full py-3.5 rounded-xl font-semibold text-center transition-all duration-300",
                           box.popular
@@ -811,7 +763,7 @@ export default function HomePage() {
                         )}
                       >
                         <span className="inline-flex items-center gap-2">
-                          Get Started
+                          {t("common.getStarted")}
                           <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                         </span>
                       </Link>
@@ -830,63 +782,19 @@ export default function HomePage() {
           <AnimatedSection className="text-center mb-16">
             <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-aura-light text-aura-dark rounded-full text-sm font-medium mb-4">
               <Award className="w-3.5 h-3.5" />
-              Why Aura
+              {t("home.whyAura.badge")}
             </span>
             <h2 className="text-3xl lg:text-5xl font-bold text-gray-900 mb-4">
-              The Aura Difference
+              {t("home.whyAura.title")}
             </h2>
             <p className="text-lg text-gray-500 max-w-2xl mx-auto">
-              Premium ingredients, revolutionary preservation, and a
-              subscription that works for you.
+              {t("home.whyAura.subtitle")}
             </p>
           </AnimatedSection>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              {
-                icon: Leaf,
-                title: "All-Natural Ingredients",
-                description:
-                  "100% natural, no preservatives. Premium meals made with ingredients you can pronounce.",
-                accent: "from-emerald-500 to-green-600",
-              },
-              {
-                icon: Clock,
-                title: "2-Year Shelf Life",
-                description:
-                  "Revolutionary preservation keeps food fresh for years without refrigeration.",
-                accent: "from-amber-500 to-orange-500",
-              },
-              {
-                icon: Package,
-                title: "Build Your Box",
-                description:
-                  "Choose 8, 12, or 24 meals. Pick exactly what you love or let AI decide.",
-                accent: "from-blue-500 to-indigo-500",
-              },
-              {
-                icon: Truck,
-                title: "Free Shipping",
-                description:
-                  "Every subscription box ships free. Right to your door, on your schedule.",
-                accent: "from-violet-500 to-purple-600",
-              },
-              {
-                icon: Shield,
-                title: "Satisfaction Guaranteed",
-                description:
-                  "Love it or your money back. We stand behind every single meal.",
-                accent: "from-rose-500 to-pink-600",
-              },
-              {
-                icon: Sparkles,
-                title: "AI Recommendations",
-                description:
-                  "Aura Fill suggests the perfect box based on your taste and dietary needs.",
-                accent: "from-aura-primary to-aura-secondary",
-              },
-            ].map((feature, i) => (
-              <AnimatedSection key={feature.title} delay={i * 80}>
+            {whyAuraFeatures.map((feature, i) => (
+              <AnimatedSection key={feature.titleKey} delay={i * 80}>
                 <div className="group relative bg-white rounded-2xl p-8 border border-gray-100 hover:border-transparent hover:shadow-xl transition-all duration-300 hover:-translate-y-1 h-full">
                   <div
                     className={cn(
@@ -897,10 +805,10 @@ export default function HomePage() {
                     <feature.icon className="w-5 h-5 text-white" />
                   </div>
                   <h3 className="text-lg font-bold text-gray-900 mb-2">
-                    {feature.title}
+                    {t(feature.titleKey)}
                   </h3>
                   <p className="text-gray-500 text-sm leading-relaxed">
-                    {feature.description}
+                    {t(feature.descriptionKey)}
                   </p>
                   {/* Bottom accent line */}
                   <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-aura-primary/40 to-transparent rounded-b-2xl transform scale-x-0 group-hover:scale-x-100 transition-transform origin-center duration-500" />
@@ -921,23 +829,23 @@ export default function HomePage() {
           <AnimatedSection className="text-center mb-16">
             <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/10 text-white/80 rounded-full text-sm font-medium mb-4 backdrop-blur-sm">
               <Heart className="w-3.5 h-3.5 text-aura-accent" />
-              Customer Stories
+              {t("home.testimonials.badge")}
             </span>
             <h2 className="text-3xl lg:text-5xl font-bold text-white mb-4">
-              Loved by Thousands
+              {t("home.testimonials.title")}
             </h2>
             <p className="text-lg text-white/40">
-              Real stories from real customers who made the switch.
+              {t("home.testimonials.subtitle")}
             </p>
           </AnimatedSection>
 
           <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
-            {testimonials.map((t, i) => (
-              <AnimatedSection key={t.name} delay={i * 100}>
+            {testimonials.map((testimonial, i) => (
+              <AnimatedSection key={testimonial.name} delay={i * 100}>
                 <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:bg-white/[0.08] transition-all duration-300 h-full flex flex-col">
                   {/* Stars */}
                   <div className="flex gap-1 mb-5">
-                    {[...Array(t.rating)].map((_, idx) => (
+                    {[...Array(testimonial.rating)].map((_, idx) => (
                       <Star
                         key={idx}
                         className="w-4 h-4 text-aura-accent fill-current"
@@ -947,20 +855,20 @@ export default function HomePage() {
 
                   {/* Quote */}
                   <p className="text-white/70 leading-relaxed mb-6 flex-1 text-[15px]">
-                    &ldquo;{t.content}&rdquo;
+                    &ldquo;{t(testimonial.contentKey)}&rdquo;
                   </p>
 
                   {/* Author */}
                   <div className="flex items-center gap-3 pt-5 border-t border-white/10">
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-aura-primary to-aura-accent flex items-center justify-center text-white text-sm font-bold">
-                      {t.avatar}
+                      {testimonial.avatar}
                     </div>
                     <div>
                       <p className="text-white font-semibold text-sm">
-                        {t.name}
+                        {testimonial.name}
                       </p>
                       <p className="text-white/40 text-xs">
-                        {t.role} &middot; {t.location}
+                        {t(testimonial.roleKey)} &middot; {testimonial.location}
                       </p>
                     </div>
                   </div>
@@ -982,17 +890,17 @@ export default function HomePage() {
                     />
                   ))}
                 </div>
-                <p className="text-xs text-white/30">Average Rating</p>
+                <p className="text-xs text-white/30">{t("home.testimonials.averageRating")}</p>
               </div>
               <div className="w-px h-12 bg-white/10 hidden sm:block" />
               <div className="text-center">
                 <p className="text-3xl font-bold text-white mb-1">10K+</p>
-                <p className="text-xs text-white/30">Happy Customers</p>
+                <p className="text-xs text-white/30">{t("home.testimonials.happyCustomers")}</p>
               </div>
               <div className="w-px h-12 bg-white/10 hidden sm:block" />
               <div className="text-center">
                 <p className="text-3xl font-bold text-white mb-1">99%</p>
-                <p className="text-xs text-white/30">Would Recommend</p>
+                <p className="text-xs text-white/30">{t("home.testimonials.wouldRecommend")}</p>
               </div>
             </div>
           </AnimatedSection>
@@ -1007,24 +915,17 @@ export default function HomePage() {
             <AnimatedSection>
               <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-aura-accent/10 text-aura-accent rounded-full text-sm font-medium mb-6">
                 <Building2 className="w-3.5 h-3.5" />
-                For Business
+                {t("home.b2b.badge")}
               </span>
               <h2 className="text-3xl lg:text-5xl font-bold text-gray-900 mb-6 leading-tight">
-                Become an{" "}
-                <span className="gradient-text-accent">Aura Dealer</span>
+                {t("home.b2b.heading")}{" "}
+                <span className="gradient-text-accent">{t("home.b2b.headingHighlight")}</span>
               </h2>
               <p className="text-lg text-gray-500 mb-8 leading-relaxed">
-                Join our Virtual Distributor network. Earn commissions
-                sharing Aura -- no inventory, no risk. Perfect for gyms,
-                marinas, FBOs, and retailers.
+                {t("home.b2b.description")}
               </p>
               <ul className="space-y-3 mb-8">
-                {[
-                  "Wholesale pricing from Bronze to Platinum",
-                  "White-label portal with your branding",
-                  "Automated Stripe commission payouts",
-                  "Real-time analytics dashboard",
-                ].map((item) => (
+                {b2bFeatures.map((item) => (
                   <li
                     key={item}
                     className="flex items-start gap-2.5 text-gray-600"
@@ -1038,7 +939,7 @@ export default function HomePage() {
                 href="/b2b"
                 className="group inline-flex items-center gap-2 bg-aura-dark text-white font-semibold px-6 py-3.5 rounded-full hover:bg-aura-darker transition-all duration-300 hover:-translate-y-0.5 shadow-sm hover:shadow-md"
               >
-                Become a Dealer
+                {t("home.b2b.cta")}
                 <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
               </Link>
             </AnimatedSection>
@@ -1051,18 +952,18 @@ export default function HomePage() {
                   <div className="relative">
                     <div className="text-center text-white mb-8">
                       <p className="text-5xl lg:text-6xl font-bold mb-2">$500K+</p>
-                      <p className="text-white/40">Paid to dealers this year</p>
+                      <p className="text-white/40">{t("home.b2b.paidToDealers")}</p>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-5 text-center border border-white/10">
                         <p className="text-3xl font-bold text-white mb-1">250+</p>
-                        <p className="text-xs text-white/40">Active Dealers</p>
+                        <p className="text-xs text-white/40">{t("home.b2b.activeDealers")}</p>
                       </div>
                       <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-5 text-center border border-white/10">
                         <p className="text-3xl font-bold text-aura-accent mb-1">
                           15%
                         </p>
-                        <p className="text-xs text-white/40">Avg. Commission</p>
+                        <p className="text-xs text-white/40">{t("home.b2b.avgCommission")}</p>
                       </div>
                     </div>
                   </div>
@@ -1074,9 +975,9 @@ export default function HomePage() {
                       </div>
                       <div>
                         <p className="text-xs font-bold text-gray-900">
-                          30% Growth
+                          {t("home.b2b.growth")}
                         </p>
-                        <p className="text-[10px] text-gray-400">This Quarter</p>
+                        <p className="text-[10px] text-gray-400">{t("home.b2b.thisQuarter")}</p>
                       </div>
                     </div>
                   </div>
@@ -1096,26 +997,29 @@ export default function HomePage() {
           <AnimatedSection>
             <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/10 text-white/80 rounded-full text-sm font-medium mb-8 backdrop-blur-sm border border-white/10">
               <Sparkles className="w-3.5 h-3.5 text-aura-accent" />
-              Start Today
+              {t("home.cta.badge")}
             </span>
             <h2 className="text-3xl lg:text-5xl xl:text-6xl font-bold text-white mb-6 leading-tight">
-              Ready to Transform
+              {t("home.cta.title")}
               <br />
-              Your Pantry?
+              {t("home.cta.titleLine2")}
             </h2>
             <p className="text-lg lg:text-xl text-white/50 mb-10 max-w-xl mx-auto leading-relaxed">
-              Join 10,000+ customers enjoying premium, shelf-stable meals
-              delivered to their door every month.
+              {t("home.cta.subtitle")}
             </p>
             <Link
               href="/build-box"
               className="group inline-flex items-center gap-2 bg-aura-accent hover:bg-aura-accent-hover text-white text-lg font-semibold px-10 py-5 rounded-full shadow-xl shadow-aura-accent/30 hover:shadow-2xl hover:shadow-aura-accent/40 hover:-translate-y-1 transition-all duration-300"
             >
-              Build Your First Box
+              {t("home.cta.button")}
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Link>
             <div className="mt-8 flex flex-wrap justify-center gap-6 text-sm text-white/40">
-              {["Free Shipping", "Cancel Anytime", "100% Satisfaction"].map(
+              {[
+                t("home.hero.freeShipping"),
+                t("home.hero.cancelAnytime"),
+                t("home.cta.satisfaction"),
+              ].map(
                 (item) => (
                   <div key={item} className="flex items-center gap-1.5">
                     <CheckCircle className="w-3.5 h-3.5 text-aura-primary" />
