@@ -9,7 +9,7 @@ npm run dev          # Start development server (Next.js on localhost:3000)
 npm run build        # Production build
 npm run start        # Start production server
 npm run lint         # Run ESLint
-npx playwright test  # Run E2E tests (166 tests)
+npx playwright test  # Run E2E tests (190 tests)
 npx playwright test --headed  # Run tests with visible browser
 ```
 
@@ -40,6 +40,11 @@ N8N_API_URL=                       # e.g., https://automation.inspiration-ai.com
 N8N_WEBHOOK_SECRET=                # Shared secret for n8n webhook auth
 CRON_SECRET=                       # Secret for cron endpoint auth
 
+# MenuMaster CRM
+MENUMASTER_API_URL=
+MENUMASTER_API_TOKEN=
+MENUMASTER_BUSINESS_ID=
+
 # App
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 NEXT_PUBLIC_APP_NAME=Aura
@@ -49,7 +54,7 @@ NEXT_PUBLIC_APP_NAME=Aura
 
 ### Tech Stack
 - **Frontend**: Next.js 16 (App Router) + React 19 + Tailwind CSS 4
-- **Backend**: Supabase (Postgres 38+ tables, Auth, RLS, Edge Functions, Storage)
+- **Backend**: Supabase (Postgres 47+ tables, Auth, RLS, Edge Functions, Storage)
 - **Payments**: Stripe (subscriptions, checkout, webhooks, Connect for B2B)
 - **Automation**: n8n workflows (order fulfillment, inventory, reminders)
 - **AI**: Google Gemini 2.5 Flash (chat), Imagen 4.0 (product images)
@@ -152,7 +157,7 @@ import { triggerOrderFulfillment, triggerLowStockAlert } from "@/lib/n8n";
 | Voyager | 12 | $84.99/mo | $99.99 | 15% |
 | Bunker | 24 | $149.99/mo | $179.99 | 17% |
 
-### Database Schema (Key Tables — 38+ total)
+### Database Schema (Key Tables — 47+ total)
 
 | Table | Purpose |
 |-------|---------|
@@ -220,6 +225,38 @@ import { WAREHOUSE_ADDRESS } from "@/lib/shipping/warehouse";
 - Provider pattern: EasyPost implementation + mock mode when API key not set
 - Warehouse origin: El Paso, TX
 
+### Vending API (`src/app/api/vending/`)
+```
+POST /api/vending/heartbeat     — machine checkin
+POST /api/vending/transaction   — record sale
+GET  /api/vending/inventory/:id — slot config
+POST /api/vending/restock       — confirm restock
+Auth: X-Vending-API-Key header per machine
+```
+
+### MenuMaster CRM Integration (`src/lib/menumaster/`)
+```typescript
+import { syncLeadToMenuMaster, logSampleActivity } from "@/lib/menumaster";
+// Fire-and-forget — follows n8n client pattern
+// Env: MENUMASTER_API_URL, MENUMASTER_API_TOKEN, MENUMASTER_BUSINESS_ID
+```
+
+### Sample Tracking (`src/app/api/samples/`)
+```
+GET  /api/samples           — list allocations
+POST /api/samples           — allocate samples (admin)
+POST /api/samples/distribute — distribute to lead
+POST /api/samples/return    — return samples
+```
+
+### White-Label API (`src/app/api/v1/`)
+```
+GET  /api/v1/products           — partner product catalog
+POST /api/v1/orders             — create order via API
+GET  /api/v1/storefront/:slug   — storefront config
+Auth: X-API-Key header (SHA-256 hashed, scoped)
+```
+
 ### Custom Hooks
 | Hook | Purpose |
 |------|---------|
@@ -228,6 +265,7 @@ import { WAREHOUSE_ADDRESS } from "@/lib/shipping/warehouse";
 | `useRealtimeOrders(userId)` | Live order status updates via Supabase Realtime |
 | `useRealtimeInventory()` | Admin inventory monitoring with change highlighting |
 | `useRealtimeNotifications(userId)` | Live notification count for bell component |
+| `useLocale()` | i18n locale, currency, translation |
 
 ### Gotchas
 
@@ -241,6 +279,9 @@ import { WAREHOUSE_ADDRESS } from "@/lib/shipping/warehouse";
 8. **Storefront theming**: Uses CSS custom properties (`--sf-primary`, etc.) — not Tailwind classes
 9. **Shipping mock mode**: When `EASYPOST_API_KEY` is not set, shipping APIs return realistic fake data with `mock: true` flag
 10. **Wishlist auth**: useWishlist only works when authenticated — check isAuthenticated before rendering heart toggles
+11. **Vending API auth**: Uses `X-Vending-API-Key` header, not Supabase auth — machine-to-machine tokens
+12. **MenuMaster integration**: Fire-and-forget like n8n — never throws, app works without MenuMaster
+13. **API keys (v1)**: SHA-256 hashed, shown once on creation — use `POST /api/admin/api-keys` to generate
 
 ## n8n Workflows
 
@@ -255,22 +296,22 @@ Located in `/workflows/` and deployed to `automation.inspiration-ai.com`:
 - `scripts/generate-embeddings.mjs` — Generate product embeddings with Gemini for AI recommendations
 - `create-admin.mjs` — Create admin user account
 
-## Project Metrics (2026-03-28)
+## Project Metrics (2026-03-31)
 
 | Metric | Count |
 |--------|-------|
-| Routes | 96 |
-| Source Files | 170 |
-| Lines of Code | 51,563 |
-| UI Components | 22 |
-| Pages | 50 |
-| API Endpoints | 45 |
+| Routes | 54 |
+| Source Files | 202 |
+| Lines of Code | 58,781 |
+| UI Components | 23 |
+| Pages | 54 |
+| API Endpoints | 58 |
 | Edge Functions | 7 |
 | Custom Hooks | 7 |
-| Lib Modules | 35 |
-| Database Tables | 42+ |
-| Migrations | 6 |
-| E2E Tests | 166 (15 files) |
+| Lib Modules | 43 |
+| Database Tables | 47+ |
+| Migrations | 11 |
+| E2E Tests | 190 (16 files) |
 | n8n Workflows | 3 |
 | Languages | 4 (EN/ES/FR/PT) |
 | Currencies | 4 (USD/MXN/EUR/BRL) |

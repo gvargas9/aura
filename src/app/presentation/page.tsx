@@ -988,7 +988,7 @@ function Slide04Channels({ active }: { active: boolean }) {
     { icon: <ShoppingCart size={22} />, name: "B2C Subscription", desc: "Monthly build-a-box, 15% savings", color: "text-emerald-400" },
     { icon: <Package size={22} />, name: "B2C One-Time", desc: "Single purchase, no commitment", color: "text-emerald-400" },
     { icon: <Building2 size={22} />, name: "B2B Wholesale", desc: "Tiered pricing, PO workflow", color: "text-blue-400" },
-    { icon: <Coffee size={22} />, name: "Vending", desc: "Smart vending partnerships", color: "text-amber-400" },
+    { icon: <Coffee size={22} />, name: "Vending", desc: "Live API · smart vending partners", color: "text-amber-400" },
     { icon: <Anchor size={22} />, name: "Specialty", desc: "Marine, aviation, expeditions", color: "text-purple-400" },
     { icon: <Shield size={22} />, name: "Preparedness", desc: "Emergency & long-term storage", color: "text-red-400" },
   ];
@@ -1193,6 +1193,7 @@ function Slide07B2B({ active }: { active: boolean }) {
     { icon: <MapPin size={18} />, label: "Multi-Location" },
     { icon: <Palette size={18} />, label: "White-Label" },
     { icon: <CircleDot size={18} />, label: "QR Virtual Distributor" },
+    { icon: <Target size={18} />, label: "Sample Tracking" },
   ];
 
   return (
@@ -1355,10 +1356,11 @@ function Slide09Storefronts({ active }: { active: boolean }) {
 function Slide10Architecture({ active }: { active: boolean }) {
   const layers = [
     { label: "Frontend", tech: "Next.js 16 + React 19 + Tailwind 4", color: "#10B981", icon: <Code2 size={16} /> },
-    { label: "API Layer", tech: "45 REST Endpoints + Server Actions", color: "#3B82F6", icon: <Server size={16} /> },
+    { label: "API Layer", tech: "58 REST Endpoints + Server Actions", color: "#3B82F6", icon: <Server size={16} /> },
     { label: "Edge Functions", tech: "7 Supabase Edge Functions (Deno)", color: "#8B5CF6", icon: <Zap size={16} /> },
     { label: "Intelligence", tech: "Pricing Engine + Gemini AI + pgvector", color: "#F59E0B", icon: <Brain size={16} /> },
-    { label: "Data Layer", tech: "Supabase Postgres (42+ tables, RLS)", color: "#06B6D4", icon: <Database size={16} /> },
+    { label: "CRM Integration", tech: "MenuMaster API · Sample Tracking · Dealer Sync", color: "#EC4899", icon: <Users size={16} /> },
+    { label: "Data Layer", tech: "Supabase Postgres (47+ tables, RLS)", color: "#06B6D4", icon: <Database size={16} /> },
     { label: "Automation", tech: "n8n Workflows + Stripe + EasyPost", color: "#6B7280", icon: <Workflow size={16} /> },
   ];
 
@@ -1423,16 +1425,16 @@ function Slide10Architecture({ active }: { active: boolean }) {
 // ═══════════════════════════════════════════════
 function Slide11Metrics({ active }: { active: boolean }) {
   const heroMetrics = [
-    { value: 53, suffix: "K", label: "Lines of Code", icon: <Code2 size={22} />, color: "#10B981" },
-    { value: 50, suffix: "", label: "Pages", icon: <Layers size={22} />, color: "#3B82F6" },
-    { value: 45, suffix: "", label: "API Endpoints", icon: <Server size={22} />, color: "#8B5CF6" },
-    { value: 42, suffix: "+", label: "Database Tables", icon: <Database size={22} />, color: "#F59E0B" },
+    { value: 59, suffix: "K", label: "Lines of Code", icon: <Code2 size={22} />, color: "#10B981" },
+    { value: 54, suffix: "", label: "Pages", icon: <Layers size={22} />, color: "#3B82F6" },
+    { value: 58, suffix: "", label: "API Endpoints", icon: <Server size={22} />, color: "#8B5CF6" },
+    { value: 47, suffix: "+", label: "Database Tables", icon: <Database size={22} />, color: "#F59E0B" },
   ];
 
   const detailMetrics = [
-    { value: 171, suffix: "", label: "Source Files", icon: <Code2 size={15} /> },
+    { value: 202, suffix: "", label: "Source Files", icon: <Code2 size={15} /> },
     { value: 25, suffix: "", label: "UI Components", icon: <Palette size={15} /> },
-    { value: 8, suffix: "", label: "Edge Functions", icon: <Zap size={15} /> },
+    { value: 7, suffix: "", label: "Edge Functions", icon: <Zap size={15} /> },
     { value: 166, suffix: "", label: "E2E Tests", icon: <TestTube2 size={15} /> },
     { value: 7, suffix: "", label: "Custom Hooks", icon: <GitBranch size={15} /> },
     { value: 35, suffix: "", label: "Lib Modules", icon: <Package size={15} /> },
@@ -1730,16 +1732,16 @@ function Slide15Roadmap({ active }: { active: boolean }) {
           <TimelineItem
             phase="Phase 3"
             title="Scale Operations"
-            status="next"
-            items={["n8n workflow automation", "Demand forecasting AI", "Vending machine integration", "Mobile app (React Native)"]}
+            status="done"
+            items={["n8n workflow automation", "Demand forecasting AI", "Vending machine API", "CRM & sample tracking"]}
           />
         </Reveal>
         <Reveal active={active} delay={900}>
           <TimelineItem
             phase="Phase 4"
             title="Market Expansion"
-            status="future"
-            items={["International markets", "White-label platform licensing", "API marketplace", "Strategic partnerships"]}
+            status="next"
+            items={["Mobile app (React Native)", "International markets", "White-label platform licensing", "API marketplace"]}
           />
         </Reveal>
       </div>
