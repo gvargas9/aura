@@ -71,6 +71,7 @@ export interface MenuMasterActivity {
   entityId: number; // MenuMaster entity ID
   activityType: "call" | "email" | "meeting" | "task" | "note";
   subject: string;
+  createdBy: number; // MenuMaster user ID (required)
   description?: string;
   activityDate?: string; // ISO 8601
   dueDate?: string; // ISO 8601

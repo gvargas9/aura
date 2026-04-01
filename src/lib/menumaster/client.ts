@@ -199,6 +199,7 @@ export async function logSampleActivity(params: {
   leadId: number;
   subject: string;
   description: string;
+  createdBy?: number;
   activityType?: "meeting" | "note" | "task";
   status?: "pending" | "completed";
   assignedTo?: number;
@@ -209,6 +210,7 @@ export async function logSampleActivity(params: {
     entityId: params.leadId,
     activityType: params.activityType ?? "note",
     subject: params.subject,
+    createdBy: params.createdBy ?? 1, // Default to admin user
     description: params.description,
     status: params.status ?? "completed",
     activityDate: new Date().toISOString(),
