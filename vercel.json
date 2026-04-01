@@ -2,7 +2,6 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
   "regions": ["iad1"],
-  "ignoreCommand": "if [ -d mobile ]; then exit 0; fi",
   "crons": [
     { "path": "/api/cron/subscription-reminders", "schedule": "0 15 * * *" },
     { "path": "/api/cron/low-stock-check", "schedule": "0 */6 * * *" },
