@@ -3,11 +3,13 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { useLocale } from "@/hooks/useLocale";
 import { Loader2 } from "lucide-react";
 
 export default function ReferralPage() {
   const params = useParams();
   const router = useRouter();
+  const { t } = useLocale();
   const [error, setError] = useState(false);
   const code = params.code as string;
 
@@ -68,14 +70,14 @@ export default function ReferralPage() {
       <div className="text-center px-4">
         {error ? (
           <>
-            <p className="text-gray-500 mb-2">Invalid or expired referral code.</p>
-            <p className="text-sm text-gray-400">Redirecting you to our store...</p>
+            <p className="text-gray-500 mb-2">{t("referral.invalidCode")}</p>
+            <p className="text-sm text-gray-400">{t("referral.redirecting")}</p>
           </>
         ) : (
           <>
             <Loader2 className="w-8 h-8 animate-spin text-aura-primary mx-auto mb-4" />
-            <p className="text-gray-600 font-medium">Processing your referral...</p>
-            <p className="text-sm text-gray-400 mt-1">You&apos;ll be redirected shortly</p>
+            <p className="text-gray-600 font-medium">{t("referral.processing")}</p>
+            <p className="text-sm text-gray-400 mt-1">{t("referral.redirectSoon")}</p>
           </>
         )}
       </div>

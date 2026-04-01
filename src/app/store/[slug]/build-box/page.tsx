@@ -7,6 +7,7 @@ import { useStorefront } from "../layout";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { formatCurrency } from "@/lib/utils";
+import { useLocale } from "@/hooks/useLocale";
 import { BOX_CONFIGS } from "@/types";
 import type { BoxConfig } from "@/types";
 import {
@@ -40,6 +41,7 @@ interface BoxSlot {
 
 export default function StorefrontBuildBoxPage() {
   const { storefront } = useStorefront();
+  const { t } = useLocale();
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -130,10 +132,10 @@ export default function StorefrontBuildBoxPage() {
       {/* Header */}
       <div style={{ backgroundColor: "var(--sf-dark)" }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-          <h1 className="text-3xl font-bold text-white">Build Your Box</h1>
+          <h1 className="text-3xl font-bold text-white">{t("buildBox.title")}</h1>
           <p className="text-gray-400 mt-1">
-            Select your meals and customize your{" "}
-            {storefront.name} box
+            {t("buildBox.subtitle")}{" "}
+            {storefront.name} {t("buildBox.box")}
           </p>
         </div>
       </div>
@@ -167,7 +169,7 @@ export default function StorefrontBuildBoxPage() {
                 >
                   <span className="capitalize">{box.size}</span>
                   <span className="ml-1.5 opacity-70">
-                    {box.slots} meals &middot; {formatCurrency(box.price)}/mo
+                    {box.slots} {t("buildBox.meals")} &middot; {formatCurrency(box.price)}{t("common.perMonth")}
                   </span>
                 </button>
               ))}
@@ -179,7 +181,7 @@ export default function StorefrontBuildBoxPage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Search meals..."
+                  placeholder={t("buildBox.searchMeals")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm bg-white focus:ring-2 focus:border-transparent outline-none"
@@ -241,7 +243,7 @@ export default function StorefrontBuildBoxPage() {
             ) : filtered.length === 0 ? (
               <div className="text-center py-20">
                 <Package className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-500">No products found</p>
+                <p className="text-gray-500">{t("store.noProductsFound")}</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -276,7 +278,7 @@ export default function StorefrontBuildBoxPage() {
                         </p>
                         {product.is_bunker_safe && (
                           <span className="inline-block mt-1 text-[10px] font-semibold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded">
-                            Bunker Safe
+                            {t("store.bunkerSafe")}
                           </span>
                         )}
                       </div>
@@ -328,7 +330,7 @@ export default function StorefrontBuildBoxPage() {
                   {selectedSize} Box
                 </h3>
                 <p className="text-sm text-gray-500 mb-4">
-                  {slots.length} of {boxConfig.slots} meals selected
+                  {slots.length} {t("buildBox.mealsSelected", { total: String(boxConfig.slots) })}
                 </p>
 
                 {/* Progress Ring */}
@@ -407,7 +409,7 @@ export default function StorefrontBuildBoxPage() {
                   <div className="text-center py-6 mb-6">
                     <ShoppingCart className="w-8 h-8 text-gray-300 mx-auto mb-2" />
                     <p className="text-sm text-gray-400">
-                      Add meals to your box
+                      {t("buildBox.addMeals")}
                     </p>
                   </div>
                 )}
@@ -415,20 +417,20 @@ export default function StorefrontBuildBoxPage() {
                 {/* Pricing */}
                 <div className="border-t border-gray-100 pt-4 mb-4 space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-500">Subscription</span>
+                    <span className="text-gray-500">{t("buildBox.subscription")}</span>
                     <span className="font-semibold text-gray-900">
-                      {formatCurrency(boxConfig.price)}/mo
+                      {formatCurrency(boxConfig.price)}{t("common.perMonth")}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-500">One-time</span>
+                    <span className="text-gray-500">{t("buildBox.oneTime")}</span>
                     <span className="text-gray-400">
                       {formatCurrency(boxConfig.oneTimePrice)}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span style={{ color: "var(--sf-primary)" }}>
-                      You save
+                      {t("buildBox.youSave")}
                     </span>
                     <span
                       className="font-semibold"
@@ -448,13 +450,14 @@ export default function StorefrontBuildBoxPage() {
                 >
                   {slots.length < boxConfig.slots ? (
                     <>
-                      Add {slotsRemaining} more meal
-                      {slotsRemaining !== 1 ? "s" : ""}
+                      {slotsRemaining !== 1
+                        ? t("buildBox.addMorePlural", { count: String(slotsRemaining) })
+                        : t("buildBox.addMore", { count: String(slotsRemaining) })}
                     </>
                   ) : (
                     <>
                       <Check className="w-5 h-5" />
-                      Proceed to Checkout
+                      {t("buildBox.proceedToCheckout")}
                       <ArrowRight className="w-4 h-4" />
                     </>
                   )}

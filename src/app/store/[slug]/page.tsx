@@ -7,6 +7,7 @@ import { useStorefront } from "./layout";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { formatCurrency } from "@/lib/utils";
+import { useLocale } from "@/hooks/useLocale";
 import { BOX_CONFIGS } from "@/types";
 import {
   ShoppingCart,
@@ -64,15 +65,16 @@ const AUDIENCE_HERO: Record<
   },
 };
 
-const STATS = [
-  { label: "Meals Shipped", value: "250K+" },
-  { label: "5-Star Reviews", value: "4,800+" },
-  { label: "Shelf Life", value: "25 yrs" },
-  { label: "Categories", value: "12+" },
+const STAT_KEYS = [
+  { labelKey: "store.mealsShipped", value: "250K+" },
+  { labelKey: "store.fiveStarReviews", value: "4,800+" },
+  { labelKey: "store.shelfLifeLabel", value: "25 yrs" },
+  { labelKey: "store.categories", value: "12+" },
 ];
 
 export default function StorefrontPage() {
   const { storefront } = useStorefront();
+  const { t } = useLocale();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -145,13 +147,13 @@ export default function StorefrontPage() {
                 style={{ backgroundColor: "var(--sf-primary)" }}
               >
                 <ShoppingCart className="w-5 h-5" />
-                Build Your Box
+                {t("store.buildBox")}
               </Link>
               <Link
                 href={`/store/${storefront.slug}/products`}
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-lg border-2 border-white/20 text-white hover:bg-white/10 transition-colors"
               >
-                Browse Products
+                {t("store.browseProducts")}
                 <ArrowRight className="w-5 h-5" />
               </Link>
             </div>
@@ -163,15 +165,15 @@ export default function StorefrontPage() {
       <section className="border-b border-gray-100 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {STATS.map((stat) => (
-              <div key={stat.label} className="text-center">
+            {STAT_KEYS.map((stat) => (
+              <div key={stat.labelKey} className="text-center">
                 <p
                   className="text-2xl sm:text-3xl font-bold"
                   style={{ color: "var(--sf-primary)" }}
                 >
                   {stat.value}
                 </p>
-                <p className="text-sm text-gray-500 mt-1">{stat.label}</p>
+                <p className="text-sm text-gray-500 mt-1">{t(stat.labelKey)}</p>
               </div>
             ))}
           </div>
@@ -184,11 +186,11 @@ export default function StorefrontPage() {
           <div className="flex items-end justify-between mb-8">
             <div>
               <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
-                Featured Products
+                {t("store.featuredProducts")}
               </h2>
               <p className="text-gray-500 mt-1">
-                Top picks for{" "}
-                {audience === "default" ? "every occasion" : audience}
+                {t("store.topPicks")}{" "}
+                {audience === "default" ? t("store.everyOccasion") : audience}
               </p>
             </div>
             <Link
@@ -196,7 +198,7 @@ export default function StorefrontPage() {
               className="hidden sm:inline-flex items-center gap-1 text-sm font-medium transition-colors hover:underline"
               style={{ color: "var(--sf-primary)" }}
             >
-              View all
+              {t("store.viewAll")}
               <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
@@ -209,7 +211,7 @@ export default function StorefrontPage() {
             <div className="text-center py-16">
               <Package className="w-12 h-12 text-gray-300 mx-auto mb-3" />
               <p className="text-gray-500">
-                No products available yet. Check back soon.
+                {t("store.noProducts")}
               </p>
             </div>
           ) : (
@@ -235,7 +237,7 @@ export default function StorefrontPage() {
                     )}
                     {product.is_bunker_safe && (
                       <span className="absolute top-2 right-2 bg-amber-500 text-white text-xs font-semibold px-2 py-0.5 rounded-full">
-                        Bunker Safe
+                        {t("store.bunkerSafe")}
                       </span>
                     )}
                   </div>
@@ -279,7 +281,7 @@ export default function StorefrontPage() {
               className="inline-flex items-center gap-1 text-sm font-medium"
               style={{ color: "var(--sf-primary)" }}
             >
-              View all products
+              {t("store.viewAllProducts")}
               <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
@@ -291,10 +293,10 @@ export default function StorefrontPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="text-center mb-10">
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
-              Choose Your Box Size
+              {t("store.chooseBoxSize")}
             </h2>
             <p className="text-gray-500 mt-2">
-              Subscribe and save on every shipment
+              {t("store.subscribeAndSave")}
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
@@ -310,13 +312,13 @@ export default function StorefrontPage() {
                 >
                   {formatCurrency(box.price)}
                 </p>
-                <p className="text-xs text-gray-400 mb-4">/month</p>
+                <p className="text-xs text-gray-400 mb-4">{t("store.perMonth")}</p>
                 <Link
                   href={`/store/${storefront.slug}/build-box?size=${box.size}`}
                   className="inline-flex items-center justify-center w-full px-4 py-2.5 rounded-lg text-white font-semibold text-sm transition-colors hover:opacity-90"
                   style={{ backgroundColor: "var(--sf-primary)" }}
                 >
-                  Build {box.size} Box
+                  {t("store.buildSizeBox", { size: box.size })}
                 </Link>
               </Card>
             ))}
@@ -345,8 +347,8 @@ export default function StorefrontPage() {
                 />
               </div>
               <div>
-                <p className="font-semibold text-gray-900">Free Shipping</p>
-                <p className="text-sm text-gray-500">On all subscription boxes</p>
+                <p className="font-semibold text-gray-900">{t("store.freeShipping")}</p>
+                <p className="text-sm text-gray-500">{t("store.onAllSubscriptions")}</p>
               </div>
             </div>
             <div className="flex items-center gap-4">
@@ -363,9 +365,9 @@ export default function StorefrontPage() {
                 />
               </div>
               <div>
-                <p className="font-semibold text-gray-900">25-Year Shelf Life</p>
+                <p className="font-semibold text-gray-900">{t("store.shelfLife")}</p>
                 <p className="text-sm text-gray-500">
-                  Premium freeze-dried quality
+                  {t("store.premiumQuality")}
                 </p>
               </div>
             </div>
@@ -383,8 +385,8 @@ export default function StorefrontPage() {
                 />
               </div>
               <div>
-                <p className="font-semibold text-gray-900">Top Rated</p>
-                <p className="text-sm text-gray-500">4.9 average from 4,800+ reviews</p>
+                <p className="font-semibold text-gray-900">{t("store.topRated")}</p>
+                <p className="text-sm text-gray-500">{t("store.topRatedDesc")}</p>
               </div>
             </div>
           </div>

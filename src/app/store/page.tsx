@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Card } from "@/components/ui/Card";
+import { useLocale } from "@/hooks/useLocale";
 import { Loader2, Store, ArrowRight } from "lucide-react";
 
 interface StorefrontListItem {
@@ -24,6 +25,7 @@ interface StorefrontListItem {
 }
 
 export default function StorefrontDirectoryPage() {
+  const { t } = useLocale();
   const [storefronts, setStorefronts] = useState<StorefrontListItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -51,15 +53,13 @@ export default function StorefrontDirectoryPage() {
           <div className="text-center">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-emerald-400 text-sm font-medium mb-4">
               <Store className="w-4 h-4" />
-              Aura Storefronts
+              {t("store.title")}
             </div>
             <h1 className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight mb-4">
-              Explore Aura Stores
+              {t("store.heading")}
             </h1>
             <p className="text-lg text-gray-400 max-w-2xl mx-auto">
-              Discover specialized storefronts curated for camping, marine,
-              emergency prep, and more. Each store features products tailored to
-              your lifestyle.
+              {t("store.subtitle")}
             </p>
           </div>
         </div>
@@ -74,7 +74,7 @@ export default function StorefrontDirectoryPage() {
         ) : storefronts.length === 0 ? (
           <div className="text-center py-20">
             <Store className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500">No stores available yet.</p>
+            <p className="text-gray-500">{t("store.noStores")}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -155,7 +155,7 @@ export default function StorefrontDirectoryPage() {
                     </div>
 
                     <div className="flex items-center gap-1 text-sm font-medium text-emerald-600 group-hover:text-emerald-700 transition-colors">
-                      Visit Store
+                      {t("store.visitStore")}
                       <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                     </div>
                   </div>

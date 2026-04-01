@@ -23,6 +23,7 @@ import {
   Star,
 } from "lucide-react";
 import { cn, formatCurrency } from "@/lib/utils";
+import { useLocale } from "@/hooks/useLocale";
 import type { ProductRecipe, Product } from "@/types/database";
 
 /* ================================================================
@@ -140,6 +141,7 @@ function MiniRecipeCard({ recipe }: { recipe: ProductRecipe }) {
    ================================================================ */
 
 export default function RecipePage() {
+  const { t } = useLocale();
   const params = useParams();
   const recipeId = params.recipeId as string;
   const supabase = createClient();
@@ -229,13 +231,13 @@ export default function RecipePage() {
           <div className="text-center">
             <BookOpen className="w-16 h-16 text-gray-200 mx-auto mb-4" />
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
-              Recipe Not Found
+              {t("recipe.notFound")}
             </h2>
             <p className="text-gray-500 mb-6">
-              The recipe you are looking for does not exist or has been removed.
+              {t("recipe.notFoundDesc")}
             </p>
             <Link href="/academy">
-              <Button variant="primary">Browse Recipes</Button>
+              <Button variant="primary">{t("recipe.browseRecipes")}</Button>
             </Link>
           </div>
         </main>
@@ -299,7 +301,7 @@ export default function RecipePage() {
                 className="flex items-center gap-2 bg-white/90 backdrop-blur-sm text-gray-700 px-4 py-2 rounded-full text-sm font-medium hover:bg-white transition-colors shadow-sm"
               >
                 <ArrowLeft className="w-4 h-4" />
-                All Recipes
+                {t("recipe.allRecipes")}
               </Link>
             </div>
 
@@ -318,7 +320,7 @@ export default function RecipePage() {
                   {recipe.is_featured && (
                     <span className="bg-aura-accent text-white text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 shadow-sm">
                       <Star className="w-3 h-3 fill-current" />
-                      Featured
+                      {t("academy.featured")}
                     </span>
                   )}
                 </div>
@@ -362,7 +364,7 @@ export default function RecipePage() {
                 aria-label="Print recipe"
               >
                 <Printer className="w-4 h-4" />
-                Print
+                {t("recipe.print")}
               </button>
               <button
                 onClick={handleShare}
@@ -370,7 +372,7 @@ export default function RecipePage() {
                 aria-label="Share recipe"
               >
                 <Share2 className="w-4 h-4" />
-                Share
+                {t("recipe.share")}
               </button>
             </div>
           </div>
@@ -381,7 +383,7 @@ export default function RecipePage() {
               <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center mx-auto mb-2">
                 <Timer className="w-5 h-5 text-blue-500" />
               </div>
-              <p className="text-xs text-gray-500">Prep Time</p>
+              <p className="text-xs text-gray-500">{t("recipe.prepTime")}</p>
               <p className="text-sm font-bold text-gray-900">
                 {recipe.prep_time_minutes || 0} min
               </p>
@@ -390,7 +392,7 @@ export default function RecipePage() {
               <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center mx-auto mb-2">
                 <Flame className="w-5 h-5 text-orange-500" />
               </div>
-              <p className="text-xs text-gray-500">Cook Time</p>
+              <p className="text-xs text-gray-500">{t("recipe.cookTime")}</p>
               <p className="text-sm font-bold text-gray-900">
                 {recipe.cook_time_minutes || 0} min
               </p>
@@ -399,14 +401,14 @@ export default function RecipePage() {
               <div className="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center mx-auto mb-2">
                 <Clock className="w-5 h-5 text-green-500" />
               </div>
-              <p className="text-xs text-gray-500">Total</p>
+              <p className="text-xs text-gray-500">{t("recipe.totalTime")}</p>
               <p className="text-sm font-bold text-gray-900">{totalTime} min</p>
             </div>
             <div className="text-center">
               <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center mx-auto mb-2">
                 <Users className="w-5 h-5 text-purple-500" />
               </div>
-              <p className="text-xs text-gray-500">Servings</p>
+              <p className="text-xs text-gray-500">{t("recipe.servings")}</p>
               <p className="text-sm font-bold text-gray-900">{recipe.servings}</p>
             </div>
           </div>
@@ -425,7 +427,7 @@ export default function RecipePage() {
               <div className="sticky top-24">
                 <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
                   <Package className="w-5 h-5 text-aura-primary" />
-                  Ingredients
+                  {t("recipe.ingredients")}
                 </h2>
                 <div className="bg-gray-50 rounded-2xl p-2 space-y-0.5">
                   {ingredients.map((ingredient, idx) => (
@@ -443,7 +445,7 @@ export default function RecipePage() {
             <div>
               <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
                 <BookOpen className="w-5 h-5 text-aura-primary" />
-                Instructions
+                {t("recipe.instructions")}
               </h2>
               <ol className="space-y-6">
                 {steps.map((step, idx) => (
@@ -465,7 +467,7 @@ export default function RecipePage() {
             <div className="mt-12 bg-gradient-to-br from-aura-warm to-amber-50 rounded-2xl p-6 lg:p-8">
               <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <Flame className="w-5 h-5 text-aura-accent" />
-                Chef&apos;s Tips
+                {t("recipe.chefsTips")}
               </h2>
               <ul className="space-y-3">
                 {recipe.tips.map((tip, idx) => (
@@ -517,7 +519,7 @@ export default function RecipePage() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">
-                  Made With
+                  {t("recipe.madeWith")}
                 </p>
                 <h3 className="font-semibold text-gray-900 mb-1">
                   {product.name}
@@ -532,7 +534,7 @@ export default function RecipePage() {
                 </p>
                 <Link href={`/products/${product.id}`}>
                   <Button variant="primary" size="sm">
-                    View Product
+                    {t("recipe.viewProduct")}
                   </Button>
                 </Link>
               </div>
@@ -543,7 +545,7 @@ export default function RecipePage() {
           {relatedRecipes.length > 0 && (
             <div className="mt-12">
               <h2 className="text-xl font-bold text-gray-900 mb-6">
-                More Recipes with {product?.name || "This Product"}
+                {t("recipe.moreRecipes")} {product?.name || ""}
               </h2>
               <div className="space-y-3">
                 {relatedRecipes.map((r) => (
@@ -557,7 +559,7 @@ export default function RecipePage() {
           {recipe.video_url && (
             <div className="mt-12">
               <h2 className="text-xl font-bold text-gray-900 mb-4">
-                Watch the Tutorial
+                {t("recipe.watchTutorial")}
               </h2>
               <div className="relative aspect-video rounded-2xl overflow-hidden bg-gray-900">
                 <iframe

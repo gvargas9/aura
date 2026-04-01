@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Header, Footer, Button, Input, Card } from "@/components/ui";
 import { useAuth } from "@/hooks";
+import { useLocale } from "@/hooks/useLocale";
 import { formatCurrency } from "@/lib/utils";
 import {
   Gift,
@@ -39,6 +40,7 @@ interface PurchaseSuccess {
 
 export default function GiftCardsPage() {
   const router = useRouter();
+  const { t } = useLocale();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
 
   // Form state
@@ -168,15 +170,15 @@ export default function GiftCardsPage() {
             </div>
 
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Gift Card Created
+              {t("giftCards.created")}
             </h1>
             <p className="text-lg text-gray-600 mb-6">
-              A {formatCurrency(success.amount)} gift card for {success.recipientName} is on its way.
+              {formatCurrency(success.amount)} {t("giftCards.createdDesc")} {success.recipientName} {t("giftCards.isOnItsWay")}
             </p>
 
             {/* Gift Card Code Display */}
             <div className="bg-gradient-to-br from-emerald-600 to-teal-700 rounded-2xl p-6 mb-6 text-white shadow-lg">
-              <p className="text-sm text-emerald-200 mb-2">Gift Card Code</p>
+              <p className="text-sm text-emerald-200 mb-2">{t("giftCards.giftCardCode")}</p>
               <div className="flex items-center justify-center gap-3">
                 <p className="text-2xl font-mono font-bold tracking-wider">
                   {success.code}
@@ -194,7 +196,7 @@ export default function GiftCardsPage() {
                 </button>
               </div>
               <p className="text-sm text-emerald-200 mt-3">
-                {formatCurrency(success.amount)} Balance
+                {formatCurrency(success.amount)} {t("giftCards.balance")}
               </p>
             </div>
 
@@ -219,11 +221,11 @@ export default function GiftCardsPage() {
                   setScheduledDate("");
                 }}
               >
-                Send Another Gift Card
+                {t("giftCards.sendAnother")}
               </Button>
               <Link href="/dashboard">
                 <Button variant="secondary" className="w-full">
-                  Go to Dashboard
+                  {t("giftCards.goToDashboard")}
                 </Button>
               </Link>
             </div>
@@ -249,33 +251,32 @@ export default function GiftCardsPage() {
           <div className="relative max-w-4xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 mb-6">
               <Sparkles className="w-4 h-4 text-amber-300" />
-              <span className="text-sm font-medium text-emerald-100">Perfect for any occasion</span>
+              <span className="text-sm font-medium text-emerald-100">{t("giftCards.perfectOccasion")}</span>
             </div>
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-4 leading-tight">
-              Give the Gift of{" "}
+              {t("giftCards.title")}{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-amber-400">
                 Aura
               </span>
             </h1>
 
             <p className="text-lg sm:text-xl text-emerald-100 max-w-2xl mx-auto mb-8">
-              Let them choose their own adventure with an Aura gift card.
-              Premium meals, delivered to their door.
+              {t("giftCards.subtitle")}
             </p>
 
             <div className="flex items-center justify-center gap-8 text-sm text-emerald-200">
               <span className="flex items-center gap-2">
                 <Zap className="w-4 h-4 text-amber-300" />
-                Instant Delivery
+                {t("giftCards.instantDelivery")}
               </span>
               <span className="flex items-center gap-2">
                 <Heart className="w-4 h-4 text-amber-300" />
-                Never Expires*
+                {t("giftCards.neverExpires")}
               </span>
               <span className="flex items-center gap-2">
                 <Gift className="w-4 h-4 text-amber-300" />
-                Any Amount
+                {t("giftCards.anyAmount")}
               </span>
             </div>
           </div>
@@ -289,9 +290,9 @@ export default function GiftCardsPage() {
               <div className="lg:col-span-3 space-y-6">
                 {/* Amount Selection */}
                 <Card padding="lg">
-                  <h2 className="text-xl font-semibold mb-1">Choose an Amount</h2>
+                  <h2 className="text-xl font-semibold mb-1">{t("giftCards.chooseAmount")}</h2>
                   <p className="text-sm text-gray-500 mb-5">
-                    Select a preset or enter a custom amount ({formatCurrency(MIN_AMOUNT)} - {formatCurrency(MAX_AMOUNT)})
+                    {t("giftCards.chooseAmountDesc")} ({formatCurrency(MIN_AMOUNT)} - {formatCurrency(MAX_AMOUNT)})
                   </p>
 
                   <div className="grid grid-cols-4 gap-3 mb-4">
@@ -317,7 +318,7 @@ export default function GiftCardsPage() {
                       min={MIN_AMOUNT}
                       max={MAX_AMOUNT}
                       step={1}
-                      placeholder="Custom amount"
+                      placeholder={t("giftCards.customAmount")}
                       value={customAmount}
                       onChange={(e) => handleCustomAmountChange(e.target.value)}
                       onFocus={() => setIsCustom(true)}
@@ -331,31 +332,31 @@ export default function GiftCardsPage() {
 
                   {isCustom && customAmount && !isValidAmount && (
                     <p className="text-sm text-red-500 mt-2">
-                      Amount must be between {formatCurrency(MIN_AMOUNT)} and {formatCurrency(MAX_AMOUNT)}
+                      {t("giftCards.amountError")} {formatCurrency(MIN_AMOUNT)} {t("giftCards.and")} {formatCurrency(MAX_AMOUNT)}
                     </p>
                   )}
                 </Card>
 
                 {/* Recipient Details */}
                 <Card padding="lg">
-                  <h2 className="text-xl font-semibold mb-1">Recipient Details</h2>
+                  <h2 className="text-xl font-semibold mb-1">{t("giftCards.recipientDetails")}</h2>
                   <p className="text-sm text-gray-500 mb-5">
-                    Who is this gift card for?
+                    {t("giftCards.recipientDetailsDesc")}
                   </p>
 
                   <div className="space-y-4">
                     <div className="grid sm:grid-cols-2 gap-4">
                       <Input
-                        label="Recipient Name"
-                        placeholder="Their name"
+                        label={t("giftCards.recipientName")}
+                        placeholder={t("giftCards.recipientNamePlaceholder")}
                         value={recipientName}
                         onChange={(e) => setRecipientName(e.target.value)}
                         leftIcon={<User className="w-4 h-4" />}
                       />
                       <Input
-                        label="Recipient Email"
+                        label={t("giftCards.recipientEmail")}
                         type="email"
-                        placeholder="their@email.com"
+                        placeholder={t("giftCards.recipientEmailPlaceholder")}
                         value={recipientEmail}
                         onChange={(e) => setRecipientEmail(e.target.value)}
                         leftIcon={<Mail className="w-4 h-4" />}
@@ -364,14 +365,14 @@ export default function GiftCardsPage() {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                        Personal Message (Optional)
+                        {t("giftCards.personalMessage")}
                       </label>
                       <div className="relative">
                         <MessageSquare className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
                         <textarea
                           className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-aura-primary/20 focus:border-aura-primary outline-none resize-none hover:border-gray-300 transition-all"
                           rows={3}
-                          placeholder="Add a heartfelt message..."
+                          placeholder={t("giftCards.messagePlaceholder")}
                           value={message}
                           onChange={(e) => setMessage(e.target.value)}
                           maxLength={300}
@@ -384,9 +385,9 @@ export default function GiftCardsPage() {
 
                 {/* Delivery Options */}
                 <Card padding="lg">
-                  <h2 className="text-xl font-semibold mb-1">Delivery</h2>
+                  <h2 className="text-xl font-semibold mb-1">{t("giftCards.delivery")}</h2>
                   <p className="text-sm text-gray-500 mb-5">
-                    When should we send the gift card?
+                    {t("giftCards.deliveryDesc")}
                   </p>
 
                   <div className="grid sm:grid-cols-2 gap-3 mb-4">
@@ -404,8 +405,8 @@ export default function GiftCardsPage() {
                         <Send className="w-5 h-5" />
                       </div>
                       <div>
-                        <p className="font-medium text-sm">Send Now</p>
-                        <p className="text-xs text-gray-500">Deliver immediately via email</p>
+                        <p className="font-medium text-sm">{t("giftCards.sendNow")}</p>
+                        <p className="text-xs text-gray-500">{t("giftCards.sendNowDesc")}</p>
                       </div>
                     </button>
 
@@ -423,8 +424,8 @@ export default function GiftCardsPage() {
                         <Calendar className="w-5 h-5" />
                       </div>
                       <div>
-                        <p className="font-medium text-sm">Schedule</p>
-                        <p className="text-xs text-gray-500">Pick a future delivery date</p>
+                        <p className="font-medium text-sm">{t("giftCards.schedule")}</p>
+                        <p className="text-xs text-gray-500">{t("giftCards.scheduleDesc")}</p>
                       </div>
                     </button>
                   </div>
@@ -432,7 +433,7 @@ export default function GiftCardsPage() {
                   {deliveryOption === "scheduled" && (
                     <Input
                       type="date"
-                      label="Delivery Date"
+                      label={t("giftCards.deliveryDate")}
                       value={scheduledDate}
                       onChange={(e) => setScheduledDate(e.target.value)}
                       min={minDate}
@@ -459,10 +460,10 @@ export default function GiftCardsPage() {
                     leftIcon={<Gift className="w-5 h-5" />}
                   >
                     {authLoading
-                      ? "Loading..."
+                      ? t("common.loading")
                       : !isAuthenticated
-                      ? "Sign In to Purchase"
-                      : `Purchase ${isValidAmount ? formatCurrency(activeAmount) : ""} Gift Card`}
+                      ? t("giftCards.signInToPurchase")
+                      : `${t("giftCards.purchase")} ${isValidAmount ? formatCurrency(activeAmount) : ""} ${t("giftCards.giftCard")}`}
                   </Button>
                 </div>
               </div>
@@ -473,7 +474,7 @@ export default function GiftCardsPage() {
                 <div className="sticky top-24 space-y-6">
                   <Card padding="none" className="overflow-hidden">
                     <div className="p-4 bg-gray-50 border-b">
-                      <h3 className="font-medium text-sm text-gray-600">Gift Card Preview</h3>
+                      <h3 className="font-medium text-sm text-gray-600">{t("giftCards.preview")}</h3>
                     </div>
 
                     {/* Gift Card Visual */}
@@ -492,7 +493,7 @@ export default function GiftCardsPage() {
                               </div>
                               <span className="text-lg font-bold tracking-wide">AURA</span>
                             </div>
-                            <p className="text-xs text-emerald-200">Gift Card</p>
+                            <p className="text-xs text-emerald-200">{t("giftCards.giftCard")}</p>
                           </div>
                           <div className="text-right">
                             <p className="text-3xl font-bold">
@@ -503,9 +504,9 @@ export default function GiftCardsPage() {
 
                         {/* Bottom row: Recipient + Message */}
                         <div className="relative">
-                          <p className="text-xs text-emerald-300 mb-0.5">To</p>
+                          <p className="text-xs text-emerald-300 mb-0.5">{t("giftCards.to")}</p>
                           <p className="font-semibold text-sm truncate">
-                            {recipientName || "Recipient Name"}
+                            {recipientName || t("giftCards.recipientNameDefault")}
                           </p>
                           {message && (
                             <p className="text-xs text-emerald-200 mt-1 line-clamp-2 italic">
@@ -522,7 +523,7 @@ export default function GiftCardsPage() {
                         <div className="flex items-start gap-3">
                           <Mail className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
                           <div>
-                            <p className="text-sm font-medium text-gray-700">Email Preview</p>
+                            <p className="text-sm font-medium text-gray-700">{t("giftCards.emailPreview")}</p>
                             <p className="text-xs text-gray-500 mt-1">
                               {recipientName || "Your recipient"} will receive a beautifully designed email
                               with the gift card code and your personal message
@@ -557,15 +558,15 @@ export default function GiftCardsPage() {
                     <div className="grid grid-cols-3 gap-3">
                       <div className="flex flex-col items-center gap-1.5 p-3 bg-white rounded-lg border border-gray-100">
                         <ShieldCheck className="w-5 h-5 text-green-600" />
-                        <span className="text-xs text-gray-500 text-center">Secure Payment</span>
+                        <span className="text-xs text-gray-500 text-center">{t("giftCards.securePayment")}</span>
                       </div>
                       <div className="flex flex-col items-center gap-1.5 p-3 bg-white rounded-lg border border-gray-100">
                         <Zap className="w-5 h-5 text-amber-500" />
-                        <span className="text-xs text-gray-500 text-center">Instant Delivery</span>
+                        <span className="text-xs text-gray-500 text-center">{t("giftCards.instantDelivery")}</span>
                       </div>
                       <div className="flex flex-col items-center gap-1.5 p-3 bg-white rounded-lg border border-gray-100">
                         <Lock className="w-5 h-5 text-blue-600" />
-                        <span className="text-xs text-gray-500 text-center">SSL Encrypted</span>
+                        <span className="text-xs text-gray-500 text-center">{t("giftCards.sslEncrypted")}</span>
                       </div>
                     </div>
                   </div>
@@ -585,33 +586,33 @@ export default function GiftCardsPage() {
         {/* How It Works */}
         <section className="py-16 px-4 bg-white">
           <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-2xl font-bold mb-10">How Gift Cards Work</h2>
+            <h2 className="text-2xl font-bold mb-10">{t("giftCards.howItWorks")}</h2>
             <div className="grid sm:grid-cols-3 gap-8">
               {[
                 {
                   icon: Gift,
-                  title: "1. Choose & Personalize",
-                  desc: "Pick an amount and add a personal message for your recipient.",
+                  titleKey: "giftCards.step1Title",
+                  descKey: "giftCards.step1Desc",
                 },
                 {
                   icon: Send,
-                  title: "2. We Deliver It",
-                  desc: "The gift card is emailed instantly or on your chosen date.",
+                  titleKey: "giftCards.step2Title",
+                  descKey: "giftCards.step2Desc",
                 },
                 {
                   icon: Heart,
-                  title: "3. They Enjoy",
-                  desc: "Your recipient builds their dream box and enjoys premium meals.",
+                  titleKey: "giftCards.step3Title",
+                  descKey: "giftCards.step3Desc",
                 },
               ].map((step) => {
                 const StepIcon = step.icon;
                 return (
-                  <div key={step.title} className="flex flex-col items-center">
+                  <div key={step.titleKey} className="flex flex-col items-center">
                     <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center mb-4">
                       <StepIcon className="w-8 h-8 text-emerald-600" />
                     </div>
-                    <h3 className="font-semibold mb-2">{step.title}</h3>
-                    <p className="text-sm text-gray-500">{step.desc}</p>
+                    <h3 className="font-semibold mb-2">{t(step.titleKey)}</h3>
+                    <p className="text-sm text-gray-500">{t(step.descKey)}</p>
                   </div>
                 );
               })}
@@ -622,13 +623,13 @@ export default function GiftCardsPage() {
         {/* CTA Banner */}
         <section className="py-12 px-4 bg-gradient-to-r from-emerald-50 to-teal-50">
           <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-2xl font-bold mb-3">Not sure what they like?</h2>
+            <h2 className="text-2xl font-bold mb-3">{t("giftCards.notSure")}</h2>
             <p className="text-gray-600 mb-6">
-              That is the beauty of a gift card. They choose their own meals from our entire premium catalog.
+              {t("giftCards.notSureDesc")}
             </p>
             <Link href="/products">
               <Button variant="outline" rightIcon={<ArrowRight className="w-4 h-4" />}>
-                Browse Our Catalog
+                {t("giftCards.browseCatalog")}
               </Button>
             </Link>
           </div>
