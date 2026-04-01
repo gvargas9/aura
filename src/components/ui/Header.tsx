@@ -15,32 +15,29 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks";
+import { useLocale } from "@/hooks/useLocale";
 import { NotificationCenter } from "./NotificationCenter";
 import { SearchModal } from "./SearchModal";
 import { LocaleSelector } from "./LocaleSelector";
 
-interface NavItem {
-  label: string;
-  href: string;
-  icon?: React.ReactNode;
-}
-
-const desktopNav: NavItem[] = [
-  { label: "Products", href: "/products" },
-  { label: "Build a Box", href: "/build-box" },
-  { label: "How It Works", href: "/how-it-works" },
-  { label: "For Business", href: "/b2b" },
-];
-
-const mobileTabNav = [
-  { label: "Home", href: "/", icon: Home },
-  { label: "Products", href: "/products", icon: LayoutGrid },
-  { label: "Build Box", href: "/build-box", icon: Package },
-  { label: "Orders", href: "/orders", icon: ClipboardList },
-  { label: "Account", href: "/account", icon: User },
-];
-
 export function Header() {
+  const { t } = useLocale();
+
+  const desktopNav = [
+    { label: t("nav.products"), href: "/products" },
+    { label: t("nav.buildBox"), href: "/build-box" },
+    { label: t("nav.howItWorks"), href: "/how-it-works" },
+    { label: t("nav.forBusiness"), href: "/b2b" },
+  ];
+
+  const mobileTabNav = [
+    { label: t("nav.home"), href: "/", icon: Home },
+    { label: t("nav.products"), href: "/products", icon: LayoutGrid },
+    { label: t("nav.buildBox"), href: "/build-box", icon: Package },
+    { label: t("nav.orders"), href: "/orders", icon: ClipboardList },
+    { label: t("nav.account"), href: "/account", icon: User },
+  ];
+
   const [scrolled, setScrolled] = useState(false);
   const [cartCount] = useState(0);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -172,7 +169,7 @@ export function Header() {
                     href="/auth/login"
                     className="text-sm font-medium text-gray-600 hover:text-aura-dark px-4 py-2 rounded-full hover:bg-gray-50 transition-all duration-200"
                   >
-                    Sign In
+                    {t("nav.signIn")}
                   </Link>
                 )}
               </div>
@@ -182,7 +179,7 @@ export function Header() {
                 href="/build-box"
                 className="hidden lg:inline-flex items-center gap-2 bg-aura-dark text-white text-sm font-semibold px-5 py-2.5 rounded-full hover:bg-aura-darker transition-all duration-200 hover:-translate-y-0.5 shadow-sm hover:shadow-md"
               >
-                Build Your Box
+                {t("nav.buildYourBox")}
               </Link>
             </div>
           </div>

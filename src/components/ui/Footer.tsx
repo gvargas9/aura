@@ -1,32 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import { Mail, Phone, MapPin, Instagram, Twitter, Facebook } from "lucide-react";
-
-const footerLinks = {
-  company: [
-    { label: "About Us", href: "/about" },
-    { label: "How It Works", href: "/how-it-works" },
-    { label: "Our Story", href: "/story" },
-    { label: "Careers", href: "/careers" },
-  ],
-  products: [
-    { label: "Build Your Box", href: "/build-box" },
-    { label: "All Products", href: "/products" },
-    { label: "Subscriptions", href: "/subscriptions" },
-    { label: "Gift Cards", href: "/gift-cards" },
-  ],
-  business: [
-    { label: "For Dealers", href: "/b2b" },
-    { label: "Wholesale", href: "/wholesale" },
-    { label: "Aviation & Marine", href: "/b2b/luxury" },
-    { label: "Partner With Us", href: "/partner" },
-  ],
-  support: [
-    { label: "Help Center", href: "/help" },
-    { label: "Contact Us", href: "/contact" },
-    { label: "Shipping Info", href: "/shipping" },
-    { label: "Returns", href: "/returns" },
-  ],
-};
+import { useLocale } from "@/hooks/useLocale";
 
 const socialLinks = [
   { icon: Instagram, href: "https://instagram.com/aura", label: "Instagram" },
@@ -35,6 +11,35 @@ const socialLinks = [
 ];
 
 export function Footer() {
+  const { t } = useLocale();
+
+  const footerLinks = {
+    company: [
+      { label: t("footer.aboutUs"), href: "/about" },
+      { label: t("nav.howItWorks"), href: "/how-it-works" },
+      { label: t("footer.ourStory"), href: "/story" },
+      { label: t("footer.careers"), href: "/careers" },
+    ],
+    products: [
+      { label: t("footer.buildYourBox"), href: "/build-box" },
+      { label: t("footer.allProducts"), href: "/products" },
+      { label: t("footer.subscriptions"), href: "/subscriptions" },
+      { label: t("footer.giftCards"), href: "/gift-cards" },
+    ],
+    business: [
+      { label: t("footer.forDealers"), href: "/b2b" },
+      { label: t("footer.wholesale"), href: "/wholesale" },
+      { label: t("footer.aviationMarine"), href: "/b2b/luxury" },
+      { label: t("footer.partnerWithUs"), href: "/partner" },
+    ],
+    support: [
+      { label: t("footer.helpCenter"), href: "/help" },
+      { label: t("footer.contact"), href: "/contact" },
+      { label: t("footer.shippingInfo"), href: "/shipping" },
+      { label: t("footer.returns"), href: "/returns" },
+    ],
+  };
+
   return (
     <footer className="bg-aura-dark text-white">
       {/* Main Footer */}
@@ -46,8 +51,7 @@ export function Footer() {
               Aura
             </Link>
             <p className="mt-4 text-gray-400 text-sm">
-              Premium shelf-stable food that tastes like it was cooked today.
-              Build your perfect box and enjoy gourmet meals anywhere.
+              {t("footer.brandDescription")}
             </p>
             {/* Contact Info */}
             <div className="mt-6 space-y-2 text-sm text-gray-400">
@@ -68,7 +72,7 @@ export function Footer() {
 
           {/* Link Columns */}
           <div>
-            <h4 className="font-semibold mb-4">Company</h4>
+            <h4 className="font-semibold mb-4">{t("footer.company")}</h4>
             <ul className="space-y-2">
               {footerLinks.company.map((link) => (
                 <li key={link.href}>
@@ -84,7 +88,7 @@ export function Footer() {
           </div>
 
           <div>
-            <h4 className="font-semibold mb-4">Products</h4>
+            <h4 className="font-semibold mb-4">{t("footer.products")}</h4>
             <ul className="space-y-2">
               {footerLinks.products.map((link) => (
                 <li key={link.href}>
@@ -100,7 +104,7 @@ export function Footer() {
           </div>
 
           <div>
-            <h4 className="font-semibold mb-4">Business</h4>
+            <h4 className="font-semibold mb-4">{t("footer.business")}</h4>
             <ul className="space-y-2">
               {footerLinks.business.map((link) => (
                 <li key={link.href}>
@@ -116,7 +120,7 @@ export function Footer() {
           </div>
 
           <div>
-            <h4 className="font-semibold mb-4">Support</h4>
+            <h4 className="font-semibold mb-4">{t("footer.support")}</h4>
             <ul className="space-y-2">
               {footerLinks.support.map((link) => (
                 <li key={link.href}>
@@ -150,7 +154,7 @@ export function Footer() {
           </div>
 
           <div className="text-sm text-gray-400">
-            &copy; {new Date().getFullYear()} Aura. All rights reserved.
+            &copy; {new Date().getFullYear()} Aura. {t("footer.rights")}
           </div>
         </div>
       </div>
@@ -160,16 +164,16 @@ export function Footer() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-wrap justify-center space-x-6 text-xs text-gray-500">
             <Link href="/privacy" className="hover:text-gray-400">
-              Privacy Policy
+              {t("footer.privacy")}
             </Link>
             <Link href="/terms" className="hover:text-gray-400">
-              Terms of Service
+              {t("footer.terms")}
             </Link>
             <Link href="/cookies" className="hover:text-gray-400">
-              Cookie Policy
+              {t("footer.cookiePolicy")}
             </Link>
             <Link href="/accessibility" className="hover:text-gray-400">
-              Accessibility
+              {t("footer.accessibility")}
             </Link>
           </div>
         </div>
