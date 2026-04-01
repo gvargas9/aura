@@ -1,7 +1,8 @@
 "use client";
 
 import { Package, Check } from "lucide-react";
-import { cn, formatCurrency } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { useLocale } from "@/hooks/useLocale";
 import { BOX_CONFIGS, type BoxConfig } from "@/types";
 
 interface BoxSizeSelectorProps {
@@ -13,10 +14,14 @@ export function BoxSizeSelector({
   selectedSize,
   onSelectSize,
 }: BoxSizeSelectorProps) {
+  const { t, formatPrice } = useLocale();
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       {Object.values(BOX_CONFIGS).map((config: BoxConfig) => {
         const isSelected = selectedSize === config.size;
+        const tierKey = `tier.${config.size}`;
+        const descKey = `tier.${config.size}.description`;
         return (
           <button
             key={config.size}
@@ -49,22 +54,22 @@ export function BoxSizeSelector({
                 />
               </div>
               <div>
-                <h4 className="font-semibold capitalize">{config.size}</h4>
-                <p className="text-sm text-gray-500">{config.slots} meals</p>
+                <h4 className="font-semibold capitalize">{t(tierKey)}</h4>
+                <p className="text-sm text-gray-500">{t("box.meals", { count: String(config.slots) })}</p>
               </div>
             </div>
 
-            <p className="text-sm text-gray-600 mb-3">{config.description}</p>
+            <p className="text-sm text-gray-600 mb-3">{t(descKey)}</p>
 
             <div className="flex items-baseline gap-1">
               <span className="text-2xl font-bold text-aura-primary">
-                {formatCurrency(config.price)}
+                {formatPrice(config.price)}
               </span>
-              <span className="text-gray-500">/month</span>
+              <span className="text-gray-500">{t("box.perMonth")}</span>
             </div>
 
             <p className="text-xs text-gray-400 mt-1">
-              {formatCurrency(config.price / config.slots)} per meal
+              {t("box.perMealPrice", { price: formatPrice(config.price / config.slots) })}
             </p>
           </button>
         );
