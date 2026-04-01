@@ -13,7 +13,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import { useAuth } from "@/hooks";
+import { useAuth, useLocale } from "@/hooks";
 import { cn, formatDate } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
@@ -120,6 +120,7 @@ function ToggleSwitch({
 
 export default function NotificationsPage() {
   const { profile, updateProfile, isLoading: authLoading } = useAuth();
+  const { t } = useLocale();
   const [preferences, setPreferences] =
     useState<NotificationPreferences>(DEFAULT_PREFERENCES);
   const [isSaving, setIsSaving] = useState(false);
@@ -208,58 +209,58 @@ export default function NotificationsPage() {
           href="/account"
           className="text-sm text-gray-500 hover:text-gray-700 mb-2 inline-block"
         >
-          &larr; Back to Account
+          &larr; {t("notifications.backToAccount")}
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900">Notifications</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{t("notifications.title")}</h1>
         <p className="text-gray-500 text-sm mt-1">
-          Manage your notification preferences and view history.
+          {t("notifications.subtitle")}
         </p>
       </div>
 
       {/* Preferences */}
       <Card className="mb-8">
         <CardHeader>
-          <CardTitle className="text-lg">Notification Preferences</CardTitle>
+          <CardTitle className="text-lg">{t("notifications.preferences")}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="divide-y divide-gray-100">
             <ToggleSwitch
               checked={preferences.order_updates_email}
               onChange={(val) => updatePref("order_updates_email", val)}
-              label="Order updates"
-              description="Email notifications for order confirmations and status changes"
+              label={t("notifications.orderUpdates")}
+              description={t("notifications.orderUpdatesDesc")}
             />
             <ToggleSwitch
               checked={preferences.shipping_email}
               onChange={(val) => updatePref("shipping_email", val)}
-              label="Shipping notifications (Email)"
-              description="Email alerts when your order ships and tracking updates"
+              label={t("notifications.shippingEmail")}
+              description={t("notifications.shippingEmailDesc")}
             />
             <ToggleSwitch
               checked={preferences.shipping_sms}
               onChange={(val) => updatePref("shipping_sms", val)}
-              label="Shipping notifications (SMS)"
-              description="Text messages for shipping and tracking updates"
+              label={t("notifications.shippingSms")}
+              description={t("notifications.shippingSmsDesc")}
             />
             <ToggleSwitch
               checked={preferences.subscription_reminders_email}
               onChange={(val) =>
                 updatePref("subscription_reminders_email", val)
               }
-              label="Subscription reminders"
-              description="Email reminders to customize your box before the cutoff date"
+              label={t("notifications.subscriptionReminders")}
+              description={t("notifications.subscriptionRemindersDesc")}
             />
             <ToggleSwitch
               checked={preferences.promotions_email}
               onChange={(val) => updatePref("promotions_email", val)}
-              label="Promotions"
-              description="Email about new products, deals, and special offers"
+              label={t("notifications.promotions")}
+              description={t("notifications.promotionsDesc")}
             />
             <ToggleSwitch
               checked={preferences.delivery_sms}
               onChange={(val) => updatePref("delivery_sms", val)}
-              label="Delivery confirmations (SMS)"
-              description="Text message when your box has been delivered"
+              label={t("notifications.deliverySms")}
+              description={t("notifications.deliverySmsDesc")}
             />
           </div>
 
@@ -270,11 +271,11 @@ export default function NotificationsPage() {
               ) : (
                 <Save className="w-4 h-4 mr-2" />
               )}
-              Save Preferences
+              {t("notifications.savePreferences")}
             </Button>
             {saveSuccess && (
               <span className="text-sm text-green-600 font-medium">
-                Preferences saved!
+                {t("notifications.preferencesSaved")}
               </span>
             )}
           </div>
@@ -284,7 +285,7 @@ export default function NotificationsPage() {
       {/* History */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Notification History</CardTitle>
+          <CardTitle className="text-lg">{t("notifications.history")}</CardTitle>
         </CardHeader>
         <CardContent>
           {isLoadingHistory ? (
@@ -294,7 +295,7 @@ export default function NotificationsPage() {
           ) : notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-gray-400">
               <Bell className="w-10 h-10 mb-3" />
-              <p className="text-sm">No notifications yet</p>
+              <p className="text-sm">{t("notifications.noNotifications")}</p>
             </div>
           ) : (
             <>
@@ -363,10 +364,10 @@ export default function NotificationsPage() {
                     className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     <ChevronLeft className="w-4 h-4" />
-                    Previous
+                    {t("notifications.previous")}
                   </button>
                   <span className="text-sm text-gray-500">
-                    Page {page} of {totalPages}
+                    {t("notifications.pageOf", { page: String(page), total: String(totalPages) })}
                   </span>
                   <button
                     onClick={() =>
@@ -375,7 +376,7 @@ export default function NotificationsPage() {
                     disabled={page >= totalPages}
                     className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 disabled:opacity-40 disabled:cursor-not-allowed"
                   >
-                    Next
+                    {t("notifications.next")}
                     <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>

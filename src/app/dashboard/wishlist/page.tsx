@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { useAuth, useWishlist } from "@/hooks";
+import { useAuth, useWishlist, useLocale } from "@/hooks";
 import { Header, Footer, Button } from "@/components/ui";
 import { formatCurrency } from "@/lib/utils";
 import { cn } from "@/lib/utils";
@@ -24,16 +24,23 @@ import type { Product } from "@/types/database";
 
 type SortBy = "date_added" | "price_asc" | "price_desc" | "name";
 
-const SORT_OPTIONS: Array<{ label: string; value: SortBy; icon: React.ReactNode }> = [
-  { label: "Date Added", value: "date_added", icon: <Clock className="w-3.5 h-3.5" /> },
-  { label: "Price: Low", value: "price_asc", icon: <DollarSign className="w-3.5 h-3.5" /> },
-  { label: "Price: High", value: "price_desc", icon: <DollarSign className="w-3.5 h-3.5" /> },
-  { label: "Name A-Z", value: "name", icon: <SortAsc className="w-3.5 h-3.5" /> },
-];
+const SORT_ICONS: Record<SortBy, React.ReactNode> = {
+  date_added: <Clock className="w-3.5 h-3.5" />,
+  price_asc: <DollarSign className="w-3.5 h-3.5" />,
+  price_desc: <DollarSign className="w-3.5 h-3.5" />,
+  name: <SortAsc className="w-3.5 h-3.5" />,
+};
 
 export default function WishlistPage() {
   const router = useRouter();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { t } = useLocale();
+  const sortOptions = useMemo(() => [
+    { label: t("wishlist.sortDateAdded"), value: "date_added" as SortBy, icon: SORT_ICONS.date_added },
+    { label: t("wishlist.sortPriceLow"), value: "price_asc" as SortBy, icon: SORT_ICONS.price_asc },
+    { label: t("wishlist.sortPriceHigh"), value: "price_desc" as SortBy, icon: SORT_ICONS.price_desc },
+    { label: t("wishlist.sortName"), value: "name" as SortBy, icon: SORT_ICONS.name },
+  ], [t]);
   const { items: wishlistItems, toggle, isLoading: wishlistLoading } = useWishlist();
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
@@ -139,10 +146,11 @@ export default function WishlistPage() {
           {/* Page Header */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">My Wishlist</h1>
+              <h1 className="text-3xl font-bold text-gray-900">{t("wishlist.title")}</h1>
               <p className="text-gray-500 mt-1">
-                {sortedProducts.length} saved{" "}
-                {sortedProducts.length === 1 ? "product" : "products"}
+                {sortedProducts.length === 1
+                  ? t("wishlist.savedProduct", { count: String(sortedProducts.length) })
+                  : t("wishlist.savedProducts", { count: String(sortedProducts.length) })}
               </p>
             </div>
 
@@ -151,7 +159,7 @@ export default function WishlistPage() {
               <div className="flex items-center gap-2">
                 <ArrowUpDown className="w-4 h-4 text-gray-400" />
                 <div className="flex items-center gap-1 bg-white rounded-xl border border-gray-200 p-1">
-                  {SORT_OPTIONS.map((opt) => (
+                  {sortOptions.map((opt) => (
                     <button
                       key={opt.value}
                       onClick={() => setSortBy(opt.value)}
@@ -195,15 +203,14 @@ export default function WishlistPage() {
                 <Heart className="w-10 h-10 text-gray-300" />
               </div>
               <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                Your wishlist is empty
+                {t("wishlist.empty")}
               </h2>
               <p className="text-gray-500 mb-6 text-center max-w-md">
-                Save products you love by tapping the heart icon. They will
-                appear here so you can easily find and add them to your box.
+                {t("wishlist.emptyMessage")}
               </p>
               <Link href="/products">
                 <Button variant="primary" rightIcon={<ArrowRight className="w-4 h-4" />}>
-                  Explore Products
+                  {t("wishlist.exploreProducts")}
                 </Button>
               </Link>
             </div>
@@ -302,14 +309,14 @@ export default function WishlistPage() {
                             className="w-full"
                             leftIcon={<Plus className="w-3.5 h-3.5" />}
                           >
-                            Add to Box
+                            {t("wishlist.addToBox")}
                           </Button>
                         </Link>
                         <button
                           onClick={() => handleRemove(product.id)}
                           disabled={isRemoving}
                           className="w-9 h-9 rounded-xl bg-red-50 text-red-500 hover:bg-red-100 flex items-center justify-center transition-all duration-200 active:scale-90"
-                          aria-label="Remove from wishlist"
+                          aria-label={t("wishlist.remove")}
                         >
                           <Heart className="w-4 h-4 fill-current" />
                         </button>

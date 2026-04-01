@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { useAuth, useRealtimeOrders } from "@/hooks";
+import { useAuth, useRealtimeOrders, useLocale } from "@/hooks";
 import {
   Card,
   Button,
@@ -50,6 +50,7 @@ const STATUS_BADGES: Record<string, string> = {
 export default function DashboardPage() {
   const router = useRouter();
   const { profile, isLoading: authLoading, isAuthenticated } = useAuth();
+  const { t } = useLocale();
   const [data, setData] = useState<DashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -144,10 +145,10 @@ export default function DashboardPage() {
           {/* Welcome Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900">
-              Welcome back, {firstName}
+              {t("dashboard.welcome", { name: firstName })}
             </h1>
             <p className="text-gray-600 mt-1">
-              Here is an overview of your Aura account.
+              {t("dashboard.overview")}
             </p>
           </div>
 
@@ -156,7 +157,7 @@ export default function DashboardPage() {
             <Card padding="md">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-sm text-gray-500">Total Orders</p>
+                  <p className="text-sm text-gray-500">{t("dashboard.totalOrders")}</p>
                   <p className="text-2xl font-bold mt-1">{data.totalOrders}</p>
                 </div>
                 <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -168,7 +169,7 @@ export default function DashboardPage() {
             <Card padding="md">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-sm text-gray-500">Active Subscriptions</p>
+                  <p className="text-sm text-gray-500">{t("dashboard.activeSubscriptions")}</p>
                   <p className="text-2xl font-bold mt-1">
                     {data.activeSubscriptions}
                   </p>
@@ -182,7 +183,7 @@ export default function DashboardPage() {
             <Card padding="md">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-sm text-gray-500">Credits Balance</p>
+                  <p className="text-sm text-gray-500">{t("dashboard.creditsBalance")}</p>
                   <p className="text-2xl font-bold mt-1">
                     {formatCurrency(data.credits)}
                   </p>
@@ -201,11 +202,11 @@ export default function DashboardPage() {
               <Card padding="lg">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl font-semibold text-gray-900">
-                    Active Subscriptions
+                    {t("dashboard.activeSubscriptions")}
                   </h2>
                   <Link href="/dashboard/subscriptions">
                     <Button variant="ghost" size="sm">
-                      Manage
+                      {t("subscriptions.manage")}
                       <ChevronRight className="w-4 h-4 ml-1" />
                     </Button>
                   </Link>
@@ -263,11 +264,11 @@ export default function DashboardPage() {
                   <div className="text-center py-8">
                     <Box className="w-12 h-12 text-gray-300 mx-auto mb-3" />
                     <p className="text-gray-500 mb-4">
-                      No active subscriptions yet.
+                      {t("dashboard.noSubscriptions")}
                     </p>
                     <Link href="/build-box">
                       <Button variant="primary" size="sm">
-                        Build Your First Box
+                        {t("dashboard.buildFirstBox")}
                       </Button>
                     </Link>
                   </div>
@@ -279,18 +280,18 @@ export default function DashboardPage() {
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-2">
                     <h2 className="text-xl font-semibold text-gray-900">
-                      Recent Orders
+                      {t("dashboard.recentOrders")}
                     </h2>
                     {ordersConnected && (
                       <span className="flex items-center gap-1 text-[10px] text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
                         <Wifi className="w-3 h-3" />
-                        Live
+                        {t("dashboard.live")}
                       </span>
                     )}
                   </div>
                   <Link href="/orders">
                     <Button variant="ghost" size="sm">
-                      View All
+                      {t("dashboard.viewAll")}
                       <ChevronRight className="w-4 h-4 ml-1" />
                     </Button>
                   </Link>
@@ -304,16 +305,16 @@ export default function DashboardPage() {
                       <thead>
                         <tr className="border-b">
                           <th className="text-left py-3 text-sm font-medium text-gray-500">
-                            Order
+                            {t("common.order")}
                           </th>
                           <th className="text-left py-3 text-sm font-medium text-gray-500">
-                            Status
+                            {t("common.status")}
                           </th>
                           <th className="text-left py-3 text-sm font-medium text-gray-500 hidden sm:table-cell">
-                            Date
+                            {t("common.date")}
                           </th>
                           <th className="text-right py-3 text-sm font-medium text-gray-500">
-                            Total
+                            {t("common.total")}
                           </th>
                         </tr>
                       </thead>
@@ -361,7 +362,7 @@ export default function DashboardPage() {
                 ) : (
                   <div className="text-center py-8">
                     <Package className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                    <p className="text-gray-500">No orders yet.</p>
+                    <p className="text-gray-500">{t("dashboard.noOrders")}</p>
                   </div>
                 );
                 })()}
@@ -372,7 +373,7 @@ export default function DashboardPage() {
             <div className="space-y-6">
               <Card padding="lg">
                 <h2 className="text-xl font-semibold mb-4 text-gray-900">
-                  Quick Actions
+                  {t("dashboard.quickActions")}
                 </h2>
                 <div className="space-y-3">
                   <Link href="/build-box" className="block">
@@ -381,7 +382,7 @@ export default function DashboardPage() {
                       variant="primary"
                       rightIcon={<ArrowRight className="w-4 h-4" />}
                     >
-                      Build a Box
+                      {t("dashboard.buildBox")}
                     </Button>
                   </Link>
                   <Link href="/orders" className="block">
@@ -390,7 +391,7 @@ export default function DashboardPage() {
                       variant="secondary"
                       rightIcon={<ArrowRight className="w-4 h-4" />}
                     >
-                      View Orders
+                      {t("dashboard.viewOrders")}
                     </Button>
                   </Link>
                   <Link href="/dashboard/subscriptions" className="block">
@@ -399,7 +400,7 @@ export default function DashboardPage() {
                       variant="outline"
                       rightIcon={<ArrowRight className="w-4 h-4" />}
                     >
-                      Manage Subscription
+                      {t("dashboard.manageSubscription")}
                     </Button>
                   </Link>
                   <Link href="/dashboard/wishlist" className="block">
@@ -409,7 +410,7 @@ export default function DashboardPage() {
                       leftIcon={<Heart className="w-4 h-4" />}
                       rightIcon={<ArrowRight className="w-4 h-4" />}
                     >
-                      My Wishlist
+                      {t("dashboard.myWishlist")}
                     </Button>
                   </Link>
                 </div>
@@ -417,17 +418,17 @@ export default function DashboardPage() {
 
               <Card padding="lg">
                 <h2 className="text-xl font-semibold mb-4 text-gray-900">
-                  Account
+                  {t("dashboard.account")}
                 </h2>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between py-2">
-                    <span className="text-sm text-gray-500">Email</span>
+                    <span className="text-sm text-gray-500">{t("dashboard.email")}</span>
                     <span className="text-sm font-medium text-gray-900 truncate ml-4">
                       {profile.email}
                     </span>
                   </div>
                   <div className="flex items-center justify-between py-2">
-                    <span className="text-sm text-gray-500">Role</span>
+                    <span className="text-sm text-gray-500">{t("dashboard.role")}</span>
                     <span className="text-sm font-medium text-gray-900 capitalize">
                       {profile.role}
                     </span>
@@ -439,7 +440,7 @@ export default function DashboardPage() {
                       size="sm"
                       leftIcon={<Settings className="w-4 h-4" />}
                     >
-                      Account Settings
+                      {t("dashboard.accountSettings")}
                     </Button>
                   </Link>
                 </div>

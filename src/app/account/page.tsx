@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useAuth } from "@/hooks";
+import { useAuth, useLocale } from "@/hooks";
 import {
   Card,
   CardHeader,
@@ -75,6 +75,7 @@ export default function AccountPage() {
     isAuthenticated,
     updateProfile,
   } = useAuth();
+  const { t } = useLocale();
 
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
@@ -124,10 +125,10 @@ export default function AccountPage() {
         address: address as unknown as Json,
       });
 
-      showToast("success", "Profile updated successfully.");
+      showToast("success", t("account.saveSuccess"));
     } catch (error) {
       console.error("Failed to update profile:", error);
-      showToast("error", "Failed to update profile. Please try again.");
+      showToast("error", t("account.saveError"));
     }
 
     setIsSaving(false);
@@ -184,13 +185,13 @@ export default function AccountPage() {
               className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 mb-4"
             >
               <ArrowLeft className="w-4 h-4" />
-              Back to Dashboard
+              {t("account.backToDashboard")}
             </Link>
             <h1 className="text-3xl font-bold text-gray-900">
-              Account Settings
+              {t("account.title")}
             </h1>
             <p className="text-gray-600 mt-1">
-              Manage your personal information and preferences.
+              {t("account.subtitle")}
             </p>
           </div>
 
@@ -200,31 +201,31 @@ export default function AccountPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <User className="w-5 h-5 text-gray-400" />
-                  Profile Information
+                  {t("account.personalInfo")}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <Input
-                    label="Full Name"
+                    label={t("account.name")}
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    placeholder="Enter your full name"
+                    placeholder={t("account.namePlaceholder")}
                   />
                   <Input
-                    label="Phone Number"
+                    label={t("account.phone")}
                     type="tel"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    placeholder="(555) 123-4567"
+                    placeholder={t("account.phonePlaceholder")}
                   />
                   <Input
-                    label="Avatar URL"
+                    label={t("account.avatarUrl")}
                     type="url"
                     value={avatarUrl}
                     onChange={(e) => setAvatarUrl(e.target.value)}
-                    placeholder="https://example.com/avatar.jpg"
-                    helperText="Enter a URL for your profile photo"
+                    placeholder={t("account.avatarPlaceholder")}
+                    helperText={t("account.avatarHelp")}
                   />
                 </div>
               </CardContent>
@@ -235,29 +236,28 @@ export default function AccountPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Mail className="w-5 h-5 text-gray-400" />
-                  Account Details
+                  {t("account.accountDetails")}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Email Address
+                      {t("account.email")}
                     </label>
                     <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-700">
                       <Mail className="w-4 h-4 text-gray-400" />
                       <span>{user?.email || profile.email}</span>
                     </div>
                     <p className="mt-1 text-sm text-gray-500">
-                      Email cannot be changed here. Contact support for
-                      assistance.
+                      {t("account.emailHelp")}
                     </p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Account Role
+                        {t("account.accountRole")}
                       </label>
                       <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-700">
                         <Shield className="w-4 h-4 text-gray-400" />
@@ -267,7 +267,7 @@ export default function AccountPage() {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Credits Balance
+                        {t("dashboard.creditsBalance")}
                       </label>
                       <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-700">
                         <CreditCard className="w-4 h-4 text-gray-400" />
@@ -286,72 +286,72 @@ export default function AccountPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <MapPin className="w-5 h-5 text-gray-400" />
-                  Shipping Address
+                  {t("account.shippingAddress")}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <Input
-                      label="First Name"
+                      label={t("account.firstName")}
                       value={address.firstName}
                       onChange={(e) =>
                         updateAddress("firstName", e.target.value)
                       }
-                      placeholder="First name"
+                      placeholder={t("account.firstName")}
                     />
                     <Input
-                      label="Last Name"
+                      label={t("account.lastName")}
                       value={address.lastName}
                       onChange={(e) =>
                         updateAddress("lastName", e.target.value)
                       }
-                      placeholder="Last name"
+                      placeholder={t("account.lastName")}
                     />
                   </div>
 
                   <Input
-                    label="Address Line 1"
+                    label={t("account.address1")}
                     value={address.address1}
                     onChange={(e) => updateAddress("address1", e.target.value)}
-                    placeholder="123 Main Street"
+                    placeholder={t("account.address1Placeholder")}
                   />
 
                   <Input
-                    label="Address Line 2"
+                    label={t("account.address2")}
                     value={address.address2 || ""}
                     onChange={(e) => updateAddress("address2", e.target.value)}
-                    placeholder="Apt, Suite, Unit (optional)"
+                    placeholder={t("account.address2Placeholder")}
                   />
 
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                     <Input
-                      label="City"
+                      label={t("account.city")}
                       value={address.city}
                       onChange={(e) => updateAddress("city", e.target.value)}
-                      placeholder="City"
+                      placeholder={t("account.city")}
                     />
                     <Input
-                      label="State"
+                      label={t("account.state")}
                       value={address.state}
                       onChange={(e) => updateAddress("state", e.target.value)}
-                      placeholder="TX"
+                      placeholder={t("account.state")}
                     />
                     <Input
-                      label="ZIP Code"
+                      label={t("account.zipCode")}
                       value={address.zipCode}
                       onChange={(e) => updateAddress("zipCode", e.target.value)}
-                      placeholder="12345"
+                      placeholder={t("account.zipCode")}
                     />
                   </div>
 
                   <Input
-                    label="Phone"
+                    label={t("account.deliveryPhone")}
                     type="tel"
                     value={address.phone || ""}
                     onChange={(e) => updateAddress("phone", e.target.value)}
-                    placeholder="(555) 123-4567"
-                    helperText="Used for delivery notifications"
+                    placeholder={t("account.phonePlaceholder")}
+                    helperText={t("account.deliveryPhoneHelp")}
                   />
                 </div>
               </CardContent>
@@ -360,7 +360,7 @@ export default function AccountPage() {
             {/* Save Button */}
             <div className="flex justify-end gap-3 pb-4">
               <Link href="/dashboard">
-                <Button variant="outline">Cancel</Button>
+                <Button variant="outline">{t("common.cancel")}</Button>
               </Link>
               <Button
                 variant="primary"
@@ -368,7 +368,7 @@ export default function AccountPage() {
                 isLoading={isSaving}
                 leftIcon={<Save className="w-4 h-4" />}
               >
-                Save Changes
+                {t("common.save")}
               </Button>
             </div>
           </div>
