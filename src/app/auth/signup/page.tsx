@@ -161,6 +161,7 @@ export default function SignupPage() {
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="John Doe"
+                  autoComplete="name"
                   leftIcon={<User className="w-5 h-5" />}
                   required
                 />
@@ -171,6 +172,7 @@ export default function SignupPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
+                  autoComplete="email"
                   leftIcon={<Mail className="w-5 h-5" />}
                   required
                 />
@@ -181,6 +183,7 @@ export default function SignupPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Create a password"
+                  autoComplete="new-password"
                   leftIcon={<Lock className="w-5 h-5" />}
                   rightIcon={
                     <button
@@ -205,6 +208,7 @@ export default function SignupPage() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Confirm your password"
+                  autoComplete="new-password"
                   leftIcon={<Lock className="w-5 h-5" />}
                   required
                 />

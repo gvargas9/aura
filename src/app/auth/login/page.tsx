@@ -116,6 +116,7 @@ function LoginContent() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
                   leftIcon={<Mail className="w-5 h-5" />}
+                  autoComplete="email"
                   required
                 />
 
@@ -125,6 +126,7 @@ function LoginContent() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
+                  autoComplete="current-password"
                   leftIcon={<Lock className="w-5 h-5" />}
                   rightIcon={
                     <button
