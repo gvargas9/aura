@@ -48,6 +48,9 @@ BUSINESS_MANAGER_BUSINESS_ID=
 # App
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 NEXT_PUBLIC_APP_NAME=Aura
+
+# Sentry (optional - error tracking disabled when empty)
+NEXT_PUBLIC_SENTRY_DSN=
 ```
 
 ## Architecture Overview

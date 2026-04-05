@@ -1,0 +1,55 @@
+name: Production E2E Tests
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: playwright-prod
+  cancel-in-progress: true
+
+jobs:
+  e2e-prod:
+    name: Verify Production Deployment
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Wait for Vercel deployment
+        if: github.event_name == 'push'
+        run: sleep 60
+
+      - name: Run production E2E tests
+        run: npx playwright test tests/e2e/verify-*.spec.ts --config=playwright.prod.config.ts
+
+      - name: Upload HTML report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-prod-report
+          path: playwright-report/
+          retention-days: 14
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "::error::Production E2E tests failed. Check the Playwright report artifact for details."
+          echo "### Production E2E Tests Failed" >> $GITHUB_STEP_SUMMARY
+          echo "The deployment verification tests against https://aura.inspiration-ai.com have failed." >> $GITHUB_STEP_SUMMARY
+          echo "Download the **playwright-prod-report** artifact for the full HTML report." >> $GITHUB_STEP_SUMMARY

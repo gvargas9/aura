@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
   images: {
@@ -51,4 +52,19 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  // Sentry org and project — configure these in your Sentry dashboard
+  org: "",
+  project: "",
+
+  // Suppress Sentry CLI output during builds
+  silent: true,
+
+  // Disable source map upload until DSN is configured
+  sourcemaps: {
+    disable: true,
+  },
+
+  // Route Sentry requests through a Next.js rewrite to avoid ad-blockers
+  tunnelRoute: "/monitoring",
+});
