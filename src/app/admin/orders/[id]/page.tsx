@@ -4,8 +4,9 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks";
+import { useLocale } from "@/hooks/useLocale";
 import { Card, Button, Input } from "@/components/ui";
-import { cn, formatCurrency, formatDate } from "@/lib/utils";
+import { cn, formatDate } from "@/lib/utils";
 import type { OrderStatus } from "@/types/database";
 import type { Json } from "@/types/database";
 import {
@@ -139,6 +140,7 @@ export default function AdminOrderDetailPage() {
   const params = useParams();
   const orderId = params.id as string;
   const { profile } = useAuth();
+  const { t, formatPrice } = useLocale();
   const supabase = createClient();
 
   const [order, setOrder] = useState<OrderWithProfile | null>(null);
@@ -324,12 +326,12 @@ export default function AdminOrderDetailPage() {
     return (
       <div className="text-center py-20">
         <Package className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-        <p className="text-gray-500 font-medium">Order not found</p>
+        <p className="text-gray-500 font-medium">{t("admin.orderNotFound")}</p>
         <Link
           href="/admin/orders"
           className="text-sm text-aura-primary hover:underline mt-2 inline-block"
         >
-          Back to Orders
+          {t("admin.backToOrders")}
         </Link>
       </div>
     );
@@ -357,12 +359,12 @@ export default function AdminOrderDetailPage() {
           className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 mb-4 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back to Orders
+          {t("admin.backToOrders")}
         </Link>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">
-              Order {order.order_number}
+              {t("admin.orderDetail")} {order.order_number}
             </h1>
             <p className="text-sm text-gray-500 mt-1">
               Created {formatDate(order.created_at)}
@@ -390,12 +392,12 @@ export default function AdminOrderDetailPage() {
           <Card padding="lg">
             <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <User className="w-4 h-4 text-gray-500" />
-              Customer
+              {t("admin.customer")}
             </h3>
             <div className="grid sm:grid-cols-2 gap-4 text-sm">
               <div>
                 <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">
-                  Name
+                  {t("admin.name")}
                 </p>
                 <p className="font-medium text-gray-900">
                   {order.profiles?.full_name ?? "N/A"}
@@ -403,7 +405,7 @@ export default function AdminOrderDetailPage() {
               </div>
               <div>
                 <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">
-                  Email
+                  {t("admin.email")}
                 </p>
                 <p className="font-medium text-gray-900">
                   {order.profiles?.email ?? "N/A"}
@@ -412,7 +414,7 @@ export default function AdminOrderDetailPage() {
               {order.profiles?.phone && (
                 <div>
                   <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">
-                    Phone
+                    {t("admin.phone")}
                   </p>
                   <p className="font-medium text-gray-900">
                     {order.profiles.phone}
@@ -421,7 +423,7 @@ export default function AdminOrderDetailPage() {
               )}
               <div>
                 <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">
-                  User ID
+                  {t("admin.userId")}
                 </p>
                 <p className="font-mono text-xs text-gray-600">
                   {order.user_id}
@@ -434,7 +436,7 @@ export default function AdminOrderDetailPage() {
           <Card padding="lg">
             <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <Package className="w-4 h-4 text-gray-500" />
-              Order Items ({items.length})
+              {t("admin.orderItems")} ({items.length})
             </h3>
             {items.length > 0 ? (
               <div className="divide-y divide-gray-100">
@@ -469,43 +471,43 @@ export default function AdminOrderDetailPage() {
                     </p>
                     <p className="text-sm font-medium text-gray-900 w-20 text-right">
                       {item.price
-                        ? formatCurrency(item.price * (item.quantity ?? 1))
+                        ? formatPrice(item.price * (item.quantity ?? 1))
                         : "-"}
                     </p>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-gray-500">No item data available.</p>
+              <p className="text-sm text-gray-500">{t("admin.noItemData")}</p>
             )}
 
             {/* Totals */}
             <div className="mt-4 pt-4 border-t border-gray-100 space-y-2 text-sm">
               <div className="flex justify-between text-gray-500">
-                <span>Subtotal</span>
-                <span>{formatCurrency(order.subtotal)}</span>
+                <span>{t("admin.subtotal")}</span>
+                <span>{formatPrice(order.subtotal)}</span>
               </div>
               {order.discount > 0 && (
                 <div className="flex justify-between text-red-600">
-                  <span>Discount</span>
-                  <span>-{formatCurrency(order.discount)}</span>
+                  <span>{t("admin.discount")}</span>
+                  <span>-{formatPrice(order.discount)}</span>
                 </div>
               )}
               <div className="flex justify-between text-gray-500">
-                <span>Shipping</span>
+                <span>{t("admin.shipping")}</span>
                 <span>
                   {order.shipping > 0
-                    ? formatCurrency(order.shipping)
-                    : "Free"}
+                    ? formatPrice(order.shipping)
+                    : t("admin.free")}
                 </span>
               </div>
               <div className="flex justify-between text-gray-500">
-                <span>Tax</span>
-                <span>{formatCurrency(order.tax)}</span>
+                <span>{t("admin.tax")}</span>
+                <span>{formatPrice(order.tax)}</span>
               </div>
               <div className="flex justify-between font-semibold text-gray-900 pt-2 border-t border-gray-100">
-                <span>Total</span>
-                <span>{formatCurrency(order.total)}</span>
+                <span>{t("admin.total")}</span>
+                <span>{formatPrice(order.total)}</span>
               </div>
             </div>
           </Card>
@@ -514,15 +516,14 @@ export default function AdminOrderDetailPage() {
           <Card padding="lg">
             <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <Truck className="w-4 h-4 text-gray-500" />
-              Shipping
+              {t("admin.shippingSection")}
             </h3>
 
             {!hasLabel ? (
               /* ---------- NOT YET SHIPPED ---------- */
               <div>
                 <p className="text-sm text-gray-500 mb-4">
-                  This order has not been shipped yet. Get rates from the
-                  warehouse to the customer and create a label.
+                  {t("admin.notShippedYet")}
                 </p>
 
                 <Button
@@ -532,14 +533,14 @@ export default function AdminOrderDetailPage() {
                   variant="outline"
                   leftIcon={<RefreshCw className="w-4 h-4" />}
                 >
-                  Get Shipping Rates
+                  {t("admin.getShippingRates")}
                 </Button>
 
                 {/* Rates list */}
                 {rates.length > 0 && (
                   <div className="mt-4 space-y-2">
                     <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Available Rates
+                      {t("admin.availableRates")}
                     </p>
                     <div className="max-h-80 overflow-y-auto space-y-2">
                       {rates.map((rate) => (
@@ -572,7 +573,7 @@ export default function AdminOrderDetailPage() {
                             </p>
                           </div>
                           <span className="text-sm font-semibold text-gray-900">
-                            {formatCurrency(rate.rate)}
+                            {formatPrice(rate.rate)}
                           </span>
                         </label>
                       ))}
@@ -586,7 +587,7 @@ export default function AdminOrderDetailPage() {
                       className="mt-3"
                       leftIcon={<Printer className="w-4 h-4" />}
                     >
-                      Create Shipping Label
+                      {t("admin.createShippingLabel")}
                     </Button>
                   </div>
                 )}
@@ -612,7 +613,7 @@ export default function AdminOrderDetailPage() {
                 <div className="grid sm:grid-cols-2 gap-4 mb-4">
                   <div>
                     <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">
-                      Tracking Number
+                      {t("admin.trackingNumber")}
                     </p>
                     <code className="text-sm font-mono text-gray-900 bg-gray-50 px-2 py-1 rounded">
                       {order.tracking_number}
@@ -621,7 +622,7 @@ export default function AdminOrderDetailPage() {
                   {carrier && (
                     <div>
                       <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">
-                        Carrier & Service
+                        {t("admin.carrierService")}
                       </p>
                       <p className="text-sm text-gray-900">
                         {carrier}
@@ -639,7 +640,7 @@ export default function AdminOrderDetailPage() {
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 text-sm font-medium text-aura-primary hover:underline"
                     >
-                      Track Package
+                      {t("admin.trackPackage")}
                       <ExternalLink className="w-3.5 h-3.5" />
                     </a>
                   )}
@@ -651,7 +652,7 @@ export default function AdminOrderDetailPage() {
                       className="inline-flex items-center gap-1.5 text-sm font-medium text-aura-primary hover:underline"
                     >
                       <Printer className="w-3.5 h-3.5" />
-                      Download Label
+                      {t("admin.downloadLabel")}
                     </a>
                   )}
                 </div>
@@ -661,7 +662,7 @@ export default function AdminOrderDetailPage() {
                   <div className="flex items-center py-4">
                     <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
                     <span className="ml-2 text-sm text-gray-500">
-                      Loading tracking...
+                      {t("admin.loadingTracking")}
                     </span>
                   </div>
                 ) : tracking && tracking.events.length > 0 ? (
@@ -718,7 +719,7 @@ export default function AdminOrderDetailPage() {
             <Card padding="lg">
               <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-gray-500" />
-                Shipping Address
+                {t("admin.shippingAddress")}
               </h3>
               <div className="text-sm text-gray-600 space-y-0.5">
                 {(address.firstName || address.lastName) && (
@@ -755,12 +756,12 @@ export default function AdminOrderDetailPage() {
           <Card padding="lg">
             <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <Save className="w-4 h-4 text-gray-500" />
-              Update Order
+              {t("admin.updateOrder")}
             </h3>
             <div className="space-y-3">
               <div>
                 <label className="block text-xs font-medium text-gray-500 mb-1">
-                  Status
+                  {t("admin.status")}
                 </label>
                 <select
                   value={editStatus}
@@ -778,14 +779,14 @@ export default function AdminOrderDetailPage() {
 
               <div>
                 <label className="block text-xs font-medium text-gray-500 mb-1">
-                  Internal Notes
+                  {t("admin.internalNotes")}
                 </label>
                 <textarea
                   value={editInternalNotes}
                   onChange={(e) => setEditInternalNotes(e.target.value)}
                   rows={4}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-aura-primary focus:border-transparent outline-none resize-none"
-                  placeholder="Internal notes (not visible to customer)..."
+                  placeholder={t("admin.internalNotesPlaceholder")}
                 />
               </div>
 
@@ -796,7 +797,7 @@ export default function AdminOrderDetailPage() {
                 className="w-full"
                 leftIcon={<Save className="w-4 h-4" />}
               >
-                Save Changes
+                {t("admin.saveChanges")}
               </Button>
 
               {saveMessage && (
@@ -818,17 +819,17 @@ export default function AdminOrderDetailPage() {
           <Card padding="lg">
             <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
               <CreditCard className="w-4 h-4 text-gray-500" />
-              Payment
+              {t("admin.payment")}
             </h3>
             <div className="text-sm space-y-2">
               <div className="flex justify-between">
-                <span className="text-gray-500">Currency</span>
+                <span className="text-gray-500">{t("admin.currency")}</span>
                 <span className="font-medium text-gray-900 uppercase">
                   {order.currency}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-500">Purchase Type</span>
+                <span className="text-gray-500">{t("admin.purchaseType")}</span>
                 <span className="font-medium text-gray-900">
                   {order.purchase_type}
                 </span>
@@ -859,7 +860,7 @@ export default function AdminOrderDetailPage() {
             <Card padding="lg">
               <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
                 <Handshake className="w-4 h-4 text-gray-500" />
-                Dealer Attribution
+                {t("admin.dealerAttribution")}
               </h3>
               <div className="text-sm">
                 <p className="text-xs text-gray-500">Dealer ID</p>
@@ -883,7 +884,7 @@ export default function AdminOrderDetailPage() {
             <Card padding="lg">
               <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
                 <Tag className="w-4 h-4 text-gray-500" />
-                Linked Subscription
+                {t("admin.linkedSubscription")}
               </h3>
               <p className="font-mono text-xs text-gray-600 break-all">
                 {order.subscription_id}

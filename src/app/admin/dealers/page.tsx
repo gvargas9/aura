@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks";
+import { useLocale } from "@/hooks/useLocale";
 import { Card, Button, Input } from "@/components/ui";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import type { DealerTier } from "@/types/database";
@@ -85,6 +86,7 @@ const emptyOrgForm: OrgFormData = {
 
 export default function AdminDealersPage() {
   const { profile } = useAuth();
+  const { t } = useLocale();
   const supabase = createClient();
 
   // Organizations
@@ -323,8 +325,8 @@ export default function AdminDealersPage() {
   return (
     <>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Dealers</h1>
-        <p className="text-gray-600">Manage dealer organizations and individual dealers</p>
+        <h1 className="text-3xl font-bold text-gray-900">{t("admin.dealers")}</h1>
+        <p className="text-gray-600">{t("admin.dealersSubtitle")}</p>
       </div>
 
       {/* Organizations Section */}
@@ -332,17 +334,17 @@ export default function AdminDealersPage() {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
             <Building className="w-5 h-5 text-gray-400" />
-            Organizations
+            {t("admin.organizations")}
           </h2>
           <Button size="sm" onClick={openCreateOrg} leftIcon={<Plus className="w-4 h-4" />}>
-            Add Organization
+            {t("admin.addOrganization")}
           </Button>
         </div>
 
         <Card padding="none">
           <div className="p-4 border-b">
             <Input
-              placeholder="Search organizations..."
+              placeholder={t("admin.searchOrganizations")}
               value={orgSearch}
               onChange={(e) => setOrgSearch(e.target.value)}
               leftIcon={<Search className="w-4 h-4" />}
@@ -356,7 +358,7 @@ export default function AdminDealersPage() {
           ) : filteredOrgs.length === 0 ? (
             <div className="text-center py-12 text-gray-500">
               <Building className="w-10 h-10 mx-auto mb-2 text-gray-300" />
-              <p className="font-medium">No organizations found</p>
+              <p className="font-medium">{t("admin.noOrganizationsFound")}</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -364,22 +366,22 @@ export default function AdminDealersPage() {
                 <thead>
                   <tr className="bg-gray-50 border-b">
                     <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                      Organization
+                      {t("admin.organization")}
                     </th>
                     <th className="text-center py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                      Tier
+                      {t("admin.tier")}
                     </th>
                     <th className="text-right py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                      Commission %
+                      {t("admin.commissionPercent")}
                     </th>
                     <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                      Contact
+                      {t("admin.contact")}
                     </th>
                     <th className="text-center py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                      Dealers
+                      {t("admin.dealers")}
                     </th>
                     <th className="text-right py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                      Actions
+                      {t("admin.actions")}
                     </th>
                   </tr>
                 </thead>
@@ -445,13 +447,13 @@ export default function AdminDealersPage() {
       <div>
         <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2 mb-4">
           <Handshake className="w-5 h-5 text-gray-400" />
-          Individual Dealers
+          {t("admin.individualDealers")}
         </h2>
 
         <Card padding="none">
           <div className="p-4 border-b">
             <Input
-              placeholder="Search dealers by name, email, referral code, or organization..."
+              placeholder={t("admin.searchDealers")}
               value={dealerSearch}
               onChange={(e) => setDealerSearch(e.target.value)}
               leftIcon={<Search className="w-4 h-4" />}
@@ -465,7 +467,7 @@ export default function AdminDealersPage() {
           ) : filteredDealers.length === 0 ? (
             <div className="text-center py-12 text-gray-500">
               <Handshake className="w-10 h-10 mx-auto mb-2 text-gray-300" />
-              <p className="font-medium">No dealers found</p>
+              <p className="font-medium">{t("admin.noDealersFound")}</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -473,25 +475,25 @@ export default function AdminDealersPage() {
                 <thead>
                   <tr className="bg-gray-50 border-b">
                     <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                      Dealer
+                      {t("admin.dealer")}
                     </th>
                     <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                      Organization
+                      {t("admin.organization")}
                     </th>
                     <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                      Referral Code
+                      {t("admin.referralCode")}
                     </th>
                     <th className="text-right py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                      Earned
+                      {t("admin.earned")}
                     </th>
                     <th className="text-right py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                      Paid
+                      {t("admin.paid")}
                     </th>
                     <th className="text-right py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                      Pending
+                      {t("admin.pending")}
                     </th>
                     <th className="text-center py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                      Status
+                      {t("admin.status")}
                     </th>
                     <th className="py-3 px-4 w-10"></th>
                   </tr>
@@ -545,12 +547,12 @@ export default function AdminDealersPage() {
                               {dealer.is_active ? (
                                 <>
                                   <ToggleRight className="w-5 h-5 text-green-600" />
-                                  <span className="text-xs text-green-600 font-medium">Active</span>
+                                  <span className="text-xs text-green-600 font-medium">{t("admin.active")}</span>
                                 </>
                               ) : (
                                 <>
                                   <ToggleLeft className="w-5 h-5 text-gray-400" />
-                                  <span className="text-xs text-gray-500 font-medium">Inactive</span>
+                                  <span className="text-xs text-gray-500 font-medium">{t("admin.inactive")}</span>
                                 </>
                               )}
                             </button>
@@ -575,17 +577,17 @@ export default function AdminDealersPage() {
                               ) : (
                                 <div className="grid sm:grid-cols-3 gap-4">
                                   <div className="bg-white p-4 rounded-lg">
-                                    <p className="text-xs text-gray-500 mb-1">Referred Orders</p>
+                                    <p className="text-xs text-gray-500 mb-1">{t("admin.referredOrders")}</p>
                                     <p className="text-2xl font-bold">{dealerOrders.count}</p>
                                   </div>
                                   <div className="bg-white p-4 rounded-lg">
-                                    <p className="text-xs text-gray-500 mb-1">Total Revenue Generated</p>
+                                    <p className="text-xs text-gray-500 mb-1">{t("admin.totalRevenueGenerated")}</p>
                                     <p className="text-2xl font-bold">
                                       {formatCurrency(dealerOrders.total)}
                                     </p>
                                   </div>
                                   <div className="bg-white p-4 rounded-lg">
-                                    <p className="text-xs text-gray-500 mb-1">Joined</p>
+                                    <p className="text-xs text-gray-500 mb-1">{t("admin.joined")}</p>
                                     <p className="text-lg font-semibold">
                                       {formatDate(dealer.created_at)}
                                     </p>
@@ -616,7 +618,7 @@ export default function AdminDealersPage() {
           <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-lg z-10">
             <div className="flex items-center justify-between px-6 py-4 border-b">
               <h2 className="text-xl font-semibold">
-                {editingOrg ? "Edit Organization" : "Add Organization"}
+                {editingOrg ? t("admin.editOrganization") : t("admin.addOrganization")}
               </h2>
               <button
                 onClick={() => setShowOrgModal(false)}
@@ -697,10 +699,10 @@ export default function AdminDealersPage() {
 
             <div className="px-6 py-4 border-t flex justify-end gap-3">
               <Button variant="outline" onClick={() => setShowOrgModal(false)}>
-                Cancel
+                {t("common.cancel")}
               </Button>
               <Button onClick={handleSaveOrg} isLoading={orgSaving}>
-                {editingOrg ? "Save Changes" : "Create Organization"}
+                {editingOrg ? t("admin.saveChanges") : t("admin.createOrganization")}
               </Button>
             </div>
           </div>

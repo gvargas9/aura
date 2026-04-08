@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks";
+import { useLocale } from "@/hooks/useLocale";
 import { Card, Button, Input } from "@/components/ui";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import type { Profile, UserRole } from "@/types/database";
@@ -60,6 +61,7 @@ function roleBadgeClass(role: string): string {
 
 export default function AdminCustomersPage() {
   const { profile: adminProfile } = useAuth();
+  const { t } = useLocale();
   const supabase = createClient();
 
   const [customers, setCustomers] = useState<CustomerRow[]>([]);
@@ -175,8 +177,8 @@ export default function AdminCustomersPage() {
   return (
     <>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Customers</h1>
-        <p className="text-gray-600">Manage customer accounts and profiles</p>
+        <h1 className="text-3xl font-bold text-gray-900">{t("admin.customersTitle")}</h1>
+        <p className="text-gray-600">{t("admin.customersSubtitle")}</p>
       </div>
 
       {/* Filters */}
@@ -184,7 +186,7 @@ export default function AdminCustomersPage() {
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
             <Input
-              placeholder="Search by name or email..."
+              placeholder={t("admin.searchNameEmail")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               leftIcon={<Search className="w-4 h-4" />}
@@ -196,7 +198,7 @@ export default function AdminCustomersPage() {
             className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-aura-primary focus:border-transparent outline-none"
             aria-label="Filter by role"
           >
-            <option value="">All Roles</option>
+            <option value="">{t("admin.allRoles")}</option>
             {ROLES.map((r) => (
               <option key={r} value={r}>
                 {r.charAt(0).toUpperCase() + r.slice(1)}
@@ -215,8 +217,8 @@ export default function AdminCustomersPage() {
         ) : customers.length === 0 ? (
           <div className="text-center py-20 text-gray-500">
             <Users className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-            <p className="font-medium">No customers found</p>
-            <p className="text-sm mt-1">Try adjusting your search or filters.</p>
+            <p className="font-medium">{t("admin.noCustomersFound")}</p>
+            <p className="text-sm mt-1">{t("admin.adjustSearch")}</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -224,16 +226,16 @@ export default function AdminCustomersPage() {
               <thead>
                 <tr className="bg-gray-50 border-b">
                   <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    Customer
+                    {t("admin.customer")}
                   </th>
                   <th className="text-center py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    Role
+                    {t("admin.role")}
                   </th>
                   <th className="text-right py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    Credits
+                    {t("admin.credits")}
                   </th>
                   <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    Joined
+                    {t("admin.joined")}
                   </th>
                   <th className="py-3 px-4 w-10"></th>
                 </tr>
@@ -305,21 +307,21 @@ export default function AdminCustomersPage() {
                               <div>
                                 <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
                                   <User className="w-4 h-4" />
-                                  Profile & Actions
+                                  {t("admin.profileActions")}
                                 </h4>
 
                                 <div className="space-y-2 text-sm mb-4">
                                   <div className="flex justify-between">
-                                    <span className="text-gray-500">Email</span>
+                                    <span className="text-gray-500">{t("admin.email")}</span>
                                     <span className="text-gray-800">{customer.email}</span>
                                   </div>
                                   <div className="flex justify-between">
-                                    <span className="text-gray-500">Phone</span>
+                                    <span className="text-gray-500">{t("admin.phone")}</span>
                                     <span className="text-gray-800">{customer.phone || "-"}</span>
                                   </div>
                                   {customer.organization_id && (
                                     <div className="flex justify-between">
-                                      <span className="text-gray-500">Organization</span>
+                                      <span className="text-gray-500">{t("admin.organization")}</span>
                                       <span className="text-gray-800 flex items-center gap-1">
                                         <Building className="w-3 h-3" />
                                         {customer.organization_id.slice(0, 8)}...
@@ -331,7 +333,7 @@ export default function AdminCustomersPage() {
                                 <div className="space-y-3 pt-3 border-t">
                                   <div>
                                     <label className="block text-xs font-medium text-gray-500 mb-1">
-                                      Role
+                                      {t("admin.role")}
                                     </label>
                                     <select
                                       value={editRole}
@@ -347,7 +349,7 @@ export default function AdminCustomersPage() {
                                     </select>
                                   </div>
                                   <Input
-                                    label="Credits"
+                                    label={t("admin.credits")}
                                     type="number"
                                     step="0.01"
                                     value={editCredits}
@@ -360,7 +362,7 @@ export default function AdminCustomersPage() {
                                     className="w-full"
                                     leftIcon={<Save className="w-4 h-4" />}
                                   >
-                                    Save Changes
+                                    {t("admin.saveChanges")}
                                   </Button>
                                 </div>
                               </div>
@@ -369,7 +371,7 @@ export default function AdminCustomersPage() {
                               <div>
                                 <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
                                   <ShoppingCart className="w-4 h-4" />
-                                  Recent Orders ({customerOrders.length})
+                                  {t("admin.recentOrdersCount", { count: String(customerOrders.length) })}
                                 </h4>
                                 {customerOrders.length > 0 ? (
                                   <ul className="space-y-2">
@@ -405,7 +407,7 @@ export default function AdminCustomersPage() {
                                     ))}
                                   </ul>
                                 ) : (
-                                  <p className="text-sm text-gray-500">No orders yet</p>
+                                  <p className="text-sm text-gray-500">{t("admin.noOrdersYet")}</p>
                                 )}
                               </div>
 
@@ -413,7 +415,7 @@ export default function AdminCustomersPage() {
                               <div>
                                 <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
                                   <RefreshCcw className="w-4 h-4" />
-                                  Subscriptions ({customerSubs.length})
+                                  {t("admin.subscriptionsCount", { count: String(customerSubs.length) })}
                                 </h4>
                                 {customerSubs.length > 0 ? (
                                   <ul className="space-y-2">
@@ -450,7 +452,7 @@ export default function AdminCustomersPage() {
                                     ))}
                                   </ul>
                                 ) : (
-                                  <p className="text-sm text-gray-500">No subscriptions</p>
+                                  <p className="text-sm text-gray-500">{t("admin.noSubscriptions")}</p>
                                 )}
                               </div>
                             </div>
