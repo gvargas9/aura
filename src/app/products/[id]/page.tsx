@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useWishlist } from "@/hooks/useWishlist";
+import { useLocale } from "@/hooks/useLocale";
 import { Header, Footer, Button } from "@/components/ui";
 import { Skeleton } from "@/components/ui/SkeletonLoader";
 import Image from "next/image";
@@ -234,6 +235,7 @@ function StarRating({
    ================================================================ */
 
 function NutritionLabel({ nutrition }: { nutrition: ProductNutrition }) {
+  const { t } = useLocale();
   const row = (
     label: string,
     value: number | null,
@@ -267,63 +269,61 @@ function NutritionLabel({ nutrition }: { nutrition: ProductNutrition }) {
   return (
     <div className="bg-white border-4 border-black rounded-lg p-4 max-w-sm">
       <h3 className="text-3xl font-black tracking-tight mb-0.5">
-        Nutrition Facts
+        {t("productDetail.nutritionFacts")}
       </h3>
       {nutrition.servings_per_container && (
         <p className="text-sm text-gray-700">
-          {nutrition.servings_per_container} servings per container
+          {nutrition.servings_per_container} {t("productDetail.servingsPerContainer")}
         </p>
       )}
       <div className="flex items-center justify-between border-b-8 border-black pb-1 mt-1">
         <div>
-          <p className="text-sm font-bold">Serving size</p>
+          <p className="text-sm font-bold">{t("productDetail.servingSize")}</p>
         </div>
-        <p className="text-sm font-bold">{nutrition.serving_size || "1 serving"}</p>
+        <p className="text-sm font-bold">{nutrition.serving_size || "1 " + t("productDetail.serving")}</p>
       </div>
 
       <div className="border-b-4 border-black pb-1 mt-2">
-        <p className="text-xs font-bold">Amount per serving</p>
+        <p className="text-xs font-bold">{t("productDetail.amountPerServing")}</p>
         <div className="flex items-center justify-between">
-          <span className="text-2xl font-black">Calories</span>
+          <span className="text-2xl font-black">{t("productDetail.calories")}</span>
           <span className="text-3xl font-black">{nutrition.calories ?? "—"}</span>
         </div>
       </div>
 
       <div className="text-right border-b border-gray-300 py-0.5">
-        <span className="text-xs font-bold">% Daily Value*</span>
+        <span className="text-xs font-bold">{t("productDetail.dailyValue")}</span>
       </div>
 
-      {row("Total Fat", nutrition.total_fat_g, "g", true, false, nutrition.total_fat_g ? Math.round((nutrition.total_fat_g / 78) * 100) : null)}
-      {row("Saturated Fat", nutrition.saturated_fat_g, "g", false, true, nutrition.saturated_fat_g ? Math.round((nutrition.saturated_fat_g / 20) * 100) : null)}
-      {row("Trans Fat", nutrition.trans_fat_g, "g", false, true)}
-      {row("Cholesterol", nutrition.cholesterol_mg, "mg", true, false, nutrition.cholesterol_mg ? Math.round((nutrition.cholesterol_mg / 300) * 100) : null)}
-      {row("Sodium", nutrition.sodium_mg, "mg", true, false, nutrition.sodium_mg ? Math.round((nutrition.sodium_mg / 2300) * 100) : null)}
-      {row("Total Carbohydrate", nutrition.total_carbohydrate_g, "g", true, false, nutrition.total_carbohydrate_g ? Math.round((nutrition.total_carbohydrate_g / 275) * 100) : null)}
-      {row("Dietary Fiber", nutrition.dietary_fiber_g, "g", false, true, nutrition.dietary_fiber_g ? Math.round((nutrition.dietary_fiber_g / 28) * 100) : null)}
-      {row("Total Sugars", nutrition.total_sugars_g, "g", false, true)}
+      {row(t("productDetail.totalFat"), nutrition.total_fat_g, "g", true, false, nutrition.total_fat_g ? Math.round((nutrition.total_fat_g / 78) * 100) : null)}
+      {row(t("productDetail.saturatedFat"), nutrition.saturated_fat_g, "g", false, true, nutrition.saturated_fat_g ? Math.round((nutrition.saturated_fat_g / 20) * 100) : null)}
+      {row(t("productDetail.transFat"), nutrition.trans_fat_g, "g", false, true)}
+      {row(t("productDetail.cholesterol"), nutrition.cholesterol_mg, "mg", true, false, nutrition.cholesterol_mg ? Math.round((nutrition.cholesterol_mg / 300) * 100) : null)}
+      {row(t("productDetail.sodium"), nutrition.sodium_mg, "mg", true, false, nutrition.sodium_mg ? Math.round((nutrition.sodium_mg / 2300) * 100) : null)}
+      {row(t("productDetail.totalCarbohydrate"), nutrition.total_carbohydrate_g, "g", true, false, nutrition.total_carbohydrate_g ? Math.round((nutrition.total_carbohydrate_g / 275) * 100) : null)}
+      {row(t("productDetail.dietaryFiber"), nutrition.dietary_fiber_g, "g", false, true, nutrition.dietary_fiber_g ? Math.round((nutrition.dietary_fiber_g / 28) * 100) : null)}
+      {row(t("productDetail.totalSugars"), nutrition.total_sugars_g, "g", false, true)}
       {nutrition.added_sugars_g !== null && (
         <div className="flex items-center justify-between py-1 border-t border-gray-300 pl-10">
           <span className="text-sm text-gray-600">
-            Includes {nutrition.added_sugars_g}g Added Sugars
+            {t("productDetail.addedSugars", { amount: String(nutrition.added_sugars_g) })}
           </span>
           <span className="text-sm font-bold">
             {Math.round((nutrition.added_sugars_g! / 50) * 100)}%
           </span>
         </div>
       )}
-      {row("Protein", nutrition.protein_g, "g", true)}
+      {row(t("productDetail.protein"), nutrition.protein_g, "g", true)}
 
       <div className="border-t-8 border-black mt-1 pt-1">
-        {row("Vitamin D", nutrition.vitamin_d_mcg, "mcg", false, false, nutrition.vitamin_d_mcg ? Math.round((nutrition.vitamin_d_mcg / 20) * 100) : null)}
-        {row("Calcium", nutrition.calcium_mg, "mg", false, false, nutrition.calcium_mg ? Math.round((nutrition.calcium_mg / 1300) * 100) : null)}
-        {row("Iron", nutrition.iron_mg, "mg", false, false, nutrition.iron_mg ? Math.round((nutrition.iron_mg / 18) * 100) : null)}
-        {row("Potassium", nutrition.potassium_mg, "mg", false, false, nutrition.potassium_mg ? Math.round((nutrition.potassium_mg / 4700) * 100) : null)}
+        {row(t("productDetail.vitaminD"), nutrition.vitamin_d_mcg, "mcg", false, false, nutrition.vitamin_d_mcg ? Math.round((nutrition.vitamin_d_mcg / 20) * 100) : null)}
+        {row(t("productDetail.calcium"), nutrition.calcium_mg, "mg", false, false, nutrition.calcium_mg ? Math.round((nutrition.calcium_mg / 1300) * 100) : null)}
+        {row(t("productDetail.iron"), nutrition.iron_mg, "mg", false, false, nutrition.iron_mg ? Math.round((nutrition.iron_mg / 18) * 100) : null)}
+        {row(t("productDetail.potassium"), nutrition.potassium_mg, "mg", false, false, nutrition.potassium_mg ? Math.round((nutrition.potassium_mg / 4700) * 100) : null)}
       </div>
 
       <p className="text-[10px] text-gray-500 mt-2 border-t border-gray-300 pt-2">
-        * The % Daily Value (DV) tells you how much a nutrient in a serving of
-        food contributes to a daily diet. 2,000 calories a day is used for
-        general nutrition advice.
+        {t("productDetail.dailyValueNote")}
       </p>
     </div>
   );
@@ -342,6 +342,7 @@ function RecipeCard({
   expanded: boolean;
   onToggle: () => void;
 }) {
+  const { t } = useLocale();
   const ingredients = (recipe.ingredients as string[]) || [];
   const steps = (recipe.steps as string[]) || [];
   const totalTime = (recipe.prep_time_minutes || 0) + (recipe.cook_time_minutes || 0);
@@ -367,7 +368,7 @@ function RecipeCard({
             </span>
             {recipe.is_featured && (
               <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-aura-accent/10 text-aura-accent">
-                Featured
+                {t("productDetail.featured")}
               </span>
             )}
           </div>
@@ -386,7 +387,7 @@ function RecipeCard({
             </span>
             <span className="flex items-center gap-1">
               <Users className="w-3.5 h-3.5" />
-              {recipe.servings} serving{recipe.servings !== 1 ? "s" : ""}
+              {recipe.servings} {recipe.servings !== 1 ? t("productDetail.servings") : t("productDetail.serving")}
             </span>
           </div>
         </div>
@@ -404,7 +405,7 @@ function RecipeCard({
             <div>
               <h5 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
                 <Package className="w-4 h-4 text-aura-primary" />
-                Ingredients
+                {t("productDetail.ingredientsLabel")}
               </h5>
               <ul className="space-y-2">
                 {ingredients.map((ingredient, idx) => (
@@ -420,7 +421,7 @@ function RecipeCard({
             <div>
               <h5 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
                 <BookOpen className="w-4 h-4 text-aura-primary" />
-                Instructions
+                {t("productDetail.instructionsLabel")}
               </h5>
               <ol className="space-y-3">
                 {steps.map((step, idx) => (
@@ -439,7 +440,7 @@ function RecipeCard({
             <div className="mt-6 bg-aura-warm rounded-xl p-4">
               <h5 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
                 <Flame className="w-4 h-4 text-aura-accent" />
-                Chef&apos;s Tips
+                {t("productDetail.chefsTips")}
               </h5>
               <ul className="space-y-1.5">
                 {recipe.tips.map((tip, idx) => (
@@ -457,7 +458,7 @@ function RecipeCard({
               href={`/academy/${recipe.id}`}
               className="text-sm font-medium text-aura-primary hover:text-aura-secondary flex items-center gap-1 transition-colors"
             >
-              View full recipe page
+              {t("productDetail.viewFullRecipe")}
               <ChevronRight className="w-4 h-4" />
             </Link>
           </div>
@@ -478,6 +479,7 @@ function ReviewCard({
   review: ProductReview;
   profile: { full_name: string | null; avatar_url: string | null } | null;
 }) {
+  const { t } = useLocale();
   return (
     <div className="border-b border-gray-100 py-6 last:border-0">
       <div className="flex items-start justify-between mb-3">
@@ -491,7 +493,7 @@ function ReviewCard({
               {review.is_verified_purchase && (
                 <span className="ml-2 inline-flex items-center gap-1 text-[10px] font-medium text-green-600 bg-green-50 px-1.5 py-0.5 rounded-full">
                   <Check className="w-2.5 h-2.5" />
-                  Verified Purchase
+                  {t("productDetail.verifiedPurchase")}
                 </span>
               )}
             </p>
@@ -512,19 +514,19 @@ function ReviewCard({
         <div className="flex flex-wrap gap-4 mb-3">
           {review.taste_rating && (
             <div className="text-xs text-gray-500">
-              <span className="font-medium">Taste:</span>{" "}
+              <span className="font-medium">{t("productDetail.taste")}:</span>{" "}
               <span className="text-aura-accent font-bold">{review.taste_rating}/5</span>
             </div>
           )}
           {review.value_rating && (
             <div className="text-xs text-gray-500">
-              <span className="font-medium">Value:</span>{" "}
+              <span className="font-medium">{t("productDetail.value")}:</span>{" "}
               <span className="text-aura-accent font-bold">{review.value_rating}/5</span>
             </div>
           )}
           {review.preparation_ease && (
             <div className="text-xs text-gray-500">
-              <span className="font-medium">Prep Ease:</span>{" "}
+              <span className="font-medium">{t("productDetail.prepEase")}:</span>{" "}
               <span className="text-aura-accent font-bold">{review.preparation_ease}/5</span>
             </div>
           )}
@@ -534,7 +536,7 @@ function ReviewCard({
       {review.admin_response && (
         <div className="bg-aura-light rounded-xl p-3 mt-3">
           <p className="text-xs font-semibold text-aura-dark mb-1">
-            Aura Team Response
+            {t("productDetail.auraTeamResponse")}
           </p>
           <p className="text-sm text-gray-600">{review.admin_response}</p>
         </div>
@@ -543,7 +545,7 @@ function ReviewCard({
       <div className="mt-3">
         <button className="text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1 transition-colors">
           <ThumbsUp className="w-3 h-3" />
-          Helpful ({review.helpful_count})
+          {t("productDetail.helpful")} ({review.helpful_count})
         </button>
       </div>
     </div>
@@ -594,6 +596,7 @@ function RatingDistribution({
 }: {
   reviews: ProductReview[];
 }) {
+  const { t } = useLocale();
   const total = reviews.length;
   const distribution = [5, 4, 3, 2, 1].map((star) => ({
     star,
@@ -612,7 +615,7 @@ function RatingDistribution({
         <p className="text-5xl font-bold text-gray-900">{average.toFixed(1)}</p>
         <StarRating rating={average} size="md" />
         <p className="text-sm text-gray-500 mt-1">
-          {total} review{total !== 1 ? "s" : ""}
+          {t("product.reviews", { count: String(total) })}
         </p>
       </div>
       <div className="flex-1 space-y-1.5">
@@ -645,6 +648,7 @@ function WriteReviewForm({
   productId: string;
   onSubmit: () => void;
 }) {
+  const { t } = useLocale();
   const { user } = useAuth();
   const [rating, setRating] = useState(0);
   const [title, setTitle] = useState("");
@@ -658,7 +662,7 @@ function WriteReviewForm({
   if (!user) {
     return (
       <div className="text-center py-8 bg-gray-50 rounded-xl">
-        <p className="text-gray-500 mb-3">Sign in to leave a review</p>
+        <p className="text-gray-500 mb-3">{t("productDetail.signInToReview")}</p>
         <Link href="/auth/login">
           <Button variant="primary" size="sm">
             Sign In
@@ -671,7 +675,7 @@ function WriteReviewForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (rating === 0) {
-      setError("Please select an overall rating");
+      setError(t("productDetail.selectRating"));
       return;
     }
 
@@ -691,7 +695,7 @@ function WriteReviewForm({
     });
 
     if (submitError) {
-      setError("Failed to submit review. Please try again.");
+      setError(t("productDetail.reviewError"));
     } else {
       setRating(0);
       setTitle("");
@@ -706,52 +710,52 @@ function WriteReviewForm({
 
   return (
     <form onSubmit={handleSubmit} className="bg-gray-50 rounded-xl p-6 space-y-4">
-      <h4 className="font-semibold text-gray-900">Write a Review</h4>
+      <h4 className="font-semibold text-gray-900">{t("productDetail.writeReview")}</h4>
 
       <div>
-        <label className="text-sm text-gray-600 block mb-1">Overall Rating *</label>
+        <label className="text-sm text-gray-600 block mb-1">{t("productDetail.overallRating")}</label>
         <StarRating rating={rating} size="lg" interactive onChange={setRating} />
       </div>
 
       <div className="grid grid-cols-3 gap-4">
         <div>
-          <label className="text-sm text-gray-600 block mb-1">Taste</label>
+          <label className="text-sm text-gray-600 block mb-1">{t("productDetail.taste")}</label>
           <StarRating rating={tasteRating} size="sm" interactive onChange={setTasteRating} />
         </div>
         <div>
-          <label className="text-sm text-gray-600 block mb-1">Value</label>
+          <label className="text-sm text-gray-600 block mb-1">{t("productDetail.value")}</label>
           <StarRating rating={valueRating} size="sm" interactive onChange={setValueRating} />
         </div>
         <div>
-          <label className="text-sm text-gray-600 block mb-1">Prep Ease</label>
+          <label className="text-sm text-gray-600 block mb-1">{t("productDetail.prepEase")}</label>
           <StarRating rating={prepEase} size="sm" interactive onChange={setPrepEase} />
         </div>
       </div>
 
       <div>
         <label htmlFor="review-title" className="text-sm text-gray-600 block mb-1">
-          Title
+          {t("productDetail.reviewTitle")}
         </label>
         <input
           id="review-title"
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="Summarize your experience"
+          placeholder={t("productDetail.reviewTitlePlaceholder")}
           className="input-field"
         />
       </div>
 
       <div>
         <label htmlFor="review-body" className="text-sm text-gray-600 block mb-1">
-          Review
+          {t("productDetail.reviewBody")}
         </label>
         <textarea
           id="review-body"
           value={body}
           onChange={(e) => setBody(e.target.value)}
           rows={4}
-          placeholder="Share your thoughts..."
+          placeholder={t("productDetail.reviewBodyPlaceholder")}
           className="input-field resize-none"
         />
       </div>
@@ -764,7 +768,7 @@ function WriteReviewForm({
       )}
 
       <Button type="submit" isLoading={isSubmitting} size="md">
-        Submit Review
+        {t("productDetail.submitReview")}
       </Button>
     </form>
   );
@@ -803,6 +807,7 @@ export default function ProductDetailPage() {
   // Wishlist integration
   const { toggle: toggleWishlist, isWishlisted } = useWishlist();
   const { isAuthenticated } = useAuth();
+  const { t } = useLocale();
   const isLiked = product ? isWishlisted(product.id) : false;
 
   const fetchData = useCallback(async () => {
@@ -938,10 +943,10 @@ export default function ProductDetailPage() {
   const flavors = [...new Set(variants.filter((v) => v.flavor).map((v) => v.flavor))];
 
   const tabs = [
-    { id: "description" as const, label: "Description" },
-    { id: "nutrition" as const, label: "Nutrition Facts" },
-    { id: "academy" as const, label: `Aura Academy${recipes.length > 0 ? ` (${recipes.length})` : ""}` },
-    { id: "reviews" as const, label: `Reviews${reviews.length > 0 ? ` (${reviews.length})` : ""}` },
+    { id: "description" as const, label: t("productDetail.description") },
+    { id: "nutrition" as const, label: t("productDetail.nutrition") },
+    { id: "academy" as const, label: `${t("productDetail.academy")}${recipes.length > 0 ? ` (${recipes.length})` : ""}` },
+    { id: "reviews" as const, label: `${t("productDetail.reviews")}${reviews.length > 0 ? ` (${reviews.length})` : ""}` },
   ];
 
   if (isLoading) {
@@ -973,13 +978,13 @@ export default function ProductDetailPage() {
           <div className="text-center">
             <Package className="w-16 h-16 text-gray-200 mx-auto mb-4" />
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
-              Product Not Found
+              {t("productDetail.productNotFound")}
             </h2>
             <p className="text-gray-500 mb-6">
-              The product you are looking for does not exist or has been removed.
+              {t("productDetail.productNotFoundDesc")}
             </p>
             <Link href="/products">
-              <Button variant="primary">Browse Products</Button>
+              <Button variant="primary">{t("productDetail.browseProducts")}</Button>
             </Link>
           </div>
         </main>
@@ -1000,9 +1005,9 @@ export default function ProductDetailPage() {
         {/* Breadcrumb */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <nav className="flex items-center gap-2 text-sm text-gray-400" aria-label="Breadcrumb">
-            <Link href="/" className="hover:text-gray-600 transition-colors">Home</Link>
+            <Link href="/" className="hover:text-gray-600 transition-colors">{t("productDetail.home")}</Link>
             <span>/</span>
-            <Link href="/products" className="hover:text-gray-600 transition-colors">Products</Link>
+            <Link href="/products" className="hover:text-gray-600 transition-colors">{t("productDetail.products")}</Link>
             <span>/</span>
             <span className="text-gray-700 font-medium truncate">{product.name}</span>
           </nav>
@@ -1045,7 +1050,7 @@ export default function ProductDetailPage() {
                     onClick={() => setActiveTab("reviews")}
                     className="text-sm text-gray-500 hover:text-aura-primary transition-colors"
                   >
-                    {reviews.length} review{reviews.length !== 1 ? "s" : ""}
+                    {t("product.reviews", { count: String(reviews.length) })}
                   </button>
                 </div>
               )}
@@ -1079,13 +1084,13 @@ export default function ProductDetailPage() {
                 {product.is_bunker_safe && (
                   <div className="flex items-center gap-2 bg-aura-dark text-white px-3 py-1.5 rounded-full text-xs font-bold">
                     <Shield className="w-3.5 h-3.5" />
-                    Bunker Safe
+                    {t("product.bunkerSafe")}
                   </div>
                 )}
                 {product.shelf_life_months && (
                   <div className="flex items-center gap-2 bg-gray-100 text-gray-700 px-3 py-1.5 rounded-full text-xs font-medium">
                     <Clock className="w-3.5 h-3.5" />
-                    {product.shelf_life_months} Month Shelf Life
+                    {t("product.shelfLife", { months: String(product.shelf_life_months) })}
                   </div>
                 )}
               </div>
@@ -1093,7 +1098,7 @@ export default function ProductDetailPage() {
               {/* Variant Selectors */}
               {sizes.length > 0 && (
                 <div>
-                  <p className="text-sm font-medium text-gray-700 mb-2">Size</p>
+                  <p className="text-sm font-medium text-gray-700 mb-2">{t("productDetail.size")}</p>
                   <div className="flex flex-wrap gap-2">
                     {sizes.map((size) => {
                       const variant = variants.find((v) => v.size === size);
@@ -1121,7 +1126,7 @@ export default function ProductDetailPage() {
 
               {flavors.length > 0 && (
                 <div>
-                  <p className="text-sm font-medium text-gray-700 mb-2">Flavor</p>
+                  <p className="text-sm font-medium text-gray-700 mb-2">{t("productDetail.flavor")}</p>
                   <div className="flex flex-wrap gap-2">
                     {flavors.map((flavor) => {
                       const variant = variants.find((v) => v.flavor === flavor);
@@ -1170,12 +1175,12 @@ export default function ProductDetailPage() {
                       />
                     </button>
                     <span className="text-sm font-medium text-gray-700">
-                      Subscribe & Save
+                      {t("productDetail.subscribeAndSave")}
                     </span>
                   </div>
                   {isSubscription && (
                     <span className="text-sm font-bold text-aura-primary bg-aura-light px-3 py-1 rounded-full">
-                      Save {savingsPercent}%
+                      {t("product.save", { percent: String(savingsPercent) })}
                     </span>
                   )}
                 </div>
@@ -1200,7 +1205,7 @@ export default function ProductDetailPage() {
                     </>
                   )}
                   <span className="text-sm text-gray-500">
-                    {isSubscription ? "/delivery" : "one-time"}
+                    {isSubscription ? t("productDetail.delivery") : t("productDetail.oneTime")}
                   </span>
                 </div>
 
@@ -1228,12 +1233,12 @@ export default function ProductDetailPage() {
                   </div>
 
                   <Button variant="primary" size="lg" className="flex-1">
-                    Add to Box
+                    {t("productDetail.addToBox")}
                   </Button>
                 </div>
 
                 <Button variant="accent" size="lg" className="w-full">
-                  Buy Now
+                  {t("productDetail.buyNow")}
                 </Button>
               </div>
 
@@ -1257,14 +1262,14 @@ export default function ProductDetailPage() {
                     "w-5 h-5 transition-transform duration-200",
                     isLiked && "fill-current animate-[heartBounce_0.3s_ease-out]"
                   )} />
-                  {isLiked ? "Saved" : "Save"}
+                  {isLiked ? t("productDetail.saved") : t("productDetail.save")}
                 </button>
                 <button
                   className="flex items-center gap-2 text-sm font-medium text-gray-400 hover:text-gray-600 transition-colors"
                   aria-label="Share product"
                 >
                   <Share2 className="w-5 h-5" />
-                  Share
+                  {t("productDetail.share")}
                 </button>
               </div>
             </div>
@@ -1309,7 +1314,7 @@ export default function ProductDetailPage() {
                   {ingredientsList && (
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                        Ingredients
+                        {t("productDetail.ingredients")}
                       </h3>
                       <p className="text-gray-600 leading-relaxed">
                         {ingredientsList}
@@ -1322,7 +1327,7 @@ export default function ProductDetailPage() {
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
                         <AlertTriangle className="w-5 h-5 text-amber-500" />
-                        Allergen Information
+                        {t("productDetail.allergens")}
                       </h3>
                       <div className="flex flex-wrap gap-3">
                         {allergens.map((allergen) => (
@@ -1338,7 +1343,7 @@ export default function ProductDetailPage() {
                         ))}
                       </div>
                       <p className="text-xs text-gray-400 mt-2">
-                        Manufactured in a facility that may process other allergens.
+                        {t("productDetail.allergenDisclaimer")}
                       </p>
                     </div>
                   )}
@@ -1349,7 +1354,7 @@ export default function ProductDetailPage() {
                       <div className="bg-gray-50 rounded-xl p-5">
                         <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
                           <Thermometer className="w-4 h-4 text-blue-500" />
-                          Storage Instructions
+                          {t("productDetail.storageInstructions")}
                         </h4>
                         <p className="text-sm text-gray-600">
                           {product.storage_instructions}
@@ -1360,7 +1365,7 @@ export default function ProductDetailPage() {
                       <div className="bg-gray-50 rounded-xl p-5">
                         <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
                           <Flame className="w-4 h-4 text-orange-500" />
-                          Preparation Instructions
+                          {t("productDetail.preparationInstructions")}
                         </h4>
                         <p className="text-sm text-gray-600">
                           {product.preparation_instructions}
@@ -1373,7 +1378,7 @@ export default function ProductDetailPage() {
                   {product.country_of_origin && (
                     <div className="flex items-center gap-2 text-sm text-gray-500">
                       <Globe className="w-4 h-4" />
-                      Country of Origin: {product.country_of_origin}
+                      {t("productDetail.countryOfOrigin")}: {product.country_of_origin}
                     </div>
                   )}
                 </div>
@@ -1388,7 +1393,7 @@ export default function ProductDetailPage() {
                     <div className="text-center py-12">
                       <Info className="w-12 h-12 text-gray-200 mx-auto mb-4" />
                       <p className="text-gray-500">
-                        Nutrition information is not yet available for this product.
+                        {t("productDetail.nutritionNotAvailable")}
                       </p>
                     </div>
                   )}
@@ -1403,17 +1408,17 @@ export default function ProductDetailPage() {
                       <div className="flex items-center justify-between mb-6">
                         <div>
                           <h3 className="text-xl font-bold text-gray-900">
-                            Aura Academy Recipes
+                            {t("productDetail.recipes")}
                           </h3>
                           <p className="text-sm text-gray-500 mt-1">
-                            Chef-crafted recipes to elevate your meals
+                            {t("productDetail.recipesSubtitle")}
                           </p>
                         </div>
                         <Link
                           href="/academy"
                           className="text-sm font-medium text-aura-primary hover:text-aura-secondary transition-colors"
                         >
-                          View All Recipes
+                          {t("productDetail.viewAllRecipes")}
                         </Link>
                       </div>
                       {recipes.map((recipe) => (
@@ -1433,13 +1438,13 @@ export default function ProductDetailPage() {
                     <div className="text-center py-12">
                       <ChefHat className="w-12 h-12 text-gray-200 mx-auto mb-4" />
                       <p className="text-gray-500 mb-2">
-                        No recipes available yet for this product.
+                        {t("productDetail.noRecipes")}
                       </p>
                       <Link
                         href="/academy"
                         className="text-sm font-medium text-aura-primary hover:text-aura-secondary transition-colors"
                       >
-                        Browse all Aura Academy recipes
+                        {t("productDetail.browseRecipes")}
                       </Link>
                     </div>
                   )}
@@ -1461,7 +1466,7 @@ export default function ProductDetailPage() {
                   {reviews.length > 0 ? (
                     <div>
                       <h3 className="font-semibold text-gray-900 mb-4">
-                        Customer Reviews
+                        {t("productDetail.customerReviews")}
                       </h3>
                       {reviews.map((review) => (
                         <ReviewCard
@@ -1475,7 +1480,7 @@ export default function ProductDetailPage() {
                     <div className="text-center py-8">
                       <Star className="w-12 h-12 text-gray-200 mx-auto mb-4" />
                       <p className="text-gray-500">
-                        No reviews yet. Be the first to share your experience!
+                        {t("productDetail.noReviews")}
                       </p>
                     </div>
                   )}
@@ -1492,7 +1497,7 @@ export default function ProductDetailPage() {
               {relatedPairsWith.length > 0 && (
                 <div>
                   <h3 className="text-xl font-bold text-gray-900 mb-6">
-                    Pairs Well With
+                    {t("productDetail.pairsWellWith")}
                   </h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {relatedPairsWith.map((p) => (
@@ -1505,7 +1510,7 @@ export default function ProductDetailPage() {
               {relatedAlsoBought.length > 0 && (
                 <div>
                   <h3 className="text-xl font-bold text-gray-900 mb-6">
-                    Customers Also Bought
+                    {t("productDetail.customersAlsoBought")}
                   </h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {relatedAlsoBought.map((p) => (
@@ -1524,7 +1529,7 @@ export default function ProductDetailPage() {
                         <path d="M18 14l1 3 3 1-3 1-1 3-1-3-3-1 3-1 1-3z" />
                       </svg>
                     </span>
-                    You Might Also Like
+                    {t("productDetail.youMightAlsoLike")}
                   </h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {aiRecommendations.map((p) => (
@@ -1546,9 +1551,9 @@ export default function ProductDetailPage() {
                   <Clock className="w-5 h-5 text-blue-500" />
                 </div>
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-1">Shelf Life</h4>
+                  <h4 className="font-semibold text-gray-900 mb-1">{t("productDetail.shelfLife")}</h4>
                   <p className="text-sm text-gray-600">
-                    {product.shelf_life_months} months from production date
+                    {t("productDetail.shelfLifeDesc", { months: String(product.shelf_life_months) })}
                   </p>
                 </div>
               </div>
@@ -1559,7 +1564,7 @@ export default function ProductDetailPage() {
                   <Thermometer className="w-5 h-5 text-purple-500" />
                 </div>
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-1">Storage</h4>
+                  <h4 className="font-semibold text-gray-900 mb-1">{t("productDetail.storage")}</h4>
                   <p className="text-sm text-gray-600">
                     {product.storage_instructions}
                   </p>
@@ -1572,9 +1577,9 @@ export default function ProductDetailPage() {
                   <Globe className="w-5 h-5 text-green-500" />
                 </div>
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-1">Origin</h4>
+                  <h4 className="font-semibold text-gray-900 mb-1">{t("productDetail.origin")}</h4>
                   <p className="text-sm text-gray-600">
-                    Made in {product.country_of_origin}
+                    {t("productDetail.madeIn", { country: product.country_of_origin || "" })}
                   </p>
                 </div>
               </div>
