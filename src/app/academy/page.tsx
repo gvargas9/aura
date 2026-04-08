@@ -21,6 +21,7 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLocale } from "@/hooks/useLocale";
 import type { ProductRecipe, Product } from "@/types/database";
 
 /* ================================================================
@@ -34,17 +35,17 @@ const DIFFICULTY_COLORS: Record<string, string> = {
 };
 
 const DIFFICULTY_OPTIONS = [
-  { label: "All Levels", value: "" },
-  { label: "Easy", value: "easy" },
-  { label: "Medium", value: "medium" },
-  { label: "Advanced", value: "advanced" },
+  { labelKey: "academy.allLevels", value: "" },
+  { labelKey: "academy.easy", value: "easy" },
+  { labelKey: "academy.medium", value: "medium" },
+  { labelKey: "academy.advanced", value: "advanced" },
 ];
 
 const PREP_TIME_OPTIONS = [
-  { label: "Any Time", value: 0 },
-  { label: "Under 15 min", value: 15 },
-  { label: "Under 30 min", value: 30 },
-  { label: "Under 60 min", value: 60 },
+  { labelKey: "academy.anyTime", value: 0 },
+  { labelKey: "academy.underMinutes", value: 15 },
+  { labelKey: "academy.underMinutes", value: 30 },
+  { labelKey: "academy.underMinutes", value: 60 },
 ];
 
 /* ================================================================
@@ -58,6 +59,7 @@ function AcademyRecipeCard({
   recipe: ProductRecipe;
   productName: string;
 }) {
+  const { t } = useLocale();
   const totalTime = (recipe.prep_time_minutes || 0) + (recipe.cook_time_minutes || 0);
 
   return (
@@ -89,7 +91,7 @@ function AcademyRecipeCard({
           <div className="absolute top-3 left-3">
             <span className="bg-aura-accent text-white text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-lg">
               <Star className="w-3 h-3 fill-current" />
-              Featured
+              {t("academy.featured")}
             </span>
           </div>
         )}
@@ -207,6 +209,7 @@ function ChefSpotlightCard({
    ================================================================ */
 
 export default function AcademyPage() {
+  const { t } = useLocale();
   const supabase = createClient();
 
   const [recipes, setRecipes] = useState<ProductRecipe[]>([]);
@@ -337,14 +340,13 @@ export default function AcademyPage() {
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm text-aura-accent px-4 py-2 rounded-full text-sm font-medium mb-6">
               <ChefHat className="w-4 h-4" />
-              Chef-Crafted Recipes
+              {t("academy.chefCrafted")}
             </div>
             <h1 className="text-4xl lg:text-6xl font-bold text-white mb-4 tracking-tight">
               Aura Academy
             </h1>
             <p className="text-lg lg:text-xl text-white/60 max-w-2xl mx-auto mb-8">
-              Discover delicious ways to prepare your shelf-stable meals with recipes
-              crafted by professional chefs. Simple, creative, and always satisfying.
+              {t("academy.subtitle")}
             </p>
 
             {/* Search bar */}
@@ -354,7 +356,7 @@ export default function AcademyPage() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search recipes, ingredients, chefs..."
+                placeholder={t("academy.searchPlaceholder")}
                 className="w-full pl-12 pr-12 py-4 border-0 rounded-2xl text-base bg-white shadow-xl focus:ring-2 focus:ring-aura-primary/30 outline-none transition-all"
                 aria-label="Search recipes"
               />
@@ -373,19 +375,19 @@ export default function AcademyPage() {
             <div className="flex items-center justify-center gap-8 mt-8 text-white/50">
               <div className="text-center">
                 <p className="text-2xl font-bold text-white">{recipes.length}</p>
-                <p className="text-xs">Recipes</p>
+                <p className="text-xs">{t("academy.recipes")}</p>
               </div>
               <div className="w-px h-8 bg-white/20" />
               <div className="text-center">
                 <p className="text-2xl font-bold text-white">{chefs.length}</p>
-                <p className="text-xs">Chefs</p>
+                <p className="text-xs">{t("academy.chefs")}</p>
               </div>
               <div className="w-px h-8 bg-white/20" />
               <div className="text-center">
                 <p className="text-2xl font-bold text-white">
                   {Object.keys(products).length}
                 </p>
-                <p className="text-xs">Products</p>
+                <p className="text-xs">{t("academy.products")}</p>
               </div>
             </div>
           </div>
@@ -423,7 +425,7 @@ export default function AcademyPage() {
                         : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"
                     )}
                   >
-                    {opt.label}
+                    {t(opt.labelKey, { minutes: String(opt.value) })}
                   </button>
                 ))}
               </div>
@@ -443,7 +445,7 @@ export default function AcademyPage() {
                         : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"
                     )}
                   >
-                    {opt.label}
+                    {t(opt.labelKey, { minutes: String(opt.value) })}
                   </button>
                 ))}
               </div>
@@ -462,7 +464,7 @@ export default function AcademyPage() {
                           : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"
                       )}
                     >
-                      All Categories
+                      {t("academy.allCategories")}
                     </button>
                     {categories.map((cat) => (
                       <button
@@ -489,7 +491,7 @@ export default function AcademyPage() {
                 aria-label="Open filters"
               >
                 <SlidersHorizontal className="w-3.5 h-3.5" />
-                Filters
+                {t("store.filters")}
               </button>
 
               {/* Clear filters */}
@@ -503,7 +505,7 @@ export default function AcademyPage() {
                   }}
                   className="text-xs text-aura-primary hover:text-aura-secondary font-medium whitespace-nowrap ml-auto"
                 >
-                  Clear All
+                  {t("academy.clearAll")}
                 </button>
               )}
             </div>
@@ -529,10 +531,10 @@ export default function AcademyPage() {
             <div className="text-center py-20">
               <BookOpen className="w-16 h-16 text-gray-200 mx-auto mb-4" />
               <h3 className="font-semibold text-gray-900 mb-2">
-                No recipes found
+                {t("academy.noRecipesFound")}
               </h3>
               <p className="text-sm text-gray-500 mb-4">
-                Try adjusting your filters or search query
+                {t("academy.tryAdjusting")}
               </p>
               <button
                 onClick={() => {
@@ -543,15 +545,15 @@ export default function AcademyPage() {
                 }}
                 className="text-sm font-medium text-aura-primary hover:text-aura-secondary"
               >
-                Clear all filters
+                {t("academy.clearAllFilters")}
               </button>
             </div>
           ) : (
             <>
               <div className="flex items-center justify-between mb-6">
                 <p className="text-sm text-gray-500">
-                  {filteredRecipes.length} recipe{filteredRecipes.length !== 1 ? "s" : ""}{" "}
-                  {hasActiveFilters ? "found" : "total"}
+                  {filteredRecipes.length} {t("academy.recipes").toLowerCase()}{" "}
+                  {hasActiveFilters ? t("academy.found") : t("academy.total")}
                 </p>
               </div>
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -577,10 +579,10 @@ export default function AcademyPage() {
                 </div>
                 <div>
                   <h2 className="text-xl font-bold text-gray-900">
-                    Meet Our Chefs
+                    {t("academy.meetOurChefs")}
                   </h2>
                   <p className="text-sm text-gray-500">
-                    The culinary experts behind your Aura Academy recipes
+                    {t("academy.chefsSubtitle")}
                   </p>
                 </div>
               </div>
@@ -605,21 +607,20 @@ export default function AcademyPage() {
             <div className="absolute inset-0 bg-grid opacity-10" />
             <div className="relative">
               <h2 className="text-2xl lg:text-3xl font-bold text-white mb-3">
-                Ready to Build Your Box?
+                {t("academy.readyToBuild")}
               </h2>
               <p className="text-white/60 max-w-lg mx-auto mb-6">
-                Choose from our premium shelf-stable meals and create your perfect
-                subscription box. Each product comes with chef-crafted recipes.
+                {t("academy.readyToBuildDesc")}
               </p>
               <div className="flex items-center justify-center gap-4">
                 <Link href="/build-box">
                   <Button variant="accent" size="lg">
-                    Build Your Box
+                    {t("store.buildBox")}
                   </Button>
                 </Link>
                 <Link href="/products">
                   <Button variant="outline" size="lg" className="text-white border-white/30 hover:bg-white/10">
-                    Browse Products
+                    {t("store.browseProducts")}
                   </Button>
                 </Link>
               </div>
@@ -636,7 +637,7 @@ export default function AcademyPage() {
             />
             <div className="fixed inset-y-0 right-0 w-80 max-w-full bg-white z-50 sm:hidden shadow-2xl overflow-y-auto p-6">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="font-semibold text-lg">Filters</h3>
+                <h3 className="font-semibold text-lg">{t("store.filters")}</h3>
                 <button
                   onClick={() => setShowMobileFilters(false)}
                   className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center"
@@ -648,7 +649,7 @@ export default function AcademyPage() {
 
               <div className="space-y-6">
                 <div>
-                  <h4 className="text-sm font-semibold text-gray-900 mb-3">Difficulty</h4>
+                  <h4 className="text-sm font-semibold text-gray-900 mb-3">{t("academy.difficulty")}</h4>
                   <div className="flex flex-wrap gap-2">
                     {DIFFICULTY_OPTIONS.map((opt) => (
                       <button
@@ -661,14 +662,14 @@ export default function AcademyPage() {
                             : "bg-white text-gray-600 border-gray-200"
                         )}
                       >
-                        {opt.label}
+                        {t(opt.labelKey, { minutes: String(opt.value) })}
                       </button>
                     ))}
                   </div>
                 </div>
 
                 <div>
-                  <h4 className="text-sm font-semibold text-gray-900 mb-3">Prep Time</h4>
+                  <h4 className="text-sm font-semibold text-gray-900 mb-3">{t("academy.prepTime")}</h4>
                   <div className="flex flex-wrap gap-2">
                     {PREP_TIME_OPTIONS.map((opt) => (
                       <button
@@ -681,7 +682,7 @@ export default function AcademyPage() {
                             : "bg-white text-gray-600 border-gray-200"
                         )}
                       >
-                        {opt.label}
+                        {t(opt.labelKey, { minutes: String(opt.value) })}
                       </button>
                     ))}
                   </div>
@@ -689,7 +690,7 @@ export default function AcademyPage() {
 
                 {categories.length > 0 && (
                   <div>
-                    <h4 className="text-sm font-semibold text-gray-900 mb-3">Category</h4>
+                    <h4 className="text-sm font-semibold text-gray-900 mb-3">{t("academy.category")}</h4>
                     <div className="flex flex-wrap gap-2">
                       <button
                         onClick={() => setCategoryFilter("")}
@@ -730,7 +731,7 @@ export default function AcademyPage() {
                   }}
                   className="w-full text-sm text-aura-primary hover:text-aura-secondary font-medium py-2 transition-colors"
                 >
-                  Clear All Filters
+                  {t("academy.clearAllFilters")}
                 </button>
               </div>
             </div>
