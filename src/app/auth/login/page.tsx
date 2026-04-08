@@ -4,8 +4,9 @@ import { useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Button, Input, Card, CardHeader, CardTitle, CardDescription, CardContent, Header, Footer } from "@/components/ui";
+import { Button, Input, Card, CardContent, Header, Footer } from "@/components/ui";
 import { Mail, Lock, Eye, EyeOff, Chrome, Loader2, ShieldCheck } from "lucide-react";
+import { useLocale } from "@/hooks/useLocale";
 
 function LoginContent() {
   const [email, setEmail] = useState("");
@@ -17,6 +18,7 @@ function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirectTo") || "/dashboard";
+  const { t } = useLocale();
 
   const supabase = createClient();
 
@@ -36,7 +38,7 @@ function LoginContent() {
       router.push(redirectTo);
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to sign in");
+      setError(err instanceof Error ? err.message : t("auth.failedSignIn"));
     } finally {
       setIsLoading(false);
     }
@@ -56,7 +58,7 @@ function LoginContent() {
 
       if (error) throw error;
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to sign in with Google");
+      setError(err instanceof Error ? err.message : t("auth.failedGoogle"));
       setIsLoading(false);
     }
   };
@@ -72,9 +74,9 @@ function LoginContent() {
             <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-aura-primary to-aura-secondary shadow-lg shadow-aura-primary/25 mb-4">
               <ShieldCheck className="w-7 h-7 text-white" />
             </div>
-            <h1 className="text-3xl font-bold text-gray-900">Welcome Back</h1>
+            <h1 className="text-3xl font-bold text-gray-900">{t("auth.welcomeBack")}</h1>
             <p className="mt-2 text-gray-500">
-              Sign in to your Aura account to continue
+              {t("auth.subtitle")}
             </p>
           </div>
 
@@ -94,7 +96,7 @@ function LoginContent() {
                 disabled={isLoading}
                 leftIcon={<Chrome className="w-5 h-5" />}
               >
-                Continue with Google
+                {t("auth.continueGoogle")}
               </Button>
 
               <div className="relative mb-6">
@@ -103,14 +105,14 @@ function LoginContent() {
                 </div>
                 <div className="relative flex justify-center text-sm">
                   <span className="px-4 bg-white text-gray-400">
-                    Or continue with email
+                    {t("auth.orContinueEmail")}
                   </span>
                 </div>
               </div>
 
               <form onSubmit={handleEmailLogin} className="space-y-5">
                 <Input
-                  label="Email"
+                  label={t("auth.email")}
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -121,7 +123,7 @@ function LoginContent() {
                 />
 
                 <Input
-                  label="Password"
+                  label={t("auth.password")}
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -151,13 +153,13 @@ function LoginContent() {
                       type="checkbox"
                       className="rounded border-gray-300 text-aura-primary focus:ring-aura-primary"
                     />
-                    <span className="ml-2 text-gray-600">Remember me</span>
+                    <span className="ml-2 text-gray-600">{t("auth.rememberMe")}</span>
                   </label>
                   <Link
                     href="/auth/forgot-password"
                     className="text-aura-primary hover:text-aura-secondary font-medium transition-colors"
                   >
-                    Forgot password?
+                    {t("auth.forgotPassword")}
                   </Link>
                 </div>
 
@@ -166,17 +168,17 @@ function LoginContent() {
                   className="w-full py-3"
                   isLoading={isLoading}
                 >
-                  Sign In
+                  {t("auth.signIn")}
                 </Button>
               </form>
 
               <p className="mt-6 text-center text-sm text-gray-500">
-                Don&apos;t have an account?{" "}
+                {t("auth.noAccount")}{" "}
                 <Link
                   href="/auth/signup"
                   className="text-aura-primary hover:text-aura-secondary font-semibold transition-colors"
                 >
-                  Sign up for free
+                  {t("auth.signUpFree")}
                 </Link>
               </p>
             </CardContent>
@@ -186,12 +188,12 @@ function LoginContent() {
           <div className="mt-6 flex items-center justify-center gap-6 text-xs text-gray-400">
             <span className="flex items-center gap-1">
               <ShieldCheck className="w-3.5 h-3.5" />
-              256-bit encryption
+              {t("auth.encryption")}
             </span>
             <span className="w-1 h-1 rounded-full bg-gray-300" />
-            <span>Secure login</span>
+            <span>{t("auth.secureLogin")}</span>
             <span className="w-1 h-1 rounded-full bg-gray-300" />
-            <span>Privacy protected</span>
+            <span>{t("auth.privacyProtected")}</span>
           </div>
         </div>
       </main>
