@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useDealerContext } from "../layout";
-import { Card, Button, Input } from "@/components/ui";
+import { useLocale } from "@/hooks/useLocale";
+import { Card, Button } from "@/components/ui";
 import {
   Loader2,
   Package,
@@ -52,6 +53,7 @@ interface SampleEvent {
 
 export default function DealerSamplesPage() {
   const { dealer } = useDealerContext();
+  const { t } = useLocale();
   const supabase = createClient();
 
   const [allocations, setAllocations] = useState<SampleAllocation[]>([]);
@@ -141,10 +143,10 @@ export default function DealerSamplesPage() {
         fetchData();
       } else {
         const err = await res.json();
-        alert(err.error || "Failed to distribute samples");
+        alert(err.error || t("b2b.samples.failedDistribute"));
       }
     } catch {
-      alert("Failed to distribute samples");
+      alert(t("b2b.samples.failedDistribute"));
     } finally {
       setIsSubmitting(false);
     }
@@ -172,10 +174,10 @@ export default function DealerSamplesPage() {
         fetchData();
       } else {
         const err = await res.json();
-        alert(err.error || "Failed to return samples");
+        alert(err.error || t("b2b.samples.failedReturn"));
       }
     } catch {
-      alert("Failed to return samples");
+      alert(t("b2b.samples.failedReturn"));
     } finally {
       setIsSubmitting(false);
     }
@@ -219,8 +221,8 @@ export default function DealerSamplesPage() {
   return (
     <>
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900">Sample Management</h1>
-        <p className="text-slate-600 mt-1">Track and distribute product samples to your leads</p>
+        <h1 className="text-2xl font-bold text-slate-900">{t("b2b.samples.title")}</h1>
+        <p className="text-slate-600 mt-1">{t("b2b.samples.subtitle")}</p>
       </div>
 
       {/* Summary Cards */}
@@ -228,7 +230,7 @@ export default function DealerSamplesPage() {
         <Card padding="md">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-500">Total Allocated</p>
+              <p className="text-sm text-slate-500">{t("b2b.samples.totalAllocated")}</p>
               <p className="text-2xl font-bold mt-1">{totalAllocated}</p>
             </div>
             <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -239,7 +241,7 @@ export default function DealerSamplesPage() {
         <Card padding="md">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-500">With Me</p>
+              <p className="text-sm text-slate-500">{t("b2b.samples.withMe")}</p>
               <p className="text-2xl font-bold mt-1 text-green-600">{totalWithMe}</p>
             </div>
             <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
@@ -250,7 +252,7 @@ export default function DealerSamplesPage() {
         <Card padding="md">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-500">Distributed</p>
+              <p className="text-sm text-slate-500">{t("b2b.samples.distributed")}</p>
               <p className="text-2xl font-bold mt-1 text-blue-600">{totalDistributed}</p>
             </div>
             <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
@@ -261,7 +263,7 @@ export default function DealerSamplesPage() {
         <Card padding="md">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-500">Returned</p>
+              <p className="text-sm text-slate-500">{t("b2b.samples.returned")}</p>
               <p className="text-2xl font-bold mt-1 text-amber-600">{totalReturned}</p>
             </div>
             <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
@@ -276,21 +278,21 @@ export default function DealerSamplesPage() {
         {allocations.length === 0 ? (
           <div className="text-center py-20 text-slate-500">
             <Package className="w-12 h-12 mx-auto mb-3 text-slate-300" />
-            <p className="font-medium">No sample allocations yet</p>
-            <p className="text-sm mt-1">Your admin will allocate samples to you.</p>
+            <p className="font-medium">{t("b2b.samples.noAllocations")}</p>
+            <p className="text-sm mt-1">{t("b2b.samples.adminWillAllocate")}</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200">
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Product</th>
-                  <th className="text-right py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Allocated</th>
-                  <th className="text-right py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Remaining</th>
-                  <th className="text-center py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Lead</th>
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Date</th>
-                  <th className="text-right py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
+                  <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">{t("b2b.samples.product")}</th>
+                  <th className="text-right py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">{t("b2b.samples.allocated")}</th>
+                  <th className="text-right py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">{t("b2b.samples.remaining")}</th>
+                  <th className="text-center py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">{t("b2b.samples.status")}</th>
+                  <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">{t("b2b.samples.lead")}</th>
+                  <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">{t("b2b.samples.date")}</th>
+                  <th className="text-right py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">{t("b2b.samples.actions")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -350,7 +352,7 @@ export default function DealerSamplesPage() {
                                     }}
                                     className="px-2.5 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 rounded-md hover:bg-blue-100 transition-colors"
                                   >
-                                    Give to Lead
+                                    {t("b2b.samples.giveToLead")}
                                   </button>
                                   <button
                                     onClick={() => {
@@ -359,7 +361,7 @@ export default function DealerSamplesPage() {
                                     }}
                                     className="px-2.5 py-1.5 text-xs font-medium text-amber-700 bg-amber-50 rounded-md hover:bg-amber-100 transition-colors"
                                   >
-                                    Return
+                                    {t("b2b.samples.return")}
                                   </button>
                                 </>
                               )}
@@ -402,18 +404,18 @@ export default function DealerSamplesPage() {
           <div className="absolute inset-0 bg-black/40" onClick={() => setDistributeModal(null)} />
           <div className="relative bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-slate-900">Give Samples to Lead</h3>
+              <h3 className="text-lg font-semibold text-slate-900">{t("b2b.samples.giveSamples")}</h3>
               <button onClick={() => setDistributeModal(null)} className="p-1 rounded hover:bg-slate-100" aria-label="Close">
                 <X className="w-5 h-5 text-slate-400" />
               </button>
             </div>
             <p className="text-sm text-slate-500 mb-4">
               {distributeModal.aura_products?.name} &mdash;{" "}
-              {distributeModal.quantity_allocated - distributeModal.quantity_distributed - distributeModal.quantity_returned} available
+              {distributeModal.quantity_allocated - distributeModal.quantity_distributed - distributeModal.quantity_returned} {t("b2b.samples.available")}
             </p>
             <div className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Quantity</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{t("b2b.samples.quantity")}</label>
                 <input
                   type="number"
                   min="1"
@@ -424,7 +426,7 @@ export default function DealerSamplesPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Lead Name *</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{t("b2b.samples.leadName")}</label>
                 <input
                   type="text"
                   value={distLeadName}
@@ -434,7 +436,7 @@ export default function DealerSamplesPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Lead Email</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{t("b2b.samples.leadEmail")}</label>
                 <input
                   type="email"
                   value={distLeadEmail}
@@ -444,7 +446,7 @@ export default function DealerSamplesPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Notes</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{t("b2b.samples.notes")}</label>
                 <textarea
                   value={distNotes}
                   onChange={(e) => setDistNotes(e.target.value)}
@@ -456,14 +458,14 @@ export default function DealerSamplesPage() {
             </div>
             <div className="flex justify-end gap-2 mt-5">
               <Button variant="secondary" onClick={() => setDistributeModal(null)}>
-                Cancel
+                {t("common.cancel")}
               </Button>
               <Button
                 onClick={handleDistribute}
                 disabled={isSubmitting || !distLeadName.trim()}
               >
                 {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Send className="w-4 h-4 mr-1" />}
-                Distribute
+                {t("b2b.samples.distribute")}
               </Button>
             </div>
           </div>
@@ -476,18 +478,18 @@ export default function DealerSamplesPage() {
           <div className="absolute inset-0 bg-black/40" onClick={() => setReturnModal(null)} />
           <div className="relative bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-slate-900">Return Samples</h3>
+              <h3 className="text-lg font-semibold text-slate-900">{t("b2b.samples.returnSamples")}</h3>
               <button onClick={() => setReturnModal(null)} className="p-1 rounded hover:bg-slate-100" aria-label="Close">
                 <X className="w-5 h-5 text-slate-400" />
               </button>
             </div>
             <p className="text-sm text-slate-500 mb-4">
               {returnModal.aura_products?.name} &mdash;{" "}
-              {returnModal.quantity_allocated - returnModal.quantity_distributed - returnModal.quantity_returned} returnable
+              {returnModal.quantity_allocated - returnModal.quantity_distributed - returnModal.quantity_returned} {t("b2b.samples.returnable")}
             </p>
             <div className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Quantity</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{t("b2b.samples.quantity")}</label>
                 <input
                   type="number"
                   min="1"
@@ -498,11 +500,11 @@ export default function DealerSamplesPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Notes</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{t("b2b.samples.notes")}</label>
                 <textarea
                   value={returnNotes}
                   onChange={(e) => setReturnNotes(e.target.value)}
-                  placeholder="Reason for return..."
+                  placeholder={t("b2b.samples.reasonForReturn")}
                   rows={2}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
                 />
@@ -510,11 +512,11 @@ export default function DealerSamplesPage() {
             </div>
             <div className="flex justify-end gap-2 mt-5">
               <Button variant="secondary" onClick={() => setReturnModal(null)}>
-                Cancel
+                {t("common.cancel")}
               </Button>
               <Button onClick={handleReturn} disabled={isSubmitting}>
                 {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <RotateCcw className="w-4 h-4 mr-1" />}
-                Return
+                {t("b2b.samples.return")}
               </Button>
             </div>
           </div>

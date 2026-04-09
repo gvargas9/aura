@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useDealerContext } from "../layout";
+import { useLocale } from "@/hooks/useLocale";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -15,11 +16,11 @@ import {
   Lock,
   ArrowRight,
   Eye,
-  ExternalLink,
 } from "lucide-react";
 
 export default function BrandingPage() {
   const { dealer, organization, profile } = useDealerContext();
+  const { t } = useLocale();
 
   const [logoUrl, setLogoUrl] = useState("");
   const [primaryColor, setPrimaryColor] = useState("#059669");
@@ -97,10 +98,10 @@ export default function BrandingPage() {
       <div>
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-slate-900">
-            White-Label Branding
+            {t("b2b.branding.title")}
           </h1>
           <p className="text-slate-500 text-sm mt-1">
-            Customize your referral pages with your brand
+            {t("b2b.branding.subtitleLocked")}
           </p>
         </div>
 
@@ -109,30 +110,28 @@ export default function BrandingPage() {
             <Lock className="w-8 h-8 text-amber-500" />
           </div>
           <h2 className="text-xl font-bold text-slate-900 mb-2">
-            Upgrade to Gold or Platinum
+            {t("b2b.branding.upgradeTitle")}
           </h2>
           <p className="text-slate-500 text-sm mb-6">
-            White-label branding is available for Gold and Platinum tier
-            dealers. Upgrade your tier to customize your referral pages with
-            your own logo, brand colors, and tagline.
+            {t("b2b.branding.upgradeDesc")}
           </p>
           <div className="flex flex-col items-center gap-3">
             <div className="flex items-center gap-4 text-sm text-slate-600">
               <span className="flex items-center gap-1.5">
                 <Check className="w-4 h-4 text-amber-500" />
-                Custom Logo
+                {t("b2b.branding.customLogo")}
               </span>
               <span className="flex items-center gap-1.5">
                 <Check className="w-4 h-4 text-amber-500" />
-                Brand Colors
+                {t("b2b.branding.brandColors")}
               </span>
               <span className="flex items-center gap-1.5">
                 <Check className="w-4 h-4 text-amber-500" />
-                Custom Tagline
+                {t("b2b.branding.customTagline")}
               </span>
             </div>
             <p className="text-xs text-slate-400">
-              Current tier:{" "}
+              {t("b2b.branding.currentTier")}{" "}
               <span className="font-semibold capitalize">
                 {organization?.dealer_tier || "bronze"}
               </span>
@@ -149,10 +148,10 @@ export default function BrandingPage() {
     <div>
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-slate-900">
-          White-Label Branding
+          {t("b2b.branding.title")}
         </h1>
         <p className="text-slate-500 text-sm mt-1">
-          Customize how your referral pages appear to customers
+          {t("b2b.branding.subtitle")}
         </p>
       </div>
 
@@ -170,21 +169,21 @@ export default function BrandingPage() {
             <Card variant="bordered" padding="lg">
               <h2 className="text-base font-semibold text-slate-900 mb-4 flex items-center gap-2">
                 <Palette className="w-5 h-5 text-blue-600" />
-                Brand Settings
+                {t("b2b.branding.settings")}
               </h2>
 
               <div className="space-y-4">
                 <Input
-                  label="Logo URL"
+                  label={t("b2b.branding.logoUrl")}
                   value={logoUrl}
                   onChange={(e) => setLogoUrl(e.target.value)}
                   placeholder="https://your-domain.com/logo.png"
-                  helperText="Square image recommended (min 200x200px)"
+                  helperText={t("b2b.branding.logoHelper")}
                 />
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Primary Brand Color
+                    {t("b2b.branding.primaryColor")}
                   </label>
                   <div className="flex items-center gap-3">
                     <input
@@ -206,11 +205,11 @@ export default function BrandingPage() {
                 </div>
 
                 <Input
-                  label="Tagline"
+                  label={t("b2b.branding.tagline")}
                   value={tagline}
                   onChange={(e) => setTagline(e.target.value)}
                   placeholder="Your adventure starts here"
-                  helperText="Shown on your referral landing page"
+                  helperText={t("b2b.branding.taglineHelper")}
                 />
               </div>
             </Card>
@@ -229,10 +228,10 @@ export default function BrandingPage() {
               variant={saved ? "accent" : "primary"}
             >
               {saving
-                ? "Saving..."
+                ? t("b2b.branding.saving")
                 : saved
-                  ? "Saved"
-                  : "Save Branding"}
+                  ? t("b2b.branding.saved")
+                  : t("b2b.branding.saveBranding")}
             </Button>
           </form>
         </div>
@@ -243,7 +242,7 @@ export default function BrandingPage() {
             <div className="px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center gap-2">
               <Eye className="w-4 h-4 text-slate-400" />
               <span className="text-sm font-medium text-slate-600">
-                Referral Page Preview
+                {t("b2b.branding.preview")}
               </span>
             </div>
 
@@ -288,7 +287,7 @@ export default function BrandingPage() {
                 {/* Hero */}
                 <div className="px-6 py-8 bg-white text-center">
                   <h3 className="text-base font-bold text-gray-900 mb-1">
-                    Premium Freeze-Dried Meals
+                    {t("b2b.branding.premiumMeals")}
                   </h3>
                   {tagline && (
                     <p
@@ -299,7 +298,7 @@ export default function BrandingPage() {
                     </p>
                   )}
                   <p className="text-[11px] text-gray-500 mb-4">
-                    Referred by {profile?.full_name || "Your Name"}
+                    {t("b2b.branding.referredBy")} {profile?.full_name || "Your Name"}
                   </p>
                   <div
                     className="inline-flex items-center gap-1 px-4 py-2 rounded-lg text-white text-xs font-semibold"
@@ -307,7 +306,7 @@ export default function BrandingPage() {
                       backgroundColor: primaryColor || "#059669",
                     }}
                   >
-                    Build Your Box
+                    {t("b2b.branding.buildYourBox")}
                     <ArrowRight className="w-3 h-3" />
                   </div>
                 </div>
@@ -315,7 +314,7 @@ export default function BrandingPage() {
                 {/* Footer */}
                 <div className="px-4 py-2 bg-gray-50 border-t border-gray-100">
                   <p className="text-[9px] text-gray-400 text-center">
-                    Powered by Aura
+                    {t("b2b.branding.poweredBy")}
                   </p>
                 </div>
               </div>
@@ -323,7 +322,7 @@ export default function BrandingPage() {
           </Card>
 
           <p className="text-xs text-slate-400 mt-3 text-center">
-            Your referral link:{" "}
+            {t("b2b.branding.referralLink")}{" "}
             <code className="bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">
               aura.com/ref/{referralCode}
             </code>

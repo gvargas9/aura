@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks";
+import { useLocale } from "@/hooks/useLocale";
 import { Card, Button, Input } from "@/components/ui";
 import { formatDate, formatCurrency } from "@/lib/utils";
 import {
@@ -19,11 +20,8 @@ import {
   ChevronUp,
   ShoppingCart,
   Package,
-  X,
   Check,
   AlertCircle,
-  Edit3,
-  Trash2,
 } from "lucide-react";
 import type { Dealer, Organization, Order, Json } from "@/types";
 
@@ -66,6 +64,7 @@ function getLocationType(type: string) {
 
 export default function LocationsPage() {
   const { user, profile } = useAuth();
+  const { t } = useLocale();
   const [dealer, setDealer] = useState<Dealer | null>(null);
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [locations, setLocations] = useState<OrgLocation[]>([]);
@@ -179,7 +178,7 @@ export default function LocationsPage() {
     if (!dealer?.organization_id) return;
 
     if (!formData.name || !formData.city || !formData.state) {
-      setSubmitError("Please fill in the location name, city, and state.");
+      setSubmitError(t("b2b.locations.fillRequired"));
       return;
     }
 
@@ -211,7 +210,7 @@ export default function LocationsPage() {
       .single();
 
     if (error) {
-      setSubmitError("Failed to add location. Please try again.");
+      setSubmitError(t("b2b.locations.failedAdd"));
       setIsSubmitting(false);
       return;
     }
@@ -245,7 +244,6 @@ export default function LocationsPage() {
 
   const handleOrderForLocation = (location: OrgLocation) => {
     if (!location.address) return;
-    // Pre-fill cart shipping address with location data and redirect to orders
     const addrData = {
       firstName: location.contact_name?.split(" ")[0] || "",
       lastName: location.contact_name?.split(" ").slice(1).join(" ") || "",
@@ -275,10 +273,10 @@ export default function LocationsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold text-slate-900">
-            Locations
+            {t("b2b.locations.title")}
           </h1>
           <p className="text-slate-500 mt-1">
-            Manage your delivery locations and order per site
+            {t("b2b.locations.subtitle")}
           </p>
         </div>
         <Button
@@ -287,7 +285,7 @@ export default function LocationsPage() {
           onClick={() => setShowAddForm(!showAddForm)}
         >
           <Plus className="w-4 h-4 mr-2" />
-          Add Location
+          {t("b2b.locations.add")}
         </Button>
       </div>
 
@@ -300,19 +298,19 @@ export default function LocationsPage() {
                 <Check className="w-6 h-6 text-emerald-600" />
               </div>
               <p className="text-sm font-medium text-slate-900">
-                Location added successfully
+                {t("b2b.locations.added")}
               </p>
             </div>
           ) : (
             <form onSubmit={handleAddLocation}>
               <h2 className="text-lg font-semibold text-slate-900 mb-5">
-                Add New Location
+                {t("b2b.locations.addNew")}
               </h2>
 
               {/* Location Type Selection */}
               <div className="mb-5">
                 <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Location Type
+                  {t("b2b.locations.locationType")}
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
                   {LOCATION_TYPES.map((type) => {
@@ -350,7 +348,7 @@ export default function LocationsPage() {
 
               <div className="grid sm:grid-cols-2 gap-4 mb-5">
                 <Input
-                  label="Location Name *"
+                  label={t("b2b.locations.locationName")}
                   value={formData.name}
                   onChange={(e) =>
                     setFormData((p) => ({ ...p, name: e.target.value }))
@@ -360,7 +358,7 @@ export default function LocationsPage() {
                   className="focus:ring-blue-600"
                 />
                 <Input
-                  label="Contact Name"
+                  label={t("b2b.locations.contactName")}
                   value={formData.contactName}
                   onChange={(e) =>
                     setFormData((p) => ({ ...p, contactName: e.target.value }))
@@ -373,7 +371,7 @@ export default function LocationsPage() {
               <div className="grid sm:grid-cols-2 gap-4 mb-5">
                 <div className="sm:col-span-2">
                   <Input
-                    label="Street Address"
+                    label={t("b2b.locations.streetAddress")}
                     value={formData.address1}
                     onChange={(e) =>
                       setFormData((p) => ({ ...p, address1: e.target.value }))
@@ -383,7 +381,7 @@ export default function LocationsPage() {
                   />
                 </div>
                 <Input
-                  label="City *"
+                  label={t("b2b.locations.city")}
                   value={formData.city}
                   onChange={(e) =>
                     setFormData((p) => ({ ...p, city: e.target.value }))
@@ -392,7 +390,7 @@ export default function LocationsPage() {
                   className="focus:ring-blue-600"
                 />
                 <Input
-                  label="State *"
+                  label={t("b2b.locations.state")}
                   value={formData.state}
                   onChange={(e) =>
                     setFormData((p) => ({ ...p, state: e.target.value }))
@@ -401,7 +399,7 @@ export default function LocationsPage() {
                   className="focus:ring-blue-600"
                 />
                 <Input
-                  label="ZIP Code"
+                  label={t("b2b.locations.zipCode")}
                   value={formData.zipCode}
                   onChange={(e) =>
                     setFormData((p) => ({ ...p, zipCode: e.target.value }))
@@ -409,7 +407,7 @@ export default function LocationsPage() {
                   className="focus:ring-blue-600"
                 />
                 <Input
-                  label="Contact Phone"
+                  label={t("b2b.locations.contactPhone")}
                   value={formData.contactPhone}
                   onChange={(e) =>
                     setFormData((p) => ({ ...p, contactPhone: e.target.value }))
@@ -423,7 +421,7 @@ export default function LocationsPage() {
               <div className="grid sm:grid-cols-2 gap-4 mb-6">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Delivery Schedule
+                    {t("b2b.locations.deliverySchedule")}
                   </label>
                   <select
                     value={formData.deliverySchedule}
@@ -435,16 +433,16 @@ export default function LocationsPage() {
                     }
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none appearance-none"
                   >
-                    <option value="">Select schedule...</option>
-                    <option value="weekly">Weekly</option>
-                    <option value="bi-weekly">Bi-Weekly</option>
-                    <option value="monthly">Monthly</option>
-                    <option value="on-demand">On Demand</option>
+                    <option value="">{t("b2b.locations.selectSchedule")}</option>
+                    <option value="weekly">{t("b2b.locations.weekly")}</option>
+                    <option value="bi-weekly">{t("b2b.locations.biWeekly")}</option>
+                    <option value="monthly">{t("b2b.locations.monthly")}</option>
+                    <option value="on-demand">{t("b2b.locations.onDemand")}</option>
                   </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Preferred Delivery Day
+                    {t("b2b.locations.preferredDay")}
                   </label>
                   <select
                     value={formData.preferredDay}
@@ -456,7 +454,7 @@ export default function LocationsPage() {
                     }
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none appearance-none"
                   >
-                    <option value="">Any day</option>
+                    <option value="">{t("b2b.locations.anyDay")}</option>
                     <option value="monday">Monday</option>
                     <option value="tuesday">Tuesday</option>
                     <option value="wednesday">Wednesday</option>
@@ -480,14 +478,14 @@ export default function LocationsPage() {
                   className="bg-blue-600 hover:bg-blue-700 focus:ring-blue-600"
                   isLoading={isSubmitting}
                 >
-                  Add Location
+                  {t("b2b.locations.add")}
                 </Button>
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setShowAddForm(false)}
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </Button>
               </div>
             </form>
@@ -530,7 +528,7 @@ export default function LocationsPage() {
                       </p>
                       {!location.is_active && (
                         <span className="text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded">
-                          Inactive
+                          {t("b2b.locations.inactive")}
                         </span>
                       )}
                     </div>
@@ -544,17 +542,17 @@ export default function LocationsPage() {
                           ]
                             .filter(Boolean)
                             .join(", ")
-                        : "No address set"}
+                        : t("b2b.locations.noAddress")}
                       {location.delivery_schedule &&
                         ` | ${location.delivery_schedule}`}
                     </p>
                   </div>
                   <div className="hidden sm:block text-right mr-2">
                     <p className="text-sm font-medium text-slate-900">
-                      {locOrders.length} orders
+                      {locOrders.length} {t("b2b.locations.orders")}
                     </p>
                     <p className="text-xs text-slate-500">
-                      {formatCurrency(locRevenue)} revenue
+                      {formatCurrency(locRevenue)} {t("b2b.locations.revenue")}
                     </p>
                   </div>
                   {isExpanded ? (
@@ -570,7 +568,7 @@ export default function LocationsPage() {
                     <div className="grid sm:grid-cols-3 gap-4 mb-4">
                       <div>
                         <p className="text-xs text-slate-500 font-medium">
-                          Type
+                          {t("b2b.locations.type")}
                         </p>
                         <p className="text-sm text-slate-900 capitalize">
                           {location.location_type.replace("_", " ")}
@@ -579,7 +577,7 @@ export default function LocationsPage() {
                       {location.contact_name && (
                         <div>
                           <p className="text-xs text-slate-500 font-medium">
-                            Contact
+                            {t("b2b.locations.contact")}
                           </p>
                           <p className="text-sm text-slate-900">
                             {location.contact_name}
@@ -589,7 +587,7 @@ export default function LocationsPage() {
                       {location.contact_phone && (
                         <div>
                           <p className="text-xs text-slate-500 font-medium">
-                            Phone
+                            {t("b2b.locations.phone")}
                           </p>
                           <p className="text-sm text-slate-900">
                             {location.contact_phone}
@@ -599,7 +597,7 @@ export default function LocationsPage() {
                       {location.delivery_schedule && (
                         <div>
                           <p className="text-xs text-slate-500 font-medium">
-                            Delivery Schedule
+                            {t("b2b.locations.deliverySchedule")}
                           </p>
                           <p className="text-sm text-slate-900 capitalize">
                             {location.delivery_schedule}
@@ -610,7 +608,7 @@ export default function LocationsPage() {
                       )}
                       <div>
                         <p className="text-xs text-slate-500 font-medium">
-                          Added
+                          {t("b2b.locations.added2")}
                         </p>
                         <p className="text-sm text-slate-900">
                           {formatDate(location.created_at)}
@@ -622,7 +620,7 @@ export default function LocationsPage() {
                     {locOrders.length > 0 && (
                       <div className="mb-4">
                         <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
-                          Recent Orders
+                          {t("b2b.locations.recentOrders")}
                         </h4>
                         <div className="bg-white rounded-lg border border-slate-200 divide-y divide-slate-50">
                           {locOrders.slice(0, 5).map((order) => (
@@ -655,7 +653,7 @@ export default function LocationsPage() {
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors border border-blue-100"
                       >
                         <ShoppingCart className="w-3.5 h-3.5" />
-                        Order for this Location
+                        {t("b2b.locations.orderForLocation")}
                       </button>
                     </div>
                   </div>
@@ -669,11 +667,10 @@ export default function LocationsPage() {
           <div className="text-center py-12">
             <MapPin className="w-10 h-10 text-slate-300 mx-auto mb-3" />
             <h3 className="text-lg font-semibold text-slate-900 mb-1">
-              No Locations Yet
+              {t("b2b.locations.empty")}
             </h3>
             <p className="text-sm text-slate-500 mb-4">
-              Add your delivery locations to streamline ordering for multiple
-              sites.
+              {t("b2b.locations.emptyDesc")}
             </p>
             <Button
               variant="primary"
@@ -681,7 +678,7 @@ export default function LocationsPage() {
               onClick={() => setShowAddForm(true)}
             >
               <Plus className="w-4 h-4 mr-2" />
-              Add Your First Location
+              {t("b2b.locations.addFirst")}
             </Button>
           </div>
         </Card>
