@@ -3,14 +3,14 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { useAuth } from "@/hooks";
+import { useAuth, useLocale } from "@/hooks";
 import {
   Card,
   Button,
   Header,
   Footer,
 } from "@/components/ui";
-import { cn, formatCurrency, formatDate } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import type { Order, OrderItem } from "@/types";
 import type { Json } from "@/types/database";
 import {
@@ -34,13 +34,13 @@ const STATUS_BADGES: Record<string, string> = {
   cancelled: "bg-red-100 text-red-700",
 };
 
-const FILTER_OPTIONS: { value: StatusFilter; label: string }[] = [
-  { value: "all", label: "All Orders" },
-  { value: "pending", label: "Pending" },
-  { value: "processing", label: "Processing" },
-  { value: "shipped", label: "Shipped" },
-  { value: "delivered", label: "Delivered" },
-  { value: "cancelled", label: "Cancelled" },
+const FILTER_KEYS: { value: StatusFilter; key: string }[] = [
+  { value: "all", key: "orders.allOrders" },
+  { value: "pending", key: "orders.pending" },
+  { value: "processing", key: "orders.processing" },
+  { value: "shipped", key: "orders.shipped" },
+  { value: "delivered", key: "orders.delivered" },
+  { value: "cancelled", key: "orders.cancelled" },
 ];
 
 function parseItems(items: Json): OrderItem[] {
@@ -62,6 +62,7 @@ function parseAddress(
 export default function OrdersPage() {
   const router = useRouter();
   const { profile, isLoading: authLoading, isAuthenticated } = useAuth();
+  const { t, formatPrice, formatDate } = useLocale();
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
@@ -131,9 +132,9 @@ export default function OrdersPage() {
           {/* Page Header */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Order History</h1>
+              <h1 className="text-3xl font-bold text-gray-900">{t("orders.title")}</h1>
               <p className="text-gray-600 mt-1">
-                Track and manage all your Aura orders.
+                {t("orders.subtitle")}
               </p>
             </div>
           </div>
@@ -141,7 +142,7 @@ export default function OrdersPage() {
           {/* Status Filter */}
           <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-2">
             <Filter className="w-4 h-4 text-gray-400 shrink-0" />
-            {FILTER_OPTIONS.map((option) => (
+            {FILTER_KEYS.map((option) => (
               <button
                 key={option.value}
                 onClick={() => setStatusFilter(option.value)}
@@ -152,7 +153,7 @@ export default function OrdersPage() {
                     : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
                 )}
               >
-                {option.label}
+                {t(option.key)}
               </button>
             ))}
           </div>
@@ -191,8 +192,9 @@ export default function OrdersPage() {
                             {items.length > 0 && (
                               <span>
                                 {" "}
-                                &middot; {items.length} item
-                                {items.length !== 1 ? "s" : ""}
+                                &middot; {items.length === 1
+                                  ? t("orders.item", { count: String(items.length) })
+                                  : t("orders.items", { count: String(items.length) })}
                               </span>
                             )}
                           </p>
@@ -206,10 +208,10 @@ export default function OrdersPage() {
                             "bg-gray-100 text-gray-700"
                           }`}
                         >
-                          {order.status}
+                          {t(`orders.${order.status}`)}
                         </span>
                         <span className="font-semibold text-gray-900 min-w-[80px] text-right">
-                          {formatCurrency(order.total)}
+                          {formatPrice(order.total)}
                         </span>
                         {isExpanded ? (
                           <ChevronUp className="w-5 h-5 text-gray-400" />
@@ -226,7 +228,7 @@ export default function OrdersPage() {
                           {/* Items */}
                           <div>
                             <h4 className="text-sm font-semibold text-gray-900 mb-3">
-                              Items
+                              {t("orders.itemsSection")}
                             </h4>
                             {items.length > 0 ? (
                               <div className="space-y-2">
@@ -242,7 +244,7 @@ export default function OrdersPage() {
                                       </span>
                                     </span>
                                     <span className="text-gray-900 font-medium">
-                                      {formatCurrency(
+                                      {formatPrice(
                                         item.price * item.quantity
                                       )}
                                     </span>
@@ -251,39 +253,39 @@ export default function OrdersPage() {
                               </div>
                             ) : (
                               <p className="text-sm text-gray-500">
-                                Item details not available.
+                                {t("orders.itemDetailsUnavailable")}
                               </p>
                             )}
 
                             {/* Order Totals */}
                             <div className="mt-4 pt-3 border-t border-gray-100 space-y-1 text-sm">
                               <div className="flex justify-between text-gray-500">
-                                <span>Subtotal</span>
-                                <span>{formatCurrency(order.subtotal)}</span>
+                                <span>{t("orders.subtotal")}</span>
+                                <span>{formatPrice(order.subtotal)}</span>
                               </div>
                               {order.discount > 0 && (
                                 <div className="flex justify-between text-green-600">
-                                  <span>Discount</span>
+                                  <span>{t("orders.discount")}</span>
                                   <span>
-                                    -{formatCurrency(order.discount)}
+                                    -{formatPrice(order.discount)}
                                   </span>
                                 </div>
                               )}
                               <div className="flex justify-between text-gray-500">
-                                <span>Shipping</span>
+                                <span>{t("orders.shipping")}</span>
                                 <span>
                                   {order.shipping > 0
-                                    ? formatCurrency(order.shipping)
-                                    : "Free"}
+                                    ? formatPrice(order.shipping)
+                                    : t("orders.freeShipping")}
                                 </span>
                               </div>
                               <div className="flex justify-between text-gray-500">
-                                <span>Tax</span>
-                                <span>{formatCurrency(order.tax)}</span>
+                                <span>{t("orders.tax")}</span>
+                                <span>{formatPrice(order.tax)}</span>
                               </div>
                               <div className="flex justify-between font-semibold text-gray-900 pt-1">
-                                <span>Total</span>
-                                <span>{formatCurrency(order.total)}</span>
+                                <span>{t("orders.total")}</span>
+                                <span>{formatPrice(order.total)}</span>
                               </div>
                             </div>
                           </div>
@@ -294,7 +296,7 @@ export default function OrdersPage() {
                               <div>
                                 <h4 className="text-sm font-semibold text-gray-900 mb-2 flex items-center gap-1.5">
                                   <MapPin className="w-4 h-4" />
-                                  Shipping Address
+                                  {t("orders.shippingAddress")}
                                 </h4>
                                 <div className="text-sm text-gray-600 bg-gray-50 rounded-lg p-3">
                                   {address.address1 && (
@@ -321,7 +323,7 @@ export default function OrdersPage() {
                               <div>
                                 <h4 className="text-sm font-semibold text-gray-900 mb-2 flex items-center gap-1.5">
                                   <Truck className="w-4 h-4" />
-                                  Tracking
+                                  {t("orders.tracking")}
                                 </h4>
                                 <div className="bg-gray-50 rounded-lg p-3">
                                   <p className="text-sm font-mono text-gray-700">
@@ -334,7 +336,7 @@ export default function OrdersPage() {
                                       rel="noopener noreferrer"
                                       className="inline-flex items-center gap-1 text-sm text-aura-primary hover:underline mt-2"
                                     >
-                                      Track Package
+                                      {t("orders.trackPackage")}
                                       <ExternalLink className="w-3.5 h-3.5" />
                                     </a>
                                   )}
@@ -345,7 +347,7 @@ export default function OrdersPage() {
                             {order.notes && !order.tracking_number && (
                               <div>
                                 <h4 className="text-sm font-semibold text-gray-900 mb-2">
-                                  Notes
+                                  {t("orders.notes")}
                                 </h4>
                                 <p className="text-sm text-gray-600 bg-gray-50 rounded-lg p-3">
                                   {order.notes}
@@ -357,7 +359,7 @@ export default function OrdersPage() {
                               href={`/orders/${order.id}`}
                               className="inline-flex items-center gap-1.5 text-sm font-medium text-aura-primary hover:underline mt-2"
                             >
-                              View Full Details
+                              {t("orders.viewFullDetails")}
                               <ExternalLink className="w-3.5 h-3.5" />
                             </a>
                           </div>
@@ -373,23 +375,23 @@ export default function OrdersPage() {
               <div className="text-center py-12">
                 <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  No orders found
+                  {t("orders.empty")}
                 </h3>
                 <p className="text-gray-500 mb-6">
                   {statusFilter !== "all"
-                    ? `You don't have any ${statusFilter} orders.`
-                    : "You haven't placed any orders yet. Start by building your first box."}
+                    ? t("orders.emptyFiltered", { status: t(`orders.${statusFilter}`).toLowerCase() })
+                    : t("orders.emptyMessage")}
                 </p>
                 {statusFilter !== "all" ? (
                   <Button
                     variant="outline"
                     onClick={() => setStatusFilter("all")}
                   >
-                    View All Orders
+                    {t("orders.viewAllOrders")}
                   </Button>
                 ) : (
                   <a href="/build-box">
-                    <Button variant="primary">Build Your First Box</Button>
+                    <Button variant="primary">{t("orders.buildFirstBox")}</Button>
                   </a>
                 )}
               </div>
